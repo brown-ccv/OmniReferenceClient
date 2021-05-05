@@ -1,14 +1,8 @@
 name: Package Electron
-
 on: pull_request
-
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2016]
+    runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -21,7 +15,7 @@ jobs:
       - name: generate windows installer
         run: npm run make
       - name: upload windows installer
-        shell: bash
-        run: |
-          ls
-          ls dist/
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-installer
+          path: out/make/squirrel.windows/x64
