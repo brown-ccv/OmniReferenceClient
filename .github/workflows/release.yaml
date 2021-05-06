@@ -1,12 +1,15 @@
 name: Package Electron
-on: pull_request
+on:
+  push:
+    branches:
+      - main
 jobs:
-  build:
+  release:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-        with:
+        with: 
           node-version: '14'
       - name: npm install
         shell: bash
@@ -14,8 +17,7 @@ jobs:
           npm install --legacy-peer-deps
       - name: generate windows installer
         run: npm run make
-      - name: upload windows installer
-        uses: actions/upload-artifact@v2
-        with:
-          name: windows-installer
-          path: out/make/squirrel.windows/x64
+      - name: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
