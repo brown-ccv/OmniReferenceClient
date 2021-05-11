@@ -4,20 +4,27 @@ import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
-import { app, BrowserWindow } from 'electron'
+import Electron, { app, BrowserWindow, ipcMain } from 'electron'
+
+declare const MAIN_WINDOW_WEBPACK_ENTRY: string
+declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
-declare const MAIN_WINDOW_WEBPACK_ENTRY: any
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup') === undefined) { // eslint-disable-line global-require
   app.quit()
 }
 
+// TODO: https://stackoverflow.com/questions/52236641/electron-ipc-and-nodeintegration
 const createWindow = (): void => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    height: 600,
-    width: 800
+    height: 800,
+    width: 1200,
+    webPreferences: {
+      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY
+    }
   })
 
   // and load the index.html of the app.
@@ -58,7 +65,81 @@ app.on('activate', () => {
 const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.join(__dirname, '../../../protos')
 const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
 
+// TODO: Configure to make enums strings
 const packageDefinition = protoLoader.loadSync(PROTO_FILES, { includeDirs: [PROTO_DIR] })
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition).openmind
-const protobuf = protobufjs.loadSync(PROTO_FILES) // TODO (BNR): Do we need this?
-console.log(packageDefinition, protoDescriptor, protobuf)
+const protobuf = protobufjs.loadSync(PROTO_FILES)
+
+// TODO: Make the URL for the backend configurable
+const bridgeClient = new (protoDescriptor as any).BridgeManagerService('localhost:50051', grpc.credentials.createInsecure())
+
+ipcMain.handle('list-bridges', async (event, query: string) => {
+  return await new Promise((resolve, reject) => {
+    bridgeClient.listBridges({ query }, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
+    })
+  })
+})
+
+ipcMain.handle('connect-to-bridge', async (event, { name }) => {
+  return await new Promise((resolve, reject) => {
+    bridgeClient.ConnectBridge({ name }, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
+    })
+  })
+})
+
+ipcMain.handle('connected-bridges', async (event, query: string) => {
+  return await new Promise((resolve, reject) => {
+    bridgeClient.ConnectedBridges({ query }, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
+    })
+  })
+})
+
+ipcMain.handle('describe-bridge', async (event, { name }) => {
+  return await new Promise((resolve, reject) => {
+    bridgeClient.DescribeBridge({ name }, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const DetailsType = protobuf.root.lookupType(resp.details.type_url.split('/')[1])
+      const details = DetailsType.decode(resp.details.value).toJSON()
+      console.log(details)
+      
+      return resolve({ ...resp, details })
+    })
+  })
+})
+
+ipcMain.handle('disconnect-from-bridge', async (event, { name }) => {
+  return await new Promise((resolve, reject) => {
+    bridgeClient.DisconnectBridge({ name }, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
+    })
+  })
+})
+
+ipcMain.on('connection-status-stream', async (event, { name, enableStream }) => {
+  const call = bridgeClient.connectionStatusStream({ name, enableStream })
+
+  call.on('data', (resp: any) => {
+    console.dir(resp)
+    event.reply('connection-update', resp)
+  })
+
+  call.on('status', console.log)
+
+  call.on('end', () => {
+    call.removeAllListeners('data')
+  })
+
+  call.on('error', (err: Error) => {
+    // TODO (BNR): How do we handle errors at this level?
+    console.error(err)
+    call.removeAllListeners('data')
+  })
+})
