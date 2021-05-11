@@ -16,7 +16,7 @@ jobs:
         run: |
           npm install --legacy-peer-deps
       - name: generate windows installer
-        run: npm run make
+        run: npm run package
       - name: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

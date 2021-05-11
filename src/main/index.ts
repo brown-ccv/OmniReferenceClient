@@ -1,4 +1,11 @@
+import * as path from 'path'
+
+import * as grpc from '@grpc/grpc-js'
+import * as protoLoader from '@grpc/proto-loader'
+import * as protobufjs from 'protobufjs'
+
 import { app, BrowserWindow } from 'electron';
+const isDevelopment = process.env.NODE_ENV !== 'production'
 declare const MAIN_WINDOW_WEBPACK_ENTRY: any;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -17,7 +24,9 @@ const createWindow = (): void => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (isDevelopment) {
+    mainWindow.webContents.openDevTools();
+  }
 };
 
 // This method will be called when Electron has finished
@@ -44,3 +53,9 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.join(__dirname, '../../../protos')
+const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
+
+const packageDefinition = protoLoader.loadSync(PROTO_FILES, { includeDirs: [PROTO_DIR] })
+const protoDescriptor = grpc.loadPackageDefinition(packageDefinition).openmind
+const protobuf = protobufjs.loadSync(PROTO_FILES) // TODO (BNR): Do we need this?
