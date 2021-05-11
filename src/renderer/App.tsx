@@ -2,8 +2,7 @@ import React from 'react'
 import {
   BrowserRouter as Router,
   Switch,
-  Route,
-  Link
+  Route
 } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -33,32 +32,36 @@ const Main = styled.div`
   border: solid 1px black;
 `
 
-export default function App() {
-  return (<Router>
-    <Content>
-      <Header />
-      <Container>
-        <SideBar>
-          <Logo />
-          <Navigation />
-        </SideBar>
-        <Main>
-          <Switch>
-            <Route path="/playground">
-              <Playground />
-            </Route>
-            <Route path="/settings">
-              <Settings />
-            </Route>
-            <Route path="/help">
-              <Help />
-            </Route>
-            <Route path="/">
-              <Home />
-            </Route>
-          </Switch>
-        </Main>
-      </Container>
-    </Content>
-  </Router>)
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Content>
+        <Header />
+        <Container>
+          <SideBar>
+            <Logo />
+            <Navigation />
+          </SideBar>
+          <Main>
+            <Switch>
+              <Route path='/playground'>
+                <Playground />
+              </Route>
+              <Route path='/settings'>
+                <Settings />
+              </Route>
+              <Route path='/help'>
+                <Help />
+              </Route>
+              <Route path='/'>
+                <Home />
+              </Route>
+            </Switch>
+          </Main>
+        </Container>
+      </Content>
+    </Router>
+  )
 }
+
+export default App

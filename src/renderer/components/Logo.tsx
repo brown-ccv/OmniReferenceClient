@@ -8,7 +8,8 @@ const LogoType = styled.h1`
     text-decoration: none;
   }
 `
-
-export default function Logo() {
-  return (<LogoType><Link to="/">My RC+S</Link></LogoType>)
+const Logo: React.FC = () => {
+  return (<LogoType><Link to='/'>My RC+S</Link></LogoType>)
 }
+
+export default Logo

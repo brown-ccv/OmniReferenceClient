@@ -1,5 +1,7 @@
 import React from 'react'
 
-export default function Help() {
-  return <h2>Settings</h2>
+const Settings: React.FC = () => {
+  return (<h2>Settings</h2>)
 }
+
+export default Settings
