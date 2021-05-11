@@ -1,5 +1,7 @@
 import React from 'react'
 
-export default function Help() {
-  return <h2>Playground</h2>
+const Playground: React.FC = () => {
+  return (<h2>Playground</h2>)
 }
+
+export default Playground

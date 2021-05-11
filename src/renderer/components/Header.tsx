@@ -6,6 +6,8 @@ const HeaderFlex = styled.header`
   border: solid 1px black;
 `
 
-export default function Header() {
-  return <HeaderFlex><h3>HEADER LOCATION</h3></HeaderFlex>
+const Header: React.FC = () => {
+  return (<HeaderFlex><h3>HEADER LOCATION</h3></HeaderFlex>)
 }
+
+export default Header
