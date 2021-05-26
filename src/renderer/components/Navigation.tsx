@@ -1,21 +1,23 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
 
 const Navigation: React.FC = () => {
   return (
-    <nav>
+    <aside className='menu is-large is-flex is-justify-content-center'>
       <ul>
-        <li>
-          <Link to='/playground'>Playground</Link>
+        <li className='menu-list'>
+          <Link to='/playground'>Playground <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
         </li>
-        <li>
-          <Link to='/settings'>Settings</Link>
+        <li className='menu-list'>
+          <Link to='/settings'>Settings <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
         </li>
-        <li>
-          <Link to='/help'>Help</Link>
+        <li className='menu-list'>
+          <Link to='/help'>Help <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
         </li>
       </ul>
-    </nav>
+    </aside>
   )
 }
 

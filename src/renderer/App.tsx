@@ -16,39 +16,41 @@ import Header from './components/Header'
 import Navigation from './components/Navigation'
 
 const Content = styled.div``
-const Container = styled.div`
-  display: flex;
-`
+const Container = styled.div``
 
 const SideBar = styled.div`
-  flex: 1;
-  margin: 1rem;
-  border: solid 1px black;
+  height: 100vh;
+  background-color: #353a40;
+  flex: 2;
 `
 
 const Main = styled.div`
-  flex: 3;
-  margin: 1rem;
-  border: solid 1px black;
+  height: 100vh;
+  background-color: #41464a;
+  flex: 7;
+  overflow-y: scroll;
 `
 
+
 const App: React.FC = () => {
+  const [provocationOn, setProvocation] = React.useState<boolean>(false)
+
   return (
     <Router>
-      <Content>
+      <Content className = 'container is-fullhd'>
         <Header />
-        <Container>
-          <SideBar>
+        <Container className = 'container is-fullhd is-flex'>
+          <SideBar className = 'block py-5 px-3'>
             <Logo />
             <Navigation />
           </SideBar>
-          <Main>
+          <Main className='block p-6'>
             <Switch>
               <Route path='/playground'>
-                <Playground />
+                <Playground provocationOn={provocationOn}/>
               </Route>
               <Route path='/settings'>
-                <Settings />
+                <Settings provocationOn={provocationOn} setProvocation = {setProvocation}/>
               </Route>
               <Route path='/help'>
                 <Help />

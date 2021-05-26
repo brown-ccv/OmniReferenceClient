@@ -62,7 +62,7 @@ const Home: React.FC = () => {
 
   return (
     <div>
-      <h2>Home</h2>
+      <h1 className= 'title is-1 has-text-white'>Home</h1>
       <p>
         {bridges.toString()}
       </p>
