@@ -1,12 +1,11 @@
 import React from 'react'
 
-type SettingProp = {
-  provocationOn: boolean,
+interface SettingProp {
+  provocationOn: boolean
   setProvocation: Function
 }
 
 const Settings: React.FC<SettingProp> = ({ provocationOn, setProvocation }) => {
-
   const provocationHandle = () => {
     setProvocation(!provocationOn)
   }

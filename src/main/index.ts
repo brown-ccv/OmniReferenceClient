@@ -108,7 +108,7 @@ ipcMain.handle('describe-bridge', async (event, { name }) => {
       const DetailsType = protobuf.root.lookupType(resp.details.type_url.split('/')[1])
       const details = DetailsType.decode(resp.details.value).toJSON()
       console.log(details)
-      
+
       return resolve({ ...resp, details })
     })
   })

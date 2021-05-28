@@ -1,37 +1,34 @@
 import React from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTimesCircle, faCircle } from '@fortawesome/free-solid-svg-icons'
+import Clock from './Clock'
 
+interface HeaderProp {
+  isRecording: boolean
+}
 
-const Header: React.FC = () => {
-  // Time on clock
-  const [curTime, setTime] = React.useState<Date>(new Date())
-
-  React.useEffect(()=>{
-    // Increment time
-    const intervalId = setInterval(()=>
-      setTime(new Date()), 1000
-    )
-    // Clear time when unmounted
-    return()=>{
-      clearInterval(intervalId)
-    }
-    } 
-  )
-
+const Header: React.FC<HeaderProp> = ({ isRecording }) => {
   return (
-  <div className='container is-fullhd has-background-grey-darker p-1'>
-    <nav className='level'>
-      <div className='level-left ml-3'>
-        <h3 className='level-item has-text-white'>{curTime.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</h3>
-      </div>
-      <div className='level-right'>
-        <div className='level-item'>
-          <button className = 'button is-danger'><FontAwesomeIcon style = {{marginRight: '5px'}} icon={faTimesCircle}/> Quit</button>
+    <div className='container is-fullhd has-background-grey-darker p-1'>
+      <nav className='level'>
+        {/* Left Side of header */}
+        <div className='level-left ml-3'>
+          <Clock />
+          {isRecording
+            ? <p className='content has-text-danger pb-2' id='blink'><FontAwesomeIcon className='icon pt-2 mx-2' icon={faCircle} />
+              Recording
+            </p>
+            : ''}
         </div>
-      </div>
-    </nav>
-  </div>)
+        {/* Right Side of header */}
+        <div className='level-right'>
+          <div className='level-item'>
+            <button className='button is-danger'><FontAwesomeIcon className='icon is-small mr-2' icon={faTimesCircle} /> Quit</button>
+          </div>
+        </div>
+      </nav>
+    </div>
+  )
 }
 
 export default Header
