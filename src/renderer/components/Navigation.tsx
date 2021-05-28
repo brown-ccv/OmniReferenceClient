@@ -8,19 +8,19 @@ const Navigation: React.FC = () => {
     <aside className='menu is-large is-flex is-justify-content-center'>
       <ul>
         <li className='menu-list'>
-          <Link to='/recording'>Recording <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
+          <Link to='/recording'>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/playground'>Playground <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
+          <Link to='/playground'>Playground <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/settings'>Settings <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
+          <Link to='/settings'>Settings <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/help'>Help <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
+          <Link to='/help'>Help <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/buttons'>Buttons <FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faAngleRight} /></Link>
+          <Link to='/buttons'>Buttons <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
 
       </ul>

@@ -22,20 +22,20 @@ const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
         {/* Column 1 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <a className='box has-background-grey m-4' onClick={handleClick}>
+          <a className='box has-background-grey m-5 mb-6' onClick={handleClick}>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={BeadsLogo} />
             </figure>
             <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>Beads</p>
           </a>
-          <a className='box has-background-grey mt-6 m-4'>
+          <a className='box has-background-grey m-5 mb-6'>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={CbtLogo} />
             </figure>
             <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>CBT</p>
           </a>
           {provocationOn
-            ? <a className='box has-background-grey mt-6 m-4'>
+            ? <a className='box has-background-grey m-5 mb-6'>
               <figure className='image is 128x128 is-flex is-justify-content-center'>
                 <img src={ProvocationLogo} />
               </figure>
@@ -47,13 +47,13 @@ const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
         {/* Column 2 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <a className='box has-background-grey m-4'>
+          <a className='box has-background-grey m-5 mb-6'>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={MsitLogo} />
             </figure>
             <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>MSIT</p>
           </a>
-          <a className='box has-background-grey mt-6 m-4'>
+          <a className='box has-background-grey m-5 mb-6'>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={RestingLogo} />
             </figure>

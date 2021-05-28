@@ -30,7 +30,7 @@ const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordi
       <h1 className='title is-1 has-text-white mb-6 pb-4'>Recording</h1>
       <div className='box has-background-grey-dark'>
         <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>On demand recording</p>
-        <a className='box has-background-white is-rounded' onClick={handleRecording} style={{ marginLeft: '210px', marginRight: '210px' }}>
+        <a className='box has-background-white is-rounded' onClick={handleRecording} id='record-red-dot'>
           <figure className='image is 96x96 is-flex is-justify-content-center mx-5 my-3'>
             <img src={isRecording ? RecordingLogo : RecordLogo} />
           </figure>

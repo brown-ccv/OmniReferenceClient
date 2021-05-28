@@ -10,7 +10,7 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "ts-standard",
-    "css-build": "node-sass --omit-source-map-url src/renderer/styles/sass/mystyles.scss src/css/mystyles.css",
+    "css-build": "node-sass --omit-source-map-url src/renderer/styles/sass/mystyles.scss src/rednerer/styles/css/mystyles.css",
     "css-watch": "npm run css-build -- --watch"
   },
   "keywords": [],

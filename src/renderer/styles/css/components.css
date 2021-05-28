@@ -10,3 +10,21 @@
       opacity: 1;
     }
   }
+
+#sidebar {
+  height: 100vh;
+  background-color: #353a40;
+  flex: 2;
+}
+#main-window {
+  height: 100vh;
+  background-color: #41464a;
+  flex: 7;
+  overflow-y: scroll;
+}
+
+#record-red-dot{
+  margin-left: 36%;
+  margin-right: 36%;
+}
+

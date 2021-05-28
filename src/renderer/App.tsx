@@ -43,12 +43,12 @@ const App: React.FC = () => {
         {/* Container for body other than header */}
         <div className='container is-fullhd is-flex'>
           {/* Sidebar */}
-          <div className='block py-5 px-3' style={{ height: '100vh', backgroundColor: '#353a40', flex: 2 }}>
+          <div className='block py-5 px-3' id='sidebar'>
             <Logo />
             <Navigation />
           </div>
           {/* Main area */}
-          <div className='block p-6' style={{ height: '100vh', backgroundColor: '#41464a', flex: 7, overflowY: 'scroll' }}>
+          <div className='block p-6' id='main-window'>
             <Switch>
               <Route path='/playground'>
                 <Playground provocationOn={provocationOn} />
