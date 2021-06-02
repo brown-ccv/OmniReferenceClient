@@ -8,24 +8,24 @@ const Home: React.FC = () => {
       <div className='block'>
         <p className='subtitle is-3 has-text-white is-flex is-justify-content-center mb-6'>Here are the statuses of your RC+S devices:</p>
         {/* Left machine */}
-        <div className = 'block'>
+        <div className='block'>
           <div className='columns'>
             <div className='column is-one-quarter'>
-              <p className='subtitle is-3 has-text-white mt-3'>Left:</p>  
+              <p className='subtitle is-3 has-text-white mt-3'>Left:</p>
             </div>
             <div className='column is-three-quarters'>
-              <ConnectionStatusHome status={'connected'}/>
+              <ConnectionStatusHome status='connected' />
             </div>
           </div>
         </div>
         {/* Right machine */}
-        <div className = 'block'>
+        <div className='block'>
           <div className='columns'>
             <div className='column is-one-quarter'>
-              <p className='subtitle is-3 has-text-white mt-3'>Right:</p>  
+              <p className='subtitle is-3 has-text-white mt-3'>Right:</p>
             </div>
             <div className='column is-three-quarters'>
-              <ConnectionStatusHome status={'connecting'}/>
+              <ConnectionStatusHome status='connecting' />
             </div>
           </div>
         </div>

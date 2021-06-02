@@ -40,15 +40,15 @@ contextBridge.exposeInMainWorld('bridgeManagerService', {
       ipcRenderer.send('connection-status-stream', request)
       ipcRenderer.removeAllListeners('connection-update')
     }
-  },
+  }
 })
 
 contextBridge.exposeInMainWorld('appService', {
-  taskLaunch: (appName: string): void=>{
-    ipcRenderer.send('task-launch', {appName})
+  taskLaunch: (appName: string): void => {
+    ipcRenderer.send('task-launch', { appName })
   },
 
-  closeApp: (): void=>{
+  closeApp: (): void => {
     ipcRenderer.send('end')
   }
 })

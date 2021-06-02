@@ -1,4 +1,5 @@
 import React from 'react'
+import TaskBox from '../components/TaskBox'
 
 const mywindow: any = window
 
@@ -13,7 +14,6 @@ interface ProvocationProp {
 }
 
 const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
-
   const launchTask = (appName: string) => {
     mywindow.appService.taskLaunch(appName)
   }
@@ -25,43 +25,18 @@ const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
         {/* Column 1 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
-            <figure className='image is 128x128 is-flex is-justify-content-center'>
-              <img src={BeadsLogo} />
-            </figure>
-            <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>Beads</p>
-          </a>
-          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
-            <figure className='image is 128x128 is-flex is-justify-content-center'>
-              <img src={CbtLogo} />
-            </figure>
-            <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>CBT</p>
-          </a>
+          <TaskBox name='Beads' logo={BeadsLogo} onClick={() => launchTask('task-msit.app')} />
+          <TaskBox name='CBT' logo={CbtLogo} onClick={() => launchTask('task-msit.app')} />
           {provocationOn
-            ? <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
-              <figure className='image is 128x128 is-flex is-justify-content-center'>
-                <img src={ProvocationLogo} />
-              </figure>
-              <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>Provocation</p>
-              </a>
+            ? <TaskBox name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('task-msit.app')} />
             : ''}
 
         </div>
         {/* Column 2 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
-            <figure className='image is 128x128 is-flex is-justify-content-center'>
-              <img src={MsitLogo} />
-            </figure>
-            <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>MSIT</p>
-          </a>
-          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
-            <figure className='image is 128x128 is-flex is-justify-content-center'>
-              <img src={RestingLogo} />
-            </figure>
-            <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>Resting</p>
-          </a>
+          <TaskBox name='MSIT' logo={MsitLogo} onClick={() => launchTask('task-msit.app')} />
+          <TaskBox name='Resting' logo={RestingLogo} onClick={() => launchTask('task-msit.app')} />
         </div>
 
       </div>
