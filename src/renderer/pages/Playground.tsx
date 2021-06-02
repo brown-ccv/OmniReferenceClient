@@ -1,5 +1,7 @@
 import React from 'react'
 
+const mywindow: any = window
+
 const BeadsLogo = require('../../../public/logos/beads.svg')
 const MsitLogo = require('../../../public/logos/msit.svg')
 const CbtLogo = require('../../../public/logos/cbt.svg')
@@ -11,8 +13,9 @@ interface ProvocationProp {
 }
 
 const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
-  const handleClick = () => {
-    console.log('clicked')
+
+  const launchTask = (appName: string) => {
+    mywindow.appService.taskLaunch(appName)
   }
 
   return (
@@ -22,20 +25,20 @@ const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
         {/* Column 1 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <a className='box has-background-grey m-5 mb-6' onClick={handleClick}>
+          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={BeadsLogo} />
             </figure>
             <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>Beads</p>
           </a>
-          <a className='box has-background-grey m-5 mb-6'>
+          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={CbtLogo} />
             </figure>
             <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>CBT</p>
           </a>
           {provocationOn
-            ? <a className='box has-background-grey m-5 mb-6'>
+            ? <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
               <figure className='image is 128x128 is-flex is-justify-content-center'>
                 <img src={ProvocationLogo} />
               </figure>
@@ -47,13 +50,13 @@ const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
         {/* Column 2 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <a className='box has-background-grey m-5 mb-6'>
+          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={MsitLogo} />
             </figure>
             <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>MSIT</p>
           </a>
-          <a className='box has-background-grey m-5 mb-6'>
+          <a className='box has-background-grey m-5 mb-6' onClick={()=>launchTask('task-msit.app')}>
             <figure className='image is 128x128 is-flex is-justify-content-center'>
               <img src={RestingLogo} />
             </figure>

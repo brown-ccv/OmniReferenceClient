@@ -1,6 +1,5 @@
 import React from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLaptopMedical, faCheck, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import ConnectionStatusHome from '../components/ConnectionStatusHome'
 
 const Home: React.FC = () => {
   return (
@@ -15,11 +14,7 @@ const Home: React.FC = () => {
               <p className='subtitle is-3 has-text-white mt-3'>Left:</p>  
             </div>
             <div className='column is-three-quarters'>
-              <div className='box has-background-grey-darker is-flex is-justify-content-space-between has-text-success'>
-                <FontAwesomeIcon className ='icon' icon={faLaptopMedical}/>
-                <p>Successfully Connected</p>
-                <FontAwesomeIcon className ='icon' icon={faCheck}/>
-              </div>
+              <ConnectionStatusHome status={'connected'}/>
             </div>
           </div>
         </div>
@@ -30,11 +25,7 @@ const Home: React.FC = () => {
               <p className='subtitle is-3 has-text-white mt-3'>Right:</p>  
             </div>
             <div className='column is-three-quarters'>
-              <div className='box has-background-grey-darker is-flex is-justify-content-space-between has-text-warning'>
-                <FontAwesomeIcon className ='icon' icon={faLaptopMedical}/>
-                <p>Attempting to Connect</p>
-                <FontAwesomeIcon className ='icon' icon={faSpinner} spin/>
-              </div>
+              <ConnectionStatusHome status={'connecting'}/>
             </div>
           </div>
         </div>

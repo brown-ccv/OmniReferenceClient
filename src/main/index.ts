@@ -4,7 +4,7 @@ import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
-import Electron, { app, BrowserWindow, ipcMain } from 'electron'
+import Electron, { app, BrowserWindow, ipcMain, shell } from 'electron'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -22,7 +22,7 @@ const createWindow = (): void => {
   const mainWindow = new BrowserWindow({
     height: 800,
     width: 1200,
-    webPreferences: {
+    webPreferences: {  
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY
     }
   })
@@ -142,4 +142,16 @@ ipcMain.on('connection-status-stream', async (event, { name, enableStream }) => 
     console.error(err)
     call.removeAllListeners('data')
   })
+})
+
+// Function to launch jsPsych tasks 
+ipcMain.on('task-launch', (event, {appName}) => {
+  //const home = app.getPath('home');
+  const fullPath = path.join('/Applications', appName)
+  shell.openPath(fullPath)
+})
+
+ipcMain.on('end', (event, args) => {
+  // quit app
+  app.quit()
 })
