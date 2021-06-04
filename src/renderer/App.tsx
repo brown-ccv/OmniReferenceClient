@@ -4,62 +4,74 @@ import {
   Switch,
   Route
 } from 'react-router-dom'
-import styled from 'styled-components'
 
-import Home from './pages/Home'
+import Buttons from './pages/Buttons'
 import Help from './pages/Help'
 import Playground from './pages/Playground'
 import Settings from './pages/Settings'
+import Recording from './pages/Recording'
+import Home from './pages/Home'
 
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
 
-const Content = styled.div``
-const Container = styled.div`
-  display: flex;
-`
-
-const SideBar = styled.div`
-  flex: 1;
-  margin: 1rem;
-  border: solid 1px black;
-`
-
-const Main = styled.div`
-  flex: 3;
-  margin: 1rem;
-  border: solid 1px black;
-`
-
 const App: React.FC = () => {
+  const [provocationOn, setProvocation] = React.useState<boolean>(false)
+  const [isRecording, setRecording] = React.useState<boolean>(false)
+  const [recordingTime, setRecordingTime] = React.useState<number>(0)
+
+  React.useEffect(() => {
+    // Manage recording time
+    let recordingInterval: any
+    if (isRecording) {
+      recordingInterval = setInterval(
+        () => setRecordingTime(prevRecording => prevRecording + 1),
+        1000
+      )
+    }
+
+    return () => clearInterval(recordingInterval)
+  }, [isRecording]
+  )
+
   return (
     <Router>
-      <Content>
-        <Header />
-        <Container>
-          <SideBar>
+      {/* Container for entire window */}
+      <div className='container is-fullhd'>
+        <Header isRecording={isRecording} />
+        {/* Container for body other than header */}
+        <div className='container is-fullhd is-flex'>
+          {/* Sidebar */}
+          <div className='block py-5 px-3' id='sidebar'>
             <Logo />
             <Navigation />
-          </SideBar>
-          <Main>
+          </div>
+          {/* Main area */}
+          <div className='block p-6' id='main-window'>
             <Switch>
               <Route path='/playground'>
-                <Playground />
+                <Playground provocationOn={provocationOn} />
               </Route>
               <Route path='/settings'>
-                <Settings />
+                <Settings provocationOn={provocationOn} setProvocation={setProvocation} />
               </Route>
               <Route path='/help'>
                 <Help />
+              </Route>
+              <Route path='/buttons'>
+                <Buttons />
+              </Route>
+              <Route path='/recording'>
+                <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />
               </Route>
               <Route path='/'>
                 <Home />
               </Route>
             </Switch>
-          </Main>
-        </Container>
-      </Content>
+          </div>
+        </div>
+      </div>
     </Router>
   )
 }

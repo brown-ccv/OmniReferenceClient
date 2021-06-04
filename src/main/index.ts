@@ -4,7 +4,7 @@ import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
-import Electron, { app, BrowserWindow, ipcMain } from 'electron'
+import Electron, { app, BrowserWindow, ipcMain, shell } from 'electron'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -108,7 +108,7 @@ ipcMain.handle('describe-bridge', async (event, { name }) => {
       const DetailsType = protobuf.root.lookupType(resp.details.type_url.split('/')[1])
       const details = DetailsType.decode(resp.details.value).toJSON()
       console.log(details)
-      
+
       return resolve({ ...resp, details })
     })
   })
@@ -142,4 +142,16 @@ ipcMain.on('connection-status-stream', async (event, { name, enableStream }) => 
     console.error(err)
     call.removeAllListeners('data')
   })
+})
+
+// Function to launch jsPsych tasks
+ipcMain.on('task-launch', (event, { appName }) => {
+  // const home = app.getPath('home');
+  const fullPath = path.join('/Applications', appName)
+  shell.openPath(fullPath)
+})
+
+ipcMain.on('quit', (event, args) => {
+  // quit app
+  app.quit()
 })
