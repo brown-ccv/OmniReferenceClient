@@ -19,8 +19,6 @@ const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordi
   const handleRecording = () => {
     if (isRecording) {
       setRecordingTime(0)
-    } else {
-
     }
     setRecording(!isRecording)
   }

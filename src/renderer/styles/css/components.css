@@ -1,5 +1,5 @@
 #blink {
-    animation: 1s blink ease infinite;
+    animation: 2s blink ease infinite;
 }
 
 @keyframes blink {

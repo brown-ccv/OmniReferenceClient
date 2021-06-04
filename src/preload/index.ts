@@ -49,6 +49,6 @@ contextBridge.exposeInMainWorld('appService', {
   },
 
   closeApp: (): void => {
-    ipcRenderer.send('end')
+    ipcRenderer.send('quit')
   }
 })

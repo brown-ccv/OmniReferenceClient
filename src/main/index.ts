@@ -151,7 +151,7 @@ ipcMain.on('task-launch', (event, { appName }) => {
   shell.openPath(fullPath)
 })
 
-ipcMain.on('end', (event, args) => {
+ipcMain.on('quit', (event, args) => {
   // quit app
   app.quit()
 })
