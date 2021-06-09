@@ -43,6 +43,20 @@ contextBridge.exposeInMainWorld('bridgeManagerService', {
   }
 })
 
+contextBridge.exposeInMainWorld('deviceManagerService', {
+  listDevices: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('list-devices', request)
+  },
+
+  connectToDevice: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('connect-to-device', request)
+  },
+
+  disconnectFromDevice: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('disconnect-from-device', request)
+  }
+})
+
 contextBridge.exposeInMainWorld('appService', {
   taskLaunch: (appName: string): void => {
     ipcRenderer.send('task-launch', { appName })

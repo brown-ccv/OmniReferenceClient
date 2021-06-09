@@ -10,6 +10,8 @@ const Buttons: React.FC = () => {
   const [connectedBridges, setConnectedBridges] = React.useState<string[]>([])
   const [details, setDetails] = React.useState<any>({})
   const [connectionStatus, setConnectionStatus] = React.useState<string>('')
+  const [devices, setDevices] = React.useState<string[]>([])
+  const [deviceConnection, setDeviceConnection] = React.useState<any>({})
 
   const listBridges = async () => {
     setBridges((await mywindow.bridgeManagerService.listBridges({})).bridges.map((i: any) => i.name))
@@ -59,6 +61,21 @@ const Buttons: React.FC = () => {
     )
   }
 
+  const listDevices = async () => {
+    setDevices((await mywindow.deviceManagerService.listDevices({ query: bridgeConnection.name })).devices.map((i: any) => i.name))
+  }
+
+  const connectToDevice = async () => {
+    const connection = await mywindow.deviceManagerService.connectToDevice({ name: devices[0] })
+    setDeviceConnection(connection)
+  }
+
+  const disconnectFromDevice = async () => {
+    await mywindow.deviceManagerService.disconnectFromDevice({ name: devices[0] })
+    setBridgeConnection({})
+    setDeviceConnection({})
+  }
+
   return (
     <div>
       <h1 className='title is-1 has-text-white'>Buttons</h1>
@@ -76,6 +93,12 @@ const Buttons: React.FC = () => {
       </p>
       <p>
         {connectionStatus}
+      </p>
+      <p>
+        {devices.toString()}
+      </p>
+      <p>
+        {`${deviceConnection.name} ${deviceConnection.connectionStatus}`}
       </p>
       <ul>
         <li>
@@ -98,6 +121,15 @@ const Buttons: React.FC = () => {
         </li>
         <li>
           <button onClick={disableStreamHandler}>Unsubscribe from Connection Events</button>
+        </li>
+        <li>
+          <button onClick={listDevices}>List devices</button>
+        </li>
+        <li>
+          <button onClick={connectToDevice}>Connect to device</button>
+        </li>
+        <li>
+          <button onClick={disconnectFromDevice}>Disconnect from device</button>
         </li>
       </ul>
     </div>
