@@ -19,6 +19,7 @@
 
 #header-container {
   padding-top: 2px;
+  padding-right: 2px;
   height: 44px;
   background-color: rgb(58, 58, 58)
 }
@@ -29,17 +30,19 @@
 
 
 #sidebar {
-  height: 95vh;
+  height: calc(100vh - 44px);
   background-color: #353a40;
   padding: 1em 2%;
   flex: 2;
 }
+
 #main-window {
-  height: 95vh;
+  height: calc(100vh - 44px);
   background-color: #41464a;
   flex: 7;
   padding: 2em 5%;
   overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 #record-red-dot{
