@@ -5,6 +5,8 @@ import {
   Route
 } from 'react-router-dom'
 
+import { useOmni } from './util/OmniContext'
+
 import Buttons from './pages/Buttons'
 import Help from './pages/Help'
 import Playground from './pages/Playground'
@@ -20,6 +22,54 @@ const App: React.FC = () => {
   const [provocationOn, setProvocation] = React.useState<boolean>(false)
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
+  const { state, dispatch } = useOmni()
+
+  /**
+   * Initial load. Check to see if any bridges are already connected.
+   */
+  React.useEffect(() => {
+    const getConnectionState = async () => {
+      dispatch({ type: 'connected-bridges-start' })
+      const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+      dispatch({ type: 'connected-bridges-finish', bridges })
+    }
+    getConnectionState()
+  }, [])
+
+  React.useEffect(() => {
+    const getConnectionState = async () => {
+      const { left, right } = state
+
+      /**
+       * If the state of the bridge connection is unknown, list all the available
+       * bridges.
+       */
+      if (left.bridgeState === 'unknown' || right.bridgeState === 'unknown') {
+        dispatch({ type: 'list-bridges-start' })
+        const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+        dispatch({ type: 'list-bridges-finish', bridges })
+      }
+
+      /**
+       * If a bridge is discovered, finalize the connection to that bridge
+       */
+      if (left.bridgeState === 'discovered') {
+        dispatch({ type: 'connect-to-bridge-start', name: left.name })
+        const connection = await (window as any).bridgeManagerService.connectToBridge({ name: left.name, retries: -1 })
+        dispatch({ type: 'connect-to-bridge-finish', connection })
+      }
+
+      if (right.bridgeState === 'discovered') {
+        dispatch({ type: 'connect-to-bridge-start', name: right.name })
+        const connection = await (window as any).bridgeManagerService.connectToBridge({ name: right.name, retries: -1 })
+        dispatch({ type: 'connect-to-bridge-finish', connection })
+      }
+
+      console.log(state)
+    }
+
+    getConnectionState()
+  }, [state])
 
   React.useEffect(() => {
     // Manage recording time
@@ -32,8 +82,7 @@ const App: React.FC = () => {
     }
 
     return () => clearInterval(recordingInterval)
-  }, [isRecording]
-  )
+  }, [isRecording])
 
   return (
     <Router>

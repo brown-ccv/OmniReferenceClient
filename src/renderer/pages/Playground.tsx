@@ -3,7 +3,7 @@ import TaskBox from '../components/TaskBox'
 
 const mywindow: any = window
 
-//import BeadsLogo from '../../../public/logos/beads.svg';
+// import BeadsLogo from '../../../public/logos/beads.svg';
 const BeadsLogo = require('../../../public/logos/beads.svg')
 const MsitLogo = require('../../../public/logos/msit.svg')
 const CbtLogo = require('../../../public/logos/cbt.svg')
