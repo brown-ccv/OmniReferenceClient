@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
   }
 
   return (
-    <div className='container is-fullhd has-background-grey-darker p-1'>
+    <div id='header-container'>
       <nav className='level'>
         {/* Left Side of header */}
         <div className='level-left ml-3'>
@@ -31,13 +31,17 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
             : ''}
         </div>
         {/* Right Side of header */}
-        <div className='level-right'>
+        <div className='level-right mt-1'>
           <p className='level-item has-text-white'>L:</p>
           <ConnectionStatusHeader status='connected' />
           <p className='level-item has-text-white'>R:</p>
           <ConnectionStatusHeader status='connecting' />
           <div className='level-item'>
-            <button className='button is-danger' onClick={quitHandler}><FontAwesomeIcon className='icon is-small mr-2' icon={faTimesCircle} /> Quit</button>
+            <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>
+              <p className='content has-text-white'>
+              <FontAwesomeIcon className='icon is-small mr-1' icon={faTimesCircle} /> Quit
+              </p>
+            </a>
           </div>
         </div>
       </nav>

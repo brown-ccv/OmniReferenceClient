@@ -38,17 +38,17 @@ const App: React.FC = () => {
   return (
     <Router>
       {/* Container for entire window */}
-      <div className='container is-fullhd'>
+      <div id='app-container'>
         <Header isRecording={isRecording} />
         {/* Container for body other than header */}
-        <div className='container is-fullhd is-flex'>
+        <div id='main-container'>
           {/* Sidebar */}
-          <div className='block py-5 px-3' id='sidebar'>
+          <div id='sidebar'>
             <Logo />
             <Navigation />
           </div>
           {/* Main area */}
-          <div className='block p-6' id='main-window'>
+          <div id='main-window'>
             <Switch>
               <Route path='/playground'>
                 <Playground provocationOn={provocationOn} />
