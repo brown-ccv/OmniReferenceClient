@@ -68,12 +68,29 @@ const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.jo
 const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
 
 // TODO: Configure to make enums strings
-const packageDefinition = protoLoader.loadSync(PROTO_FILES, { includeDirs: [PROTO_DIR] })
+const packageDefinition = protoLoader.loadSync(PROTO_FILES, {
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+  includeDirs: [PROTO_DIR]
+})
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition).openmind
 const protobuf = protobufjs.loadSync(PROTO_FILES)
 
 // TODO: Make the URL for the backend configurable
 const bridgeClient = new (protoDescriptor as any).BridgeManagerService('localhost:50051', grpc.credentials.createInsecure())
+const deviceClient = new (protoDescriptor as any).DeviceManagerService('localhost:50051', grpc.credentials.createInsecure())
+
+const parseAny = (message: any) => {
+  if (message.type_url === undefined || message.value === undefined) { throw new Error('No type found') }
+
+  const [_, typeUrl] = message.type_url.split('/')
+  const protobufType = protobuf.lookupType(typeUrl)
+
+  // TODO: Make this recursively parse enums (do I even need that?)
+  return protobufType.decode(message.value)
+}
 
 ipcMain.handle('list-bridges', async (event, query: string) => {
   return await new Promise((resolve, reject) => {
@@ -109,7 +126,6 @@ ipcMain.handle('describe-bridge', async (event, { name }) => {
 
       const DetailsType = protobuf.root.lookupType(resp.details.type_url.split('/')[1])
       const details = DetailsType.decode(resp.details.value).toJSON()
-      console.log(details)
 
       return resolve({ ...resp, details })
     })
@@ -129,7 +145,6 @@ ipcMain.on('connection-status-stream', async (event, { name, enableStream }) => 
   const call = bridgeClient.connectionStatusStream({ name, enableStream })
 
   call.on('data', (resp: any) => {
-    console.dir(resp)
     event.reply('connection-update', resp)
   })
 
@@ -143,6 +158,35 @@ ipcMain.on('connection-status-stream', async (event, { name, enableStream }) => 
     // TODO (BNR): How do we handle errors at this level?
     console.error(err)
     call.removeAllListeners('data')
+  })
+})
+
+ipcMain.handle('list-devices', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.ListDevices(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
+    })
+  })
+})
+
+ipcMain.handle('connect-to-device', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.ConnectDevice(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const details = parseAny(resp.details)
+      return resolve({ ...resp, details })
+    })
+  })
+})
+
+ipcMain.handle('disconnect-from-device', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.DisconnectDevice(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
+    })
   })
 })
 
