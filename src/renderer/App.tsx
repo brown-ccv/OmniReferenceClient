@@ -19,10 +19,16 @@ import Header from './components/Header'
 import Navigation from './components/Navigation'
 
 const App: React.FC = () => {
-  const [provocationOn, setProvocation] = React.useState<boolean>(false)
+  const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
+
+
+  function timeout(delay: number) {
+    return new Promise( res => setTimeout(res, delay) );
+}
+
 
   /**
    * Initial load. Check to see if any bridges are already connected.
@@ -33,35 +39,41 @@ const App: React.FC = () => {
       const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
       dispatch({ type: 'connected-bridges-finish', bridges })
     }
+    
     getConnectionState()
   }, [])
 
   React.useEffect(() => {
     const getConnectionState = async () => {
+      
       const { left, right } = state
-
+      await timeout(2000); //for 1 sec delay
       /**
        * If the state of the bridge connection is unknown, list all the available
        * bridges.
        */
       if (left.bridgeState === 'unknown' || right.bridgeState === 'unknown') {
         dispatch({ type: 'list-bridges-start' })
+        await timeout(2000); //for 1 sec delay
         const { bridges } = await (window as any).bridgeManagerService.listBridges({})
         dispatch({ type: 'list-bridges-finish', bridges })
       }
-
+      await timeout(2000); //for 1 sec delay
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
       if (left.bridgeState === 'discovered') {
         dispatch({ type: 'connect-to-bridge-start', name: left.name })
+        await timeout(2000); //for 1 sec delay
         const connection = await (window as any).bridgeManagerService.connectToBridge({ name: left.name, retries: -1 })
         dispatch({ type: 'connect-to-bridge-finish', connection })
       }
-
+      await timeout(2000); //for 1 sec delay
       if (right.bridgeState === 'discovered') {
         dispatch({ type: 'connect-to-bridge-start', name: right.name })
+        await timeout(2000); //for 1 sec delay
         const connection = await (window as any).bridgeManagerService.connectToBridge({ name: right.name, retries: -1 })
+        await timeout(2000); //for 1 sec delay
         dispatch({ type: 'connect-to-bridge-finish', connection })
       }
 
@@ -76,8 +88,7 @@ const App: React.FC = () => {
     let recordingInterval: any
     if (isRecording) {
       recordingInterval = setInterval(
-        () => setRecordingTime(prevRecording => prevRecording + 1),
-        1000
+        () => setRecordingTime(prevRecording => prevRecording + 1), 1000
       )
     }
 
@@ -88,7 +99,7 @@ const App: React.FC = () => {
     <Router>
       {/* Container for entire window */}
       <div id='app-container'>
-        <Header isRecording={isRecording} />
+        <Header isRecording={isRecording} leftStatus={state.left.bridgeState} rightStatus={state.right.bridgeState}/>
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
@@ -100,10 +111,10 @@ const App: React.FC = () => {
           <div id='main-window'>
             <Switch>
               <Route path='/playground'>
-                <Playground provocationOn={provocationOn} />
+                <Playground showProvocationTask={showProvocationTask} />
               </Route>
               <Route path='/settings'>
-                <Settings provocationOn={provocationOn} setProvocation={setProvocation} />
+                <Settings showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask} />
               </Route>
               <Route path='/help'>
                 <Help />
@@ -115,7 +126,7 @@ const App: React.FC = () => {
                 <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />
               </Route>
               <Route path='/'>
-                <Home />
+                <Home leftStatus={state.left.bridgeState} rightStatus={state.right.bridgeState}/>
               </Route>
             </Switch>
           </div>

@@ -1,28 +1,30 @@
 import React from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLaptopMedical, faCheck, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import ConnectionProgressCheckHome from './ConnectionProgressCheckHome'
+
+let dict = new Map()
+dict.set("unknown",0)
+dict.set("scanning",1)
+dict.set("discovered",2)
+dict.set("connecting",3)
+dict.set("connected",4)
+dict.set("error", 5)
 
 interface ConnectionProp {
+  name: string,
   status: string
 }
 
-const ConnectionStatusHome: React.FC<ConnectionProp> = ({ status }) => {
+
+const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status }) => {
+
   return (
-    <>
-      {status === 'connected'
-        ? <div className='box has-background-grey-darker is-flex is-justify-content-space-between has-text-success'>
-          <FontAwesomeIcon className='icon' icon={faLaptopMedical} />
-          <p>Successfully Connected</p>
-          <FontAwesomeIcon className='icon' icon={faCheck} />
-        </div>
-        : status === 'connecting'
-          ? <div className='box has-background-grey-darker is-flex is-justify-content-space-between has-text-warning'>
-            <FontAwesomeIcon className='icon' icon={faLaptopMedical} />
-            <p>Attempting to Connect</p>
-            <FontAwesomeIcon className='icon' icon={faSpinner} spin />
-          </div>
-          : ''}
-    </>
+    <div className='box has-background-grey-darker has-text-grey-light'>
+      <p className='subtitle has-text-white is-5'>{name} Status: {status}</p>
+      <ConnectionProgressCheckHome text = 'Scanning for bridge' progress_index = {dict.get(status)} this_index = {0}/>
+      <ConnectionProgressCheckHome text = 'Connecting to bridge' progress_index = {dict.get(status)} this_index = {1}/>
+      <ConnectionProgressCheckHome text = 'Scanning for device' progress_index = {dict.get(status)} this_index = {2}/>
+      <ConnectionProgressCheckHome text = 'Connecting to device' progress_index = {dict.get(status)} this_index = {3}/>
+    </div>
 
   )
 }

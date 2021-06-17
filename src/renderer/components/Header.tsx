@@ -8,13 +8,18 @@ import ConnectionStatusHeader from './ConnectionStatusHeader'
 const mywindow: any = window
 
 interface HeaderProp {
-  isRecording: boolean
+  isRecording: boolean,
+  leftStatus: string,
+  rightStatus: string
 }
 
-const Header: React.FC<HeaderProp> = ({ isRecording }) => {
+const Header: React.FC<HeaderProp> = ({ isRecording, leftStatus, rightStatus }) => {
   const quitHandler = () => {
     mywindow.appService.closeApp()
   }
+
+  
+
 
   return (
     <div id='header-container'>
@@ -33,9 +38,9 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
         {/* Right Side of header */}
         <div className='level-right mt-1'>
           <p className='level-item has-text-white'>L:</p>
-          <ConnectionStatusHeader status='connected' />
+          <ConnectionStatusHeader status={leftStatus} />
           <p className='level-item has-text-white'>R:</p>
-          <ConnectionStatusHeader status='connecting' />
+          <ConnectionStatusHeader status={rightStatus} />
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>
               <p className='content has-text-white'>

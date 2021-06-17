@@ -11,10 +11,10 @@ const RestingLogo = require('../../../public/logos/resting.svg')
 const ProvocationLogo = require('../../../public/logos/provocation.svg')
 
 interface ProvocationProp {
-  provocationOn: boolean
+  showProvocationTask: boolean
 }
 
-const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
+const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
   const launchTask = (appName: string) => {
     mywindow.appService.taskLaunch(appName)
   }
@@ -28,7 +28,7 @@ const Playground: React.FC<ProvocationProp> = ({ provocationOn }) => {
           {/* Boxes for tasks */}
           <TaskBox name='Beads' logo={BeadsLogo} onClick={() => launchTask('task-msit.app')} />
           <TaskBox name='CBT' logo={CbtLogo} onClick={() => launchTask('task-msit.app')} />
-          {provocationOn
+          {showProvocationTask
             ? <TaskBox name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('task-msit.app')} />
             : ''}
 

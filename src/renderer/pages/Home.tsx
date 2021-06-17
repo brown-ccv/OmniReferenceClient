@@ -1,7 +1,12 @@
 import React from 'react'
 import ConnectionStatusHome from '../components/ConnectionStatusHome'
 
-const Home: React.FC = () => {
+interface HomeProp {
+  leftStatus: string,
+  rightStatus: string
+}
+
+const Home: React.FC<HomeProp> = ({leftStatus, rightStatus}) => {
   return (
     <>
       <h1 className='title is-1 has-text-white mb-6 pb-4'>Hello!</h1>
@@ -10,22 +15,11 @@ const Home: React.FC = () => {
         {/* Left machine */}
         <div className='block'>
           <div className='columns'>
-            <div className='column is-one-quarter'>
-              <p className='subtitle is-3 has-text-white mt-3'>Left:</p>
+            <div className='column is-half' id='home-column'>
+              <ConnectionStatusHome name='Left' status={leftStatus}/>
             </div>
-            <div className='column is-three-quarters'>
-              <ConnectionStatusHome status='connected' />
-            </div>
-          </div>
-        </div>
-        {/* Right machine */}
-        <div className='block'>
-          <div className='columns'>
-            <div className='column is-one-quarter'>
-              <p className='subtitle is-3 has-text-white mt-3'>Right:</p>
-            </div>
-            <div className='column is-three-quarters'>
-              <ConnectionStatusHome status='connecting' />
+            <div className='column is-half' id='home-column'>
+              <ConnectionStatusHome name='Right' status={rightStatus}/>
             </div>
           </div>
         </div>
