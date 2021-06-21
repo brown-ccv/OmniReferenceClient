@@ -27,6 +27,7 @@ type Action =
   | { type: 'connect-to-bridge-start', name: string}
   | { type: 'connect-to-bridge-finish', connection: {name: string, connectionStatus: string, details: any}}
   | { type: 'disconnect-from-bridge', name: string }
+  | { type: 'error-bridge', message: string, name?: string }
 type Dispatch = (action: Action) => void
 type ConnectionState = 'unknown' | 'scanning' | 'discovered' | 'connecting' | 'connected' | 'disconnected' | 'error'
 interface DeviceState {
@@ -193,6 +194,28 @@ const omniReducer = (state: State, action: Action) => {
 
       if (name === right.name) {
         right.bridgeState = 'disconnected'
+      }
+
+      return { left, right }
+    }
+    case 'error-bridge': {
+      const { left, right } = state
+      const { name, message } = action
+
+      if (left.name === name) {
+        left.bridgeState = 'error'
+        left.error = message
+      } else if (right.name === name) {
+        right.bridgeState = 'error'
+        right.error = message
+      } else {
+        /**
+         * NOTE (BNR): In the case where we get an error and no bridge it's
+         *             likely an error with the SummitManager and that error
+         *             applies to any/all bridges.
+         */
+        left.bridgeState = right.bridgeState = 'error'
+        left.error = right.error = message
       }
 
       return { left, right }

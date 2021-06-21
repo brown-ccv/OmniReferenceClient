@@ -29,9 +29,13 @@ const App: React.FC = () => {
    */
   React.useEffect(() => {
     const getConnectionState = async () => {
-      dispatch({ type: 'connected-bridges-start' })
-      const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-      dispatch({ type: 'connected-bridges-finish', bridges })
+      try {
+        dispatch({ type: 'connected-bridges-start' })
+        const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+        dispatch({ type: 'connected-bridges-finish', bridges })
+      } catch (e) {
+        dispatch({ type: 'error-bridge', message: e.message })
+      }
     }
     getConnectionState()
   }, [])
@@ -45,24 +49,36 @@ const App: React.FC = () => {
        * bridges.
        */
       if (left.bridgeState === 'unknown' || right.bridgeState === 'unknown') {
-        dispatch({ type: 'list-bridges-start' })
-        const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-        dispatch({ type: 'list-bridges-finish', bridges })
+        try {
+          dispatch({ type: 'list-bridges-start' })
+          const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+          dispatch({ type: 'list-bridges-finish', bridges })
+        } catch (e) {
+          dispatch({ type: 'error-bridge', message: e.message })
+        }
       }
 
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
       if (left.bridgeState === 'discovered') {
-        dispatch({ type: 'connect-to-bridge-start', name: left.name })
-        const connection = await (window as any).bridgeManagerService.connectToBridge({ name: left.name, retries: -1 })
-        dispatch({ type: 'connect-to-bridge-finish', connection })
+        try {
+          dispatch({ type: 'connect-to-bridge-start', name: left.name })
+          const connection = await (window as any).bridgeManagerService.connectToBridge({ name: left.name, retries: -1 })
+          dispatch({ type: 'connect-to-bridge-finish', connection })
+        } catch (e) {
+          dispatch({ type: 'error-bridge', message: e.message })
+        }
       }
 
       if (right.bridgeState === 'discovered') {
-        dispatch({ type: 'connect-to-bridge-start', name: right.name })
-        const connection = await (window as any).bridgeManagerService.connectToBridge({ name: right.name, retries: -1 })
-        dispatch({ type: 'connect-to-bridge-finish', connection })
+        try {
+          dispatch({ type: 'connect-to-bridge-start', name: right.name })
+          const connection = await (window as any).bridgeManagerService.connectToBridge({ name: right.name, retries: -1 })
+          dispatch({ type: 'connect-to-bridge-finish', connection })
+        } catch (e) {
+          dispatch({ type: 'error-bridge', message: e.message })
+        }
       }
 
       console.log(state)
