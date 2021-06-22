@@ -24,17 +24,21 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
 
-  /**
-   * Initial load. Check to see if any bridges are already connected.
-   */
   React.useEffect(() => {
     const getConnectionState = async () => {
-      try {
-        dispatch({ type: 'connected-bridges-start' })
-        const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-        dispatch({ type: 'connected-bridges-finish', bridges })
-      } catch (e) {
-        dispatch({ type: 'error-bridge', message: e.message })
+      const { left, right } = state
+
+      /**
+       * Initial load. Check to see if any bridges are already connected.
+       */
+      if (left.connectionState === 'unknown' || right.connectionState === 'unknown') {
+        try {
+          dispatch({ type: 'connected-bridges' })
+          const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+          dispatch({ type: 'connected-bridges-success', bridges })
+        } catch (e) {
+          dispatch({ type: 'connected-bridges-failure', message: e.message })
+        }
       }
     }
     getConnectionState()
@@ -45,45 +49,37 @@ const App: React.FC = () => {
       const { left, right } = state
 
       /**
-       * If the state of the bridge connection is unknown, list all the available
+       * If the state of the bridge connection is still unknown, list all the available
        * bridges.
        */
-      if (left.bridgeState === 'unknown' || right.bridgeState === 'unknown') {
+      if (left.connectionState === 'unknown' || right.connectionState === 'unknown') {
         try {
-          dispatch({ type: 'list-bridges-start' })
+          dispatch({ type: 'list-bridges' })
           const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-          dispatch({ type: 'list-bridges-finish', bridges })
+          dispatch({ type: 'list-bridges-success', bridges })
         } catch (e) {
-          dispatch({ type: 'error-bridge', message: e.message })
+          dispatch({ type: 'list-bridges-failure', message: e.message })
         }
       }
 
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
-      if (left.bridgeState === 'discovered') {
-        try {
-          dispatch({ type: 'connect-to-bridge-start', name: left.name })
-          const connection = await (window as any).bridgeManagerService.connectToBridge({ name: left.name, retries: -1 })
-          dispatch({ type: 'connect-to-bridge-finish', connection })
-        } catch (e) {
-          dispatch({ type: 'error-bridge', message: e.message })
-        }
-      }
+      ;[left, right].forEach(async ({ connectionState, name })=> {
+        if (connectionState !== 'discovered-bridge')
+          return
 
-      if (right.bridgeState === 'discovered') {
         try {
-          dispatch({ type: 'connect-to-bridge-start', name: right.name })
-          const connection = await (window as any).bridgeManagerService.connectToBridge({ name: right.name, retries: -1 })
-          dispatch({ type: 'connect-to-bridge-finish', connection })
+          dispatch({ type: 'connect-to-bridge', name })
+          const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: -1 })
+          dispatch({ type: 'connect-to-bridge-success', connection })
         } catch (e) {
-          dispatch({ type: 'error-bridge', message: e.message })
+          dispatch({ type: 'connect-to-bridge-failure', message: e.message, name })
         }
-      }
+      })
 
       console.log(state)
     }
-
     getConnectionState()
   }, [state])
 
