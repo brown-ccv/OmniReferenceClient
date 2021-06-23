@@ -65,9 +65,8 @@ const App: React.FC = () => {
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
-      ;[left, right].forEach(async ({ connectionState, name })=> {
-        if (connectionState !== ConnectionState.DiscoveredBridge)
-          return
+      ;[left, right].forEach(async ({ connectionState, name }) => {
+        if (connectionState !== ConnectionState.DiscoveredBridge) { return }
 
         try {
           dispatch({ type: ActionType.ConnectToBridge, name })
