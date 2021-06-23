@@ -1,12 +1,12 @@
 import React from 'react'
 import ConnectionStatusHome from '../components/ConnectionStatusHome'
 
-interface HomeProp {
+interface StatusProp {
   leftStatus: string,
   rightStatus: string
 }
 
-const Home: React.FC<HomeProp> = ({leftStatus, rightStatus}) => {
+const Status: React.FC<StatusProp> = ({leftStatus, rightStatus}) => {
   return (
     <>
       <h1 className='title is-1 has-text-white mb-6 pb-4'>Hello!</h1>
@@ -34,4 +34,4 @@ const Home: React.FC<HomeProp> = ({leftStatus, rightStatus}) => {
   )
 }
 
-export default Home
+export default Status

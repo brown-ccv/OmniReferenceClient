@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProp> = ({ isRecording, leftStatus, rightStatus }) 
           <Clock />
           {isRecording
             ? <Link to='/recording' className='level-item'>
-              <p className='content has-text-danger pb-2' id='blink'><FontAwesomeIcon className='icon pt-2 mx-2' icon={faCircle} />
+              <p className='content has-text-danger pb-1' id='blink'><FontAwesomeIcon className='icon pt-2 mx-2' icon={faCircle} />
                 Recording
               </p>
               </Link>

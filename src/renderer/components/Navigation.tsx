@@ -8,6 +8,9 @@ const Navigation: React.FC = () => {
     <aside className='menu is-large is-flex is-justify-content-center'>
       <ul>
         <li className='menu-list'>
+          <Link to='/'>Status <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
+        </li>
+        <li className='menu-list'>
           <Link to='/recording'>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>

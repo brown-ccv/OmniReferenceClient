@@ -8,7 +8,7 @@ interface TaskBoxProp{
 
 const TaskBox: React.FC<TaskBoxProp> = ({ name, logo, onClick }) => {
   return (
-    <a className='box has-background-grey m-5 mb-6' onClick={() => onClick()}>
+    <a className='box has-background-grey' id='task-box' onClick={() => onClick()}>
       <figure className='image is 128x128 is-flex is-justify-content-center'>
         <img src={logo} />
       </figure>

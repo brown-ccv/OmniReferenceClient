@@ -12,7 +12,7 @@ import Help from './pages/Help'
 import Playground from './pages/Playground'
 import Settings from './pages/Settings'
 import Recording from './pages/Recording'
-import Home from './pages/Home'
+import Status from './pages/Status'
 
 import Logo from './components/Logo'
 import Header from './components/Header'
@@ -126,7 +126,7 @@ const App: React.FC = () => {
                 <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />
               </Route>
               <Route path='/'>
-                <Home leftStatus={state.left.bridgeState} rightStatus={state.right.bridgeState}/>
+                <Status leftStatus={state.left.bridgeState} rightStatus={state.right.bridgeState}/>
               </Route>
             </Switch>
           </div>

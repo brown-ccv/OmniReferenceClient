@@ -20,10 +20,10 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status }) => {
   return (
     <div className='box has-background-grey-darker has-text-grey-light'>
       <p className='subtitle has-text-white is-5'>{name} Status: {status}</p>
-      <ConnectionProgressCheckHome text = 'Scanning for bridge' progress_index = {dict.get(status)} this_index = {0}/>
-      <ConnectionProgressCheckHome text = 'Connecting to bridge' progress_index = {dict.get(status)} this_index = {1}/>
-      <ConnectionProgressCheckHome text = 'Scanning for device' progress_index = {dict.get(status)} this_index = {2}/>
-      <ConnectionProgressCheckHome text = 'Connecting to device' progress_index = {dict.get(status)} this_index = {3}/>
+      <ConnectionProgressCheckHome text = 'Scanning for CTM' progress_index = {dict.get(status)} this_index = {0}/>
+      <ConnectionProgressCheckHome text = 'Connecting to CTM' progress_index = {dict.get(status)} this_index = {1}/>
+      <ConnectionProgressCheckHome text = 'Scanning for INS' progress_index = {dict.get(status)} this_index = {2}/>
+      <ConnectionProgressCheckHome text = 'Connecting to INS' progress_index = {dict.get(status)} this_index = {3}/>
     </div>
 
   )
