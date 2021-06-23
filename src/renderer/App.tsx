@@ -5,7 +5,7 @@ import {
   Route
 } from 'react-router-dom'
 
-import { useOmni } from './util/OmniContext'
+import { useOmni, ConnectionState, ActionType } from './util/OmniContext'
 
 import Buttons from './pages/Buttons'
 import Help from './pages/Help'
@@ -31,13 +31,13 @@ const App: React.FC = () => {
       /**
        * Initial load. Check to see if any bridges are already connected.
        */
-      if (left.connectionState === 'unknown' || right.connectionState === 'unknown') {
+      if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
-          dispatch({ type: 'connected-bridges' })
+          dispatch({ type: ActionType.ConnectedBridges })
           const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-          dispatch({ type: 'connected-bridges-success', bridges })
+          dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
         } catch (e) {
-          dispatch({ type: 'connected-bridges-failure', message: e.message })
+          dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
         }
       }
     }
@@ -52,13 +52,13 @@ const App: React.FC = () => {
        * If the state of the bridge connection is still unknown, list all the available
        * bridges.
        */
-      if (left.connectionState === 'unknown' || right.connectionState === 'unknown') {
+      if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
-          dispatch({ type: 'list-bridges' })
+          dispatch({ type: ActionType.ListBridges })
           const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-          dispatch({ type: 'list-bridges-success', bridges })
+          dispatch({ type: ActionType.ListBridgesSuccess, bridges })
         } catch (e) {
-          dispatch({ type: 'list-bridges-failure', message: e.message })
+          dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
         }
       }
 
@@ -66,15 +66,15 @@ const App: React.FC = () => {
        * If a bridge is discovered, finalize the connection to that bridge
        */
       ;[left, right].forEach(async ({ connectionState, name })=> {
-        if (connectionState !== 'discovered-bridge')
+        if (connectionState !== ConnectionState.DiscoveredBridge)
           return
 
         try {
-          dispatch({ type: 'connect-to-bridge', name })
+          dispatch({ type: ActionType.ConnectToBridge, name })
           const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: -1 })
-          dispatch({ type: 'connect-to-bridge-success', connection })
+          dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
         } catch (e) {
-          dispatch({ type: 'connect-to-bridge-failure', message: e.message, name })
+          dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
         }
       })
 
