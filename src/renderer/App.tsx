@@ -24,26 +24,16 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
 
-
-  function timeout(delay: number) {
-    return new Promise( res => setTimeout(res, delay) );
-}
-
-
   /**
-   * Initial load. Check to see if any bridges are already connected.
+   * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
    */
   React.useEffect(() => {
-    const getConnectionState = async () => {
+    const getInitialConnectionState = async () => {
       const { left, right } = state
 
-      /**
-       * Initial load. Check to see if any bridges are already connected.
-       */
       if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ConnectedBridges })
-          await timeout(2000); //for 1 sec delay
           const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
           dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
         } catch (e) {
@@ -51,15 +41,16 @@ const App: React.FC = () => {
         }
       }
     }
-    
-    getConnectionState()
+    getInitialConnectionState()
   }, [])
 
+  /**
+   * NOTE (BNR): This hook runs whenever the state is updated.
+   */
   React.useEffect(() => {
-    const getConnectionState = async () => {
-      
+    const updateConnectionState = async () => {
       const { left, right } = state
-      await timeout(2000); //for 1 sec delay
+
       /**
        * If the state of the bridge connection is still unknown, list all the available
        * bridges.
@@ -73,7 +64,6 @@ const App: React.FC = () => {
           dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
         }
       }
-      await timeout(2000); //for 1 sec delay
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
@@ -91,7 +81,7 @@ const App: React.FC = () => {
 
       console.log(state)
     }
-    getConnectionState()
+    updateConnectionState()
   }, [state])
 
   React.useEffect(() => {

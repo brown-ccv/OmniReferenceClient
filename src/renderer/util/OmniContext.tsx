@@ -55,15 +55,15 @@ type Action =
   | { type: ActionType.DisconnectFromBridge, name: string }
 type Dispatch = (action: Action) => void
 
-interface DeviceState {
+interface BridgeDevicePairState {
   name: string
   connectionState: ConnectionState
   previousState: ConnectionState
   error?: string
 }
 interface State {
-  left: DeviceState
-  right: DeviceState
+  left: BridgeDevicePairState
+  right: BridgeDevicePairState
 }
 
 const splitName = (name: string) => {
@@ -90,10 +90,10 @@ const initialState: State = {
 }
 
 const omniReducer = (state: State, action: Action) => {
+  const { left, right } = state
+
   switch (action.type) {
     case ActionType.ConnectedBridges: {
-      const { left, right } = state
-
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.Unknown) { return }
 
@@ -104,55 +104,31 @@ const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ConnectedBridgesSuccess: {
-      const { left, right } = state
       const { bridges } = action
 
       if (bridges.length === 0) {
         left.previousState = left.connectionState
-        right.previousState = right.previousState
+        right.previousState = right.connectionState
         left.connectionState = right.connectionState = ConnectionState.Unknown
         return { left, right }
       }
 
-      if (bridges.find(item => item.name === left.name) != null) {
-        left.previousState = left.connectionState
-        left.connectionState = ConnectionState.ConnectedBridge
-      }
-
-      if (bridges.find(item => item.name === right.name) != null) {
-        right.previousState = right.connectionState
-        right.connectionState = ConnectionState.ConnectedBridge
-      }
-
       ;[left, right].forEach(item => {
+        if (bridges.find(({ name })=> name === item.name) != null) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.ConnectedBridge
+          return
+        }
+
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
         [item.connectionState, item.previousState] = [item.previousState, item.connectionState]
       })
 
       return { left, right }
     }
-    case ActionType.ConnectedBridgesFailure: {
-      const { left, right } = state
-      const { message } = action
-
-      /**
-       * NOTE (BNR): Errors for both ListBridges and ConnectedBridges indicate
-       *             a system wide error. Because of this we set both the left
-       *             and right side to ErrorBridge.
-       */
-      ;[left, right].forEach(item => {
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorBridge
-        item.error = message
-      })
-
-      return { left, right }
-    }
     case ActionType.ListBridges: {
-      const { left, right } = state
-
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown) { return }
+        if (![ConnectionState.Unknown, ConnectionState.NotFoundBridge].includes(item.connectionState)) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -161,27 +137,24 @@ const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ListBridgesSuccess: {
-      const { left, right } = state
       const { bridges } = action
 
-      if (bridges.find(item => left.name.startsWith(item.name)) !== null && left.connectionState === ConnectionState.ScanningBridge) {
-        left.connectionState = ConnectionState.DiscoveredBridge
-      }
-
-      if (bridges.find(item => right.name.startsWith(item.name)) !== null && right.connectionState === ConnectionState.ScanningBridge) {
-        right.connectionState = ConnectionState.DiscoveredBridge
-      }
-
       ;[left, right].forEach(item => {
+        if (bridges.find(({ name })=> item.name.startsWith(name)) !== null && item.connectionState === ConnectionState.ScanningBridge) {
+          item.connectionState = ConnectionState.DiscoveredBridge
+          return
+        }
+
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
+
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.NotFoundBridge
       })
 
       return { left, right }
     }
+    case ActionType.ConnectedBridgesFailure:
     case ActionType.ListBridgesFailure: {
-      const { left, right } = state
       const { message } = action
 
       /**
@@ -198,7 +171,6 @@ const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ConnectToBridge: {
-      const { left, right } = state
       const { name } = action
 
       /**
@@ -218,7 +190,6 @@ const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ConnectToBridgeSuccess: {
-      const { left, right } = state
       const { name, connectionStatus, details } = action?.connection
 
       ;[left, right].forEach(item => {
@@ -261,7 +232,6 @@ const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ConnectToBridgeFailure: {
-      const { left, right } = state
       const { message, name } = action
 
       ;[left, right].forEach(item => {
@@ -275,7 +245,6 @@ const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.DisconnectFromBridge: {
-      const { left, right } = state
       const { name } = action
 
       ;[left, right].forEach(item => {
