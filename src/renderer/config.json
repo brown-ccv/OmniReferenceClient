@@ -1,0 +1,8 @@
+{
+  "left": {
+    "name": "//summit/bridge/foobar/device/abc"
+  },
+  "right": {
+    "name": "//summit/bridge/barbaz/device/xyz"
+  }
+}
