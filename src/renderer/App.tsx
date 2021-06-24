@@ -5,7 +5,7 @@ import {
   Route
 } from 'react-router-dom'
 
-import { useOmni } from './util/OmniContext'
+import { useOmni, ConnectionState, ActionType } from './util/OmniContext'
 
 import Buttons from './pages/Buttons'
 import Help from './pages/Help'
@@ -35,9 +35,21 @@ const App: React.FC = () => {
    */
   React.useEffect(() => {
     const getConnectionState = async () => {
-      dispatch({ type: 'connected-bridges-start' })
-      const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-      dispatch({ type: 'connected-bridges-finish', bridges })
+      const { left, right } = state
+
+      /**
+       * Initial load. Check to see if any bridges are already connected.
+       */
+      if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
+        try {
+          dispatch({ type: ActionType.ConnectedBridges })
+          await timeout(2000); //for 1 sec delay
+          const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+          dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
+        } catch (e) {
+          dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
+        }
+      }
     }
     
     getConnectionState()
@@ -49,37 +61,36 @@ const App: React.FC = () => {
       const { left, right } = state
       await timeout(2000); //for 1 sec delay
       /**
-       * If the state of the bridge connection is unknown, list all the available
+       * If the state of the bridge connection is still unknown, list all the available
        * bridges.
        */
-      if (left.bridgeState === 'unknown' || right.bridgeState === 'unknown') {
-        dispatch({ type: 'list-bridges-start' })
-        await timeout(2000); //for 1 sec delay
-        const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-        dispatch({ type: 'list-bridges-finish', bridges })
+      if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
+        try {
+          dispatch({ type: ActionType.ListBridges })
+          const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+          dispatch({ type: ActionType.ListBridgesSuccess, bridges })
+        } catch (e) {
+          dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
+        }
       }
       await timeout(2000); //for 1 sec delay
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
-      if (left.bridgeState === 'discovered') {
-        dispatch({ type: 'connect-to-bridge-start', name: left.name })
-        await timeout(2000); //for 1 sec delay
-        const connection = await (window as any).bridgeManagerService.connectToBridge({ name: left.name, retries: -1 })
-        dispatch({ type: 'connect-to-bridge-finish', connection })
-      }
-      await timeout(2000); //for 1 sec delay
-      if (right.bridgeState === 'discovered') {
-        dispatch({ type: 'connect-to-bridge-start', name: right.name })
-        await timeout(2000); //for 1 sec delay
-        const connection = await (window as any).bridgeManagerService.connectToBridge({ name: right.name, retries: -1 })
-        await timeout(2000); //for 1 sec delay
-        dispatch({ type: 'connect-to-bridge-finish', connection })
-      }
+      ;[left, right].forEach(async ({ connectionState, name }) => {
+        if (connectionState !== ConnectionState.DiscoveredBridge) { return }
+
+        try {
+          dispatch({ type: ActionType.ConnectToBridge, name })
+          const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: -1 })
+          dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
+        } catch (e) {
+          dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
+        }
+      })
 
       console.log(state)
     }
-
     getConnectionState()
   }, [state])
 
@@ -99,7 +110,7 @@ const App: React.FC = () => {
     <Router>
       {/* Container for entire window */}
       <div id='app-container'>
-        <Header isRecording={isRecording} leftStatus={state.left.bridgeState} rightStatus={state.right.bridgeState}/>
+        <Header isRecording={isRecording} leftStatus={state.left.connectionState} rightStatus={state.right.connectionState}/>
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
@@ -126,7 +137,7 @@ const App: React.FC = () => {
                 <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />
               </Route>
               <Route path='/'>
-                <Status leftStatus={state.left.bridgeState} rightStatus={state.right.bridgeState}/>
+                <Status leftStatus={state.left.connectionState} leftPrevStatus={state.left.previousState} rightStatus={state.right.connectionState} rightPrevStatus={state.right.previousState}/>
               </Route>
             </Switch>
           </div>
