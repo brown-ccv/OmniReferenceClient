@@ -8,67 +8,66 @@ interface ConnectionProp {
 
 const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
   const statusComponent = () => {
-    switch(status) {
-      case 'unknown': return(
+    switch (status) {
+      case 'unknown': return (
         <a className='box has-background-danger has-text-white is-flex py-1'>
-            <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-              Unknown<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
-            </p>
-            </a>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Unknown<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
+          </p>
+        </a>
       )
-      case 'scanning-bridge': return(
+      case 'scanning-bridge': return (
         <a className='box has-background-warning is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Scanning<FontAwesomeIcon className='icon is-small ml-2' icon={faSpinner} spin />
           </p>
         </a>
       )
-      case 'discovered-bridge': return(
+      case 'discovered-bridge': return (
         <a className='box has-background-warning is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Discovered<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
           </p>
         </a>
       )
-      case 'connecting-bridge': return(
+      case 'connecting-bridge': return (
         <a className='box has-background-warning is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Connecting<FontAwesomeIcon className='icon is-small ml-2' icon={faSpinner} spin />
           </p>
         </a>
       )
-      case 'connected-bridge': return(
+      case 'connected-bridge': return (
         <a className='box has-background-success is-flex py-1'>
-            <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-              Connected<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
-            </p>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Connected<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
+          </p>
         </a>
       )
-      case 'disconnected': return(
+      case 'disconnected': return (
         <a className='box has-background-grey has-text-white is-flex py-1'>
-            <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-              Disconnected<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
-            </p>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Disconnected<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
+          </p>
         </a>
       )
-      case 'not-found-bridge': return(
+      case 'not-found-bridge': return (
         <a className='box has-background-grey has-text-white is-flex py-1'>
-            <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-              Not Found<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
-            </p>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Not Found<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
+          </p>
         </a>
       )
-      default: return(
+      default: return (
         <a className='box has-background-danger has-text-white is-flex py-1'>
-            <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-              Error<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
-            </p>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Error<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
+          </p>
         </a>
       )
-      
     }
   }
-  
+
   return (
     <div className='level-item'>
       {statusComponent()}

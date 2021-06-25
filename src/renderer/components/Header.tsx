@@ -8,8 +8,8 @@ import ConnectionStatusHeader from './ConnectionStatusHeader'
 const mywindow: any = window
 
 interface HeaderProp {
-  isRecording: boolean,
-  leftStatus: string,
+  isRecording: boolean
+  leftStatus: string
   rightStatus: string
 }
 
@@ -17,9 +17,6 @@ const Header: React.FC<HeaderProp> = ({ isRecording, leftStatus, rightStatus }) 
   const quitHandler = () => {
     mywindow.appService.closeApp()
   }
-
-  
-
 
   return (
     <div id='header-container'>
@@ -44,7 +41,7 @@ const Header: React.FC<HeaderProp> = ({ isRecording, leftStatus, rightStatus }) 
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>
               <p className='content has-text-white'>
-              <FontAwesomeIcon className='icon is-small mr-1' icon={faTimesCircle} /> Quit
+                <FontAwesomeIcon className='icon is-small mr-1' icon={faTimesCircle} /> Quit
               </p>
             </a>
           </div>

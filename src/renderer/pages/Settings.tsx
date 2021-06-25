@@ -14,9 +14,9 @@ const Settings: React.FC<SettingProp> = ({ showProvocationTask, setShowProvocati
   return (
     <>
       <h1 className='title is-1 has-text-white mb-6 pb-4'>Settings</h1>
-      <SettingsToggle text = 'Provocation Launcher:' toggleIsOn = {showProvocationTask} buttonHandle = {provocationHandle}/>
-      <SettingsToggle text = 'Beep:' toggleIsOn = {true} buttonHandle = {()=>{}}/>
-      <SettingsToggle text = 'Impedence Test:' toggleIsOn = {true} buttonHandle = {()=>{}}/>
+      <SettingsToggle text='Provocation Launcher:' toggleIsOn={showProvocationTask} buttonHandle={provocationHandle} />
+      <SettingsToggle text='Beep:' toggleIsOn buttonHandle={() => {}} />
+      <SettingsToggle text='Impedence Test:' toggleIsOn buttonHandle={() => {}} />
     </>
   )
 }

@@ -114,7 +114,7 @@ const omniReducer = (state: State, action: Action) => {
       }
 
       ;[left, right].forEach(item => {
-        if (bridges.find(({ name })=> name === item.name) != null) {
+        if (bridges.find(({ name }) => name === item.name) != null) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
           return
@@ -140,7 +140,7 @@ const omniReducer = (state: State, action: Action) => {
       const { bridges } = action
 
       ;[left, right].forEach(item => {
-        if (bridges.find(({ name })=> item.name.startsWith(name)) !== null && item.connectionState === ConnectionState.ScanningBridge) {
+        if (bridges.find(({ name }) => item.name.startsWith(name)) !== null && item.connectionState === ConnectionState.ScanningBridge) {
           item.connectionState = ConnectionState.DiscoveredBridge
           return
         }
