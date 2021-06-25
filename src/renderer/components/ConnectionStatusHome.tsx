@@ -18,7 +18,7 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
       connectINS: 'not-started'
     }
     // Error case
-    if (status === 'error-bridge') {
+    if (status === 'error-bridge' || status === 'not-found-bridge') {
       switch (prevStatus) {
         case 'unknown': {
           connectionJSON.scanCTM = 'error'
