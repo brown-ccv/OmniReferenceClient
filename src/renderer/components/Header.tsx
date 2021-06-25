@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>
               <p className='content has-text-white'>
-              <FontAwesomeIcon className='icon is-small mr-1' icon={faTimesCircle} /> Quit
+                <FontAwesomeIcon className='icon is-small mr-1' icon={faTimesCircle} /> Quit
               </p>
             </a>
           </div>

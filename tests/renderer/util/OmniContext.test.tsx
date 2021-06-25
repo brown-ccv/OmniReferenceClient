@@ -1,0 +1,233 @@
+import { omniReducer, ActionType, ConnectionState, State } from '../../../src/renderer/util/OmniContext'
+
+describe('omniReducer', () => {
+  let initState: State
+
+  beforeEach(() => {
+    initState = {
+      left: {
+        name: '//summit/bridge/foo/device/bar',
+        connectionState: ConnectionState.Unknown,
+        previousState: ConnectionState.Unknown,
+      },
+      /**
+       * NOTE (BNR): This right bridge/device pair will always be connected. We
+       *             want to make sure the state transitions don't affect already
+       *             connected things
+       */
+      right: {
+        name: '//summit/bridge/bar/device/baz',
+        connectionState: ConnectionState.ConnectedBridge,
+        previousState: ConnectionState.ConnectingBridge,
+      }
+    }
+  })
+
+  describe('ConnectedBridges', () => {
+    it('transitions to scanning-bridge', () => {
+      const { left, right } = omniReducer(initState, { type: ActionType.ConnectedBridges })
+
+      expect(left.connectionState).toBe(ConnectionState.ScanningBridge)
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to previous state if not connected', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ScanningBridge
+
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectedBridgesSuccess, bridges: [] }))
+
+      expect(left.connectionState).toBe(ConnectionState.Unknown)
+      expect(left.previousState).toBe(ConnectionState.ScanningBridge)
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+    
+    it('transitions to connected-bridge if connected', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ScanningBridge
+
+      const bridges = [{ name: '//summit/bridge/foo/device/bar' }, { name: '//summit/bridge/bar/device/baz' }]
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectedBridgesSuccess, bridges }))
+
+      expect(left.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(left.previousState).toBe(ConnectionState.ScanningBridge)
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to error-bridge if error', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ScanningBridge
+      right.connectionState = ConnectionState.ScanningBridge
+
+      const message = 'failure message'
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectedBridgesFailure, message}))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(left.previousState).toBe(ConnectionState.ScanningBridge)
+      expect(left.error).toBe(message)
+
+      expect(right.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(right.previousState).toBe(ConnectionState.ScanningBridge)
+      expect(right.error).toBe(message)
+    })
+  })
+
+  describe('ListBridges', () =>{
+    it('transitions to scanning-bridge', () => {
+      const { left, right } = omniReducer(initState, { type: ActionType.ListBridges })
+
+      expect(left.connectionState).toBe(ConnectionState.ScanningBridge)
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to not-found-bridge if not found', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ScanningBridge
+
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ListBridgesSuccess, bridges: [] }))
+
+      expect(left.connectionState).toBe(ConnectionState.NotFoundBridge)
+      expect(left.previousState).toBe(ConnectionState.ScanningBridge)
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to discovered-bridge if discovered', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ScanningBridge
+
+      const bridges = [{ name: '//summit/bridge/foo/device/bar' }, { name: '//summit/bridge/bar/device/baz' }]
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ListBridgesSuccess, bridges }))
+
+      expect(left.connectionState).toBe(ConnectionState.DiscoveredBridge)
+      expect(left.previousState).toBe(ConnectionState.ScanningBridge)
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to error-bridge if error', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ScanningBridge
+
+      const message = 'failure message'
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ListBridgesFailure, message }))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(left.previousState).toBe(ConnectionState.ScanningBridge)
+      expect(left.error).toBe(message)
+
+      expect(right.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.error).toBe(message)
+    })
+  })
+
+  describe('ConnectToBridge', () => {
+    it('does nothing if the bridge has not been discovered', () => {
+      let { left, right } = initState
+
+      omniReducer(initState, { type: ActionType.ConnectToBridge, name: left.name })
+
+      expect(left.connectionState).toBe(ConnectionState.Unknown)
+      expect(left.previousState).toBe(ConnectionState.Unknown)
+
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectToBridge, name: right.name }))
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to connecting if the bridge has been discovered', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.DiscoveredBridge
+      left.previousState = ConnectionState.ScanningBridge
+
+      ;({left, right} = omniReducer(initState, { type: ActionType.ConnectToBridge, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.ConnectingBridge)
+      expect(left.previousState).toBe(ConnectionState.DiscoveredBridge)
+
+      omniReducer(initState, { type: ActionType.ConnectToBridge, name: right.name })
+
+      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to connected-bridge on success', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectingBridge
+      left.previousState = ConnectionState.DiscoveredBridge
+
+      let connection = { name: left.name, connectionStatus: 'CONNECTION_SUCCESS', details: undefined }
+      ;({ left } = omniReducer(initState, { type: ActionType.ConnectToBridgeSuccess, connection }))
+
+      expect(left.connectionState).toBe(ConnectionState.ConnectedBridge)
+      expect(left.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to error-bridge if the connection is not established', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectingBridge
+      left.previousState = ConnectionState.DiscoveredBridge
+
+      let connection = { name: left.name, connectionStatus: 'CONNECTION_FAILURE', details: undefined }
+      ;({ left } = omniReducer(initState, { type: ActionType.ConnectToBridgeSuccess, connection }))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(left.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+
+    it('transitions to error-bridge if error', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectingBridge
+      left.previousState = ConnectionState.DiscoveredBridge
+
+      const message = 'failure message'
+      ;({ left } = omniReducer(initState, { type: ActionType.ConnectToBridgeFailure, name: left.name, message }))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(left.previousState).toBe(ConnectionState.ConnectingBridge)
+      expect(left.error).toBe(message)
+    })
+  })
+
+  describe('DisconnectFromBridge', () => {
+    it('does nothing if the bridge has not been connected', () => {
+      let { left } = initState
+      
+      ;({ left } = omniReducer(initState, { type: ActionType.DisconnectFromBridge, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.Unknown)
+      expect(left.previousState).toBe(ConnectionState.Unknown)
+    })
+
+    it('transitions to disconnected if the bridge is connected', () => {
+      let { right } = initState
+
+      ;({ right } = omniReducer(initState, { type: ActionType.DisconnectFromBridge, name: right.name }))
+
+      expect(right.connectionState).toBe(ConnectionState.Disconnected)
+      expect(right.previousState).toBe(ConnectionState.ConnectedBridge)
+    })
+  })
+})

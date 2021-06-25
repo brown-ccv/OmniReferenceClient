@@ -42,7 +42,7 @@ export enum ActionType {
   DisconnectFromBridge = 'disconnect-from-bridge',
 }
 
-type Action =
+export type Action =
   | { type: ActionType.ListBridges }
   | { type: ActionType.ListBridgesSuccess, bridges: Array<{name: string}> }
   | { type: ActionType.ListBridgesFailure, message: string }
@@ -55,13 +55,14 @@ type Action =
   | { type: ActionType.DisconnectFromBridge, name: string }
 type Dispatch = (action: Action) => void
 
-interface BridgeDevicePairState {
+export interface BridgeDevicePairState {
   name: string
   connectionState: ConnectionState
   previousState: ConnectionState
   error?: string
 }
-interface State {
+
+export interface State {
   left: BridgeDevicePairState
   right: BridgeDevicePairState
 }
@@ -89,7 +90,7 @@ const initialState: State = {
   }
 }
 
-const omniReducer = (state: State, action: Action) => {
+export const omniReducer = (state: State, action: Action) => {
   const { left, right } = state
 
   switch (action.type) {
@@ -106,22 +107,15 @@ const omniReducer = (state: State, action: Action) => {
     case ActionType.ConnectedBridgesSuccess: {
       const { bridges } = action
 
-      if (bridges.length === 0) {
-        left.previousState = left.connectionState
-        right.previousState = right.connectionState
-        left.connectionState = right.connectionState = ConnectionState.Unknown
-        return { left, right }
-      }
-
       ;[left, right].forEach(item => {
-        if (bridges.find(({ name })=> name === item.name) != null) {
+        if (item.connectionState !== ConnectionState.ScanningBridge) { return }
+
+        if (bridges.find(({ name }) => name === item.name) !== undefined) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
-          return
+        } else {
+          [item.connectionState, item.previousState] = [item.previousState, item.connectionState]
         }
-
-        if (item.connectionState !== ConnectionState.ScanningBridge) { return }
-        [item.connectionState, item.previousState] = [item.previousState, item.connectionState]
       })
 
       return { left, right }
@@ -140,15 +134,15 @@ const omniReducer = (state: State, action: Action) => {
       const { bridges } = action
 
       ;[left, right].forEach(item => {
-        if (bridges.find(({ name })=> item.name.startsWith(name)) !== null && item.connectionState === ConnectionState.ScanningBridge) {
-          item.connectionState = ConnectionState.DiscoveredBridge
-          return
-        }
-
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.NotFoundBridge
+        if (bridges.find(({ name }) => item.name.startsWith(name)) !== undefined) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.DiscoveredBridge
+        } else {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.NotFoundBridge
+        }
       })
 
       return { left, right }
@@ -180,7 +174,6 @@ const omniReducer = (state: State, action: Action) => {
        */
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.DiscoveredBridge) { return }
-
         if (name !== item.name) { return }
 
         item.previousState = item.connectionState
@@ -194,7 +187,6 @@ const omniReducer = (state: State, action: Action) => {
 
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ConnectingBridge) { return }
-
         if (name !== item.name) { return }
 
         switch (connectionStatus) {
@@ -224,7 +216,7 @@ const omniReducer = (state: State, action: Action) => {
              *             is in 'CONSTANT_CASE' should I reformat to 'human case'
              *             or should I leave it as is?
              */
-            item.error = details.connectionStatus
+            item.error = details?.connectionStatus
           }
         }
       })
