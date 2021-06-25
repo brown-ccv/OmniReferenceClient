@@ -100,7 +100,7 @@ const App: React.FC = () => {
     <Router>
       {/* Container for entire window */}
       <div id='app-container'>
-        <Header isRecording={isRecording} leftStatus={state.left.connectionState} rightStatus={state.right.connectionState} />
+        <Header isRecording={isRecording} />
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
@@ -127,7 +127,7 @@ const App: React.FC = () => {
                 <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />
               </Route>
               <Route path='/'>
-                <Status leftStatus={state.left.connectionState} leftPrevStatus={state.left.previousState} rightStatus={state.right.connectionState} rightPrevStatus={state.right.previousState} />
+                <Status />
               </Route>
             </Switch>
           </div>

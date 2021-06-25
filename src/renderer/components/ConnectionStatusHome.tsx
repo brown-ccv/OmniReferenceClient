@@ -1,33 +1,90 @@
 import React from 'react'
+import { ConnectionState } from '../util/OmniContext'
 import ConnectionProgressCheckHome from './ConnectionProgressCheckHome'
-
-const dict = new Map()
-dict.set('unknown', 0)
-dict.set('scanning-bridge', 1)
-dict.set('discovered-bridge', 2)
-dict.set('connecting-bridge', 3)
-dict.set('connected-bridge', 4)
-dict.set('error-bridge', 100)
-dict.set('not-found-bridge', 101)
-dict.set('disconnected', -100)
 
 interface ConnectionProp {
   name: string
-  status: string
-  prevStatus: string
+  status: ConnectionState
+  prevStatus: ConnectionState
 }
 
 const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStatus }) => {
-  // status = 'error-bridge'
-  // prevStatus = 'not-found-bridge'
+  
+  const connectionStatuses = () => {
+    const connectionJSON = {
+      scanCTM: 'not-started',
+      connectCTM: 'not-started',
+      scanINS: 'not-started',
+      connectINS: 'not-started'
+    }
+    // Error case
+    if (status === 'error-bridge') {
+      switch (prevStatus) {
+        case 'unknown': {
+          connectionJSON.scanCTM = 'error'
+          break
+        }
+        case 'scanning-bridge': {
+          connectionJSON.scanCTM = 'error'
+          break
+        }
+        case 'discovered-bridge': {
+          connectionJSON.scanCTM = 'success'
+          connectionJSON.connectCTM = 'error'
+          break
+        }
+        case 'connecting-bridge': {
+          connectionJSON.scanCTM = 'success'
+          connectionJSON.connectCTM = 'error'
+          break
+        }
+        case 'connected-bridge': {
+          connectionJSON.scanCTM = 'success'
+          connectionJSON.connectCTM = 'success'
+          connectionJSON.scanINS = 'error'
+          break
+        }
+      }
+    }
+    // Success case
+    else {
+      switch (status) {
+        case 'scanning-bridge': {
+          connectionJSON.scanCTM = 'in-progress'
+          break
+        }
+        case 'discovered-bridge': {
+          connectionJSON.scanCTM = 'success'
+          connectionJSON.connectCTM = 'in-progress'
+          break
+        }
+        case 'connecting-bridge': {
+          connectionJSON.scanCTM = 'success'
+          connectionJSON.connectCTM = 'in-progress'
+          break
+        }
+        case 'connected-bridge': {
+          connectionJSON.scanCTM = 'success'
+          connectionJSON.connectCTM = 'success'
+          connectionJSON.scanINS = 'in-progress'
+          break
+        }
+      }
+    }
+    return (
+      <>
+        <ConnectionProgressCheckHome text='Scanning for CTM' progress={connectionJSON.scanCTM} />
+        <ConnectionProgressCheckHome text='Connecting to CTM' progress={connectionJSON.connectCTM} />
+        <ConnectionProgressCheckHome text='Scanning for INS' progress={connectionJSON.scanINS} />
+        <ConnectionProgressCheckHome text='Connecting to INS' progress={connectionJSON.connectINS} />
+      </>
+    )
+  }
 
   return (
     <div className='box has-background-grey-darker has-text-grey-light'>
       <p className='subtitle has-text-white is-5'>{name} Status: {status}</p>
-      <ConnectionProgressCheckHome text='Scanning for CTM' progress_index={dict.get(status)} prev_index={dict.get(prevStatus)} this_index={1} />
-      <ConnectionProgressCheckHome text='Connecting to CTM' progress_index={dict.get(status)} prev_index={dict.get(prevStatus)} this_index={3} />
-      <ConnectionProgressCheckHome text='Scanning for INS' progress_index={dict.get(status)} prev_index={dict.get(prevStatus)} this_index={5} />
-      <ConnectionProgressCheckHome text='Connecting to INS' progress_index={dict.get(status)} prev_index={dict.get(prevStatus)} this_index={7} />
+      {connectionStatuses()}
     </div>
 
   )

@@ -1,9 +1,10 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLaptopMedical, faCheck, faSpinner, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { ConnectionState } from '../util/OmniContext'
 
 interface ConnectionProp {
-  status: string
+  status: ConnectionState
 }
 
 const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {

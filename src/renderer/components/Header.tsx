@@ -4,16 +4,17 @@ import { Link } from 'react-router-dom'
 import { faTimesCircle, faCircle } from '@fortawesome/free-solid-svg-icons'
 import Clock from './Clock'
 import ConnectionStatusHeader from './ConnectionStatusHeader'
+import { useOmni } from '../util/OmniContext'
 
 const mywindow: any = window
 
 interface HeaderProp {
   isRecording: boolean
-  leftStatus: string
-  rightStatus: string
 }
 
-const Header: React.FC<HeaderProp> = ({ isRecording, leftStatus, rightStatus }) => {
+const Header: React.FC<HeaderProp> = ({ isRecording }) => {
+  const { state } = useOmni()
+
   const quitHandler = () => {
     mywindow.appService.closeApp()
   }
@@ -35,9 +36,9 @@ const Header: React.FC<HeaderProp> = ({ isRecording, leftStatus, rightStatus }) 
         {/* Right Side of header */}
         <div className='level-right mt-1'>
           <p className='level-item has-text-white'>L:</p>
-          <ConnectionStatusHeader status={leftStatus} />
+          <ConnectionStatusHeader status={state.left.connectionState} />
           <p className='level-item has-text-white'>R:</p>
-          <ConnectionStatusHeader status={rightStatus} />
+          <ConnectionStatusHeader status={state.right.connectionState} />
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>
               <p className='content has-text-white'>
