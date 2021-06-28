@@ -43,5 +43,5 @@ npm run lint
 To have the linter fix errors, run:
 
 ```
-npm run lin -- --fix
+npm run lint -- --fix
 ```
