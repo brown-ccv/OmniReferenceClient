@@ -8,72 +8,80 @@ interface ConnectionProp {
 }
 
 const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
-  const statusComponent = () => {
     switch (status) {
-      case 'unknown': return (
+      case ConnectionState.Unknown: return (
+        <div className='level-item'>
         <a className='box has-background-danger has-text-white is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-            Unknown<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
+            Unknown<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
           </p>
         </a>
+        </div>
       )
-      case 'scanning-bridge': return (
+      case ConnectionState.ScanningBridge: return (
+        <div className='level-item'>
         <a className='box has-background-warning is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Scanning<FontAwesomeIcon className='icon is-small ml-2' icon={faSpinner} spin />
           </p>
         </a>
+        </div>
       )
-      case 'discovered-bridge': return (
+      case ConnectionState.DiscoveredBridge: return (
+        <div className='level-item'>
         <a className='box has-background-warning is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Discovered<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
           </p>
         </a>
+        </div>
       )
-      case 'connecting-bridge': return (
+      case ConnectionState.ConnectingBridge: return (
+        <div className='level-item'>
         <a className='box has-background-warning is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Connecting<FontAwesomeIcon className='icon is-small ml-2' icon={faSpinner} spin />
           </p>
         </a>
+        </div>
       )
-      case 'connected-bridge': return (
+      case ConnectionState.ConnectedBridge: return (
+        <div className='level-item'>
         <a className='box has-background-success is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Connected<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
           </p>
         </a>
+        </div>
       )
-      case 'disconnected': return (
+      case ConnectionState.Disconnected: return (
+        <div className='level-item'>
         <a className='box has-background-grey has-text-white is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Disconnected<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
           </p>
         </a>
+        </div>
       )
-      case 'not-found-bridge': return (
+      case ConnectionState.NotFoundBridge: return (
+        <div className='level-item'>
         <a className='box has-background-grey has-text-white is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Not Found<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
           </p>
         </a>
+        </div>
       )
       default: return (
+        <div className='level-item'>
         <a className='box has-background-danger has-text-white is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Error<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
           </p>
         </a>
+        </div>
       )
     }
   }
-
-  return (
-    <div className='level-item'>
-      {statusComponent()}
-    </div>
-  )
-}
 
 export default ConnectionStatusHeader

@@ -24,17 +24,23 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
 
+  function timeout(delay: number) {
+    return new Promise( res => setTimeout(res, delay) );
+  }
+
+
   /**
    * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
    */
   React.useEffect(() => {
     const getInitialConnectionState = async () => {
       const { left, right } = state
-
+      await timeout(3000)
       if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ConnectedBridges })
           const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+          await timeout(3000)
           dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
         } catch (e) {
           dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
@@ -55,10 +61,12 @@ const App: React.FC = () => {
        * If the state of the bridge connection is still unknown, list all the available
        * bridges.
        */
+      await timeout(3000)
       if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ListBridges })
           const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+          await timeout(3000)
           dispatch({ type: ActionType.ListBridgesSuccess, bridges })
         } catch (e) {
           dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
