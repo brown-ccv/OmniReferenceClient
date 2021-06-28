@@ -11,7 +11,8 @@
     "publish": "electron-forge publish",
     "lint": "ts-standard",
     "css-build": "node-sass --omit-source-map-url src/renderer/styles/sass/mystyles.scss src/renderer/styles/css/main.css",
-    "css-watch": "npm run css-build -- --watch"
+    "css-watch": "npm run css-build -- --watch",
+    "test": "jest"
   },
   "keywords": [],
   "author": {
@@ -72,6 +73,7 @@
     "@electron-forge/maker-zip": "^6.0.0-beta.54",
     "@electron-forge/plugin-webpack": "6.0.0-beta.54",
     "@marshallofsound/webpack-asset-relocator-loader": "^0.5.0",
+    "@types/jest": "^26.0.23",
     "@types/react": "^17.0.5",
     "@types/react-dom": "^17.0.3",
     "@types/react-router-dom": "^5.1.7",
@@ -82,9 +84,11 @@
     "electron": "12.0.6",
     "file-loader": "^6.2.0",
     "fork-ts-checker-webpack-plugin": "^5.0.14",
+    "jest": "^27.0.5",
     "node-loader": "^1.0.1",
     "style-loader": "^1.2.1",
     "svg-url-loader": "^7.1.1",
+    "ts-jest": "^27.0.3",
     "ts-loader": "^8.0.2",
     "ts-standard": "^10.0.0",
     "typescript": "^4.0.2"
@@ -102,6 +106,9 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-dom": "^5.2.0"
+  },
+  "jest": {
+    "preset": "ts-jest"
   },
   "release": {
     "branches": [
