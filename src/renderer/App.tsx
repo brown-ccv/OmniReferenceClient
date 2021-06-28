@@ -24,10 +24,9 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
 
-  function timeout(delay: number) {
-    return new Promise( res => setTimeout(res, delay) );
+  async function timeout (delay: number) {
+    return await new Promise(res => setTimeout(res, delay))
   }
-
 
   /**
    * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.

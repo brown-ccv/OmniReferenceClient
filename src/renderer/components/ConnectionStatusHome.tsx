@@ -3,7 +3,6 @@ import { faSpinner, faCheck, faCircleNotch, faTimes } from '@fortawesome/free-so
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ConnectionState } from '../util/OmniContext'
 
-
 interface ConnectionProp {
   name: string
   status: ConnectionState
@@ -11,14 +10,13 @@ interface ConnectionProp {
 }
 
 interface ProgressStatus {
-  scanCTM: string,
-  connectCTM: string,
-  scanINS: string,
-  connectINS: string
+  scanCTM: 'not-started' | 'error' | 'success' | 'in-progress'
+  connectCTM: 'not-started' | 'error' | 'success' | 'in-progress'
+  scanINS: 'not-started' | 'error' | 'success' | 'in-progress'
+  connectINS: 'not-started' | 'error' | 'success' | 'in-progress'
 }
 
 const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStatus }) => {
-  
   const connectionJSON: ProgressStatus = {
     scanCTM: 'not-started',
     connectCTM: 'not-started',
