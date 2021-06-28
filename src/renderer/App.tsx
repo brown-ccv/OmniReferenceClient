@@ -12,17 +12,21 @@ import Help from './pages/Help'
 import Playground from './pages/Playground'
 import Settings from './pages/Settings'
 import Recording from './pages/Recording'
-import Home from './pages/Home'
+import Status from './pages/Status'
 
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
 
 const App: React.FC = () => {
-  const [provocationOn, setProvocation] = React.useState<boolean>(false)
+  const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
+
+  async function timeout (delay: number) {
+    return await new Promise(res => setTimeout(res, delay))
+  }
 
   /**
    * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
@@ -30,11 +34,12 @@ const App: React.FC = () => {
   React.useEffect(() => {
     const getInitialConnectionState = async () => {
       const { left, right } = state
-
+      await timeout(3000)
       if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ConnectedBridges })
           const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+          await timeout(3000)
           dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
         } catch (e) {
           dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
@@ -55,16 +60,17 @@ const App: React.FC = () => {
        * If the state of the bridge connection is still unknown, list all the available
        * bridges.
        */
+      await timeout(3000)
       if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ListBridges })
           const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+          await timeout(3000)
           dispatch({ type: ActionType.ListBridgesSuccess, bridges })
         } catch (e) {
           dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
         }
       }
-
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
@@ -90,8 +96,7 @@ const App: React.FC = () => {
     let recordingInterval: any
     if (isRecording) {
       recordingInterval = setInterval(
-        () => setRecordingTime(prevRecording => prevRecording + 1),
-        1000
+        () => setRecordingTime(prevRecording => prevRecording + 1), 1000
       )
     }
 
@@ -114,10 +119,10 @@ const App: React.FC = () => {
           <div id='main-window'>
             <Switch>
               <Route path='/playground'>
-                <Playground provocationOn={provocationOn} />
+                <Playground showProvocationTask={showProvocationTask} />
               </Route>
               <Route path='/settings'>
-                <Settings provocationOn={provocationOn} setProvocation={setProvocation} />
+                <Settings showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask} />
               </Route>
               <Route path='/help'>
                 <Help />
@@ -129,7 +134,7 @@ const App: React.FC = () => {
                 <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />
               </Route>
               <Route path='/'>
-                <Home />
+                <Status />
               </Route>
             </Switch>
           </div>

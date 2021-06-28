@@ -54,3 +54,6 @@
   margin-right: 36%;
 }
 
+#task-box{
+  max-width: 260px;
+}

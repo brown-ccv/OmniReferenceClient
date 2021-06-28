@@ -77,7 +77,7 @@ const Buttons: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className='container has-text-white'>
       <h1 className='title is-1 has-text-white'>Buttons</h1>
       <p>
         {bridges.toString()}
