@@ -101,6 +101,21 @@ const App: React.FC = () => {
         }
       })
 
+      /**
+       * If a device is discovered, finalize the connection to that device
+       */
+      ;[left, right].forEach(async ({ connectionState, name }) => {
+        if (connectionState !== ConnectionState.DiscoveredDevice) { return }
+
+        try {
+          dispatch({ type: ActionType.ConnectToDevice, name })
+          const connection = await (window as any).deviceManagerService.connectToDevice({ name })
+          dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
+        } catch (e) {
+          dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
+        }
+      })
+
       console.log(state)
     }
     updateConnectionState()

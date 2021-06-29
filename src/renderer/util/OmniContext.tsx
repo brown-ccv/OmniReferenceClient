@@ -29,6 +29,8 @@ export enum ConnectionState {
   ScanningDevice = 'scanning-device',
   NotFoundDevice = 'not-found-device',
   DiscoveredDevice = 'discovered-device',
+  ConnectingDevice = 'connecting-device',
+  ConnectedDevice = 'connected-device',
   ErrorDevice = 'error-device',
   Disconnected = 'disconnected',
 }
@@ -46,6 +48,9 @@ export enum ActionType {
   ListDevices = 'list-devices',
   ListDevicesSuccess = 'list-devices-success',
   ListDevicesFailure = 'list-devices-failure',
+  ConnectToDevice = 'connect-to-device',
+  ConnectToDeviceSuccess = 'connect-to-device-success',
+  ConnectToDeviceFailure = 'connect-to-device-failure',
   DisconnectFromBridge = 'disconnect-from-bridge',
 }
 
@@ -59,10 +64,13 @@ export type Action =
   | { type: ActionType.ConnectToBridge, name: string}
   | { type: ActionType.ConnectToBridgeSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToBridgeFailure, message: string, name: string }
+  | { type: ActionType.DisconnectFromBridge, name: string }
   | { type: ActionType.ListDevices, name: string }
   | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
-  | { type: ActionType.DisconnectFromBridge, name: string }
+  | { type: ActionType.ConnectToDevice, name: string }
+  | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
+  | { type: ActionType.ConnectToDeviceFailure, message: string, name: string }
 type Dispatch = (action: Action) => void
 
 export interface BridgeDevicePairState {
@@ -297,6 +305,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.ConnectToDeviceFailure:
     case ActionType.ListDevicesFailure: {
       const { message, name } = action
 
@@ -306,6 +315,60 @@ export const omniReducer = (state: State, action: Action) => {
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ErrorDevice
         item.error = message
+      })
+
+      return { left, right }
+    }
+    case ActionType.ConnectToDevice: {
+      const { name } = action
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+        if (item.connectionState !== ConnectionState.DiscoveredDevice) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.ConnectingDevice
+      })
+
+      return { left, right }
+    }
+    case ActionType.ConnectToDeviceSuccess: {
+      const { name, connectionStatus, details } = action?.connection
+
+      ;[left, right].forEach(item => {
+        if (item.connectionState !== ConnectionState.ConnectingDevice) { return }
+        if (name !== item.name) { return }
+
+        switch (connectionStatus) {
+          case 'CONNECTION_SUCCESS': {
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.ConnectedDevice
+            break
+          }
+          /**
+           * NOTE (BNR): Why handle errors here instead of ActionType.ConnectToDeviceFailure?
+           *
+           *             Good question, the ActionType.ConnectToDeviceFailure action is for
+           *             when the _call_ to the device fails, not when the _call_ succeeds
+           *             but the result was a device connection failure.
+           *
+           *             The motivation is that I don't want the callers of dispatch to
+           *             think about what's in the response from the server. All that logic
+           *             should be here in the reducer
+           */
+          case 'CONNECTION_FAILURE':
+          case 'CONNECT_DEVICE_STATUS_UNSPECIFIED':
+          default: {
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.ErrorDevice
+            /**
+             * TODO (BNR): The connection status enum off of the details object
+             *             is in 'CONSTANT_CASE' should I reformat to 'human case'
+             *             or should I leave it as is?
+             */
+            item.error = details?.connectionStatus
+          }
+        }
       })
 
       return { left, right }

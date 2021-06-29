@@ -300,4 +300,71 @@ describe('omniReducer', () => {
       expect(right.error).toBe(message)
     })
   })
+
+  describe('ConnectToDevice', () => {
+    it('transitions to connecting-device', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.DiscoveredDevice
+      left.previousState = ConnectionState.ScanningDevice
+
+      ;({ left } = omniReducer(initState, { type: ActionType.ConnectToDevice, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.ConnectingDevice)
+      expect(left.previousState).toBe(ConnectionState.DiscoveredDevice)
+    })
+
+    it('transitions to connected-device if the connection completed', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectingDevice
+      left.previousState = ConnectionState.DiscoveredDevice
+
+      const connection = { name: left.name, connectionStatus: 'CONNECTION_SUCCESS', details: undefined }
+      ;({ left } = omniReducer(initState, { type: ActionType.ConnectToDeviceSuccess, connection }))
+
+      expect(left.connectionState).toBe(ConnectionState.ConnectedDevice)
+      expect(left.previousState).toBe(ConnectionState.ConnectingDevice)
+    })
+
+    it('transitions to error-device if the connection fails', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ConnectingDevice
+      left.previousState = ConnectionState.DiscoveredDevice
+
+      right.connectionState = ConnectionState.ConnectingDevice
+      right.previousState = ConnectionState.DiscoveredDevice
+
+      const details = { connectionStatus: 'failure message' }
+      let connection = { name: left.name, connectionStatus: 'CONNECT_DEVICE_STATUS_UNSPECIFIED', details }
+      ;({ left } = omniReducer(initState, { type: ActionType.ConnectToDeviceSuccess, connection }))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorDevice)
+      expect(left.previousState).toBe(ConnectionState.ConnectingDevice)
+      expect(left.error).toBe(details.connectionStatus)
+
+      connection = { name: right.name, connectionStatus: 'CONNECTION_FAILURE', details }
+      ;({ right } = omniReducer(initState, { type: ActionType.ConnectToDeviceSuccess, connection }))
+
+      expect(right.connectionState).toBe(ConnectionState.ErrorDevice)
+      expect(right.previousState).toBe(ConnectionState.ConnectingDevice)
+      expect(right.error).toBe(details.connectionStatus)
+    })
+
+    it('transitions to error-device if the api call fails', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectingDevice
+      left.previousState = ConnectionState.DiscoveredDevice
+
+
+      const message = 'failure message'
+      ;({ left } = omniReducer(initState, { type: ActionType.ConnectToDeviceFailure, message, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorDevice)
+      expect(left.previousState).toBe(ConnectionState.ConnectingDevice)
+      expect(left.error).toBe(message)
+    })
+  })
 })
