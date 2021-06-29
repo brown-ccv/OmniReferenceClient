@@ -80,6 +80,21 @@ const App: React.FC = () => {
         }
       })
 
+      /**
+       * If a bridge is connected, start listing out the devices available to that bridge
+       */
+      ;[left, right].forEach(async ({ connectionState, name }) => {
+        if (connectionState !== ConnectionState.ConnectedBridge) { return }
+
+        try {
+          dispatch({ type: ActionType.ListDevices, name })
+          const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
+          dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
+        } catch (e) {
+          dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
+        }
+      })
+
       console.log(state)
     }
     updateConnectionState()

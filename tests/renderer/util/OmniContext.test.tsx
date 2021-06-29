@@ -230,4 +230,74 @@ describe('omniReducer', () => {
       expect(right.previousState).toBe(ConnectionState.ConnectedBridge)
     })
   })
+
+  describe('ListDevices', () => {
+    it('transitions to scanning-device', () => {
+      let { right } = initState
+
+      ;({ right } = omniReducer(initState, { type: ActionType.ListDevices, name: right.name }))
+
+      expect(right.connectionState).toBe(ConnectionState.ScanningDevice)
+      expect(right.previousState).toBe(ConnectionState.ConnectedBridge)
+    })
+
+    it('transitions to not-found-device if not found', () => {
+      let { right } = initState
+
+      right.connectionState = ConnectionState.ScanningDevice
+      right.previousState = ConnectionState.ConnectedBridge
+
+      const devices: Array<{name: string}> = []
+      ;({ right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: right.name }))
+
+      expect(right.connectionState).toBe(ConnectionState.NotFoundDevice)
+      expect(right.previousState).toBe(ConnectionState.ScanningDevice)
+    })
+
+    it('transitions to discovered-device if discovered', () => {
+      let { right } = initState
+
+      right.connectionState = ConnectionState.ScanningDevice
+      right.previousState = ConnectionState.ConnectedBridge
+
+      const devices = [{ name: '//summit/bridge/bar/device/baz' }]
+      ;({ right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: right.name }))
+
+      expect(right.connectionState).toBe(ConnectionState.DiscoveredDevice)
+      expect(right.previousState).toBe(ConnectionState.ScanningDevice)
+    })
+
+    it('does not update devices associated with another device', () => {
+      let { left, right } = initState
+
+      left.connectionState = ConnectionState.ScanningDevice
+      left.previousState = ConnectionState.ConnectedBridge
+
+      right.connectionState = ConnectionState.ScanningDevice
+      right.previousState = ConnectionState.ConnectedBridge
+
+      const devices = [{ name: '//summit/bridge/bar/device/baz'}, {name: '//summit/bridge/foo/device/bar'}]
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.DiscoveredDevice)
+      expect(left.previousState).toBe(ConnectionState.ScanningDevice)
+
+      expect(right.connectionState).toBe(ConnectionState.ScanningDevice)
+      expect(right.previousState).toBe(ConnectionState.ConnectedBridge)
+    })
+
+    it('transitions to error-device if error', () => {
+      let { right } = initState
+
+      right.connectionState = ConnectionState.ScanningDevice
+      right.previousState = ConnectionState.ConnectedBridge
+
+      const message = 'failure message'
+      ;({ right } = omniReducer(initState, { type: ActionType.ListDevicesFailure, message, name: right.name }))
+
+      expect(right.connectionState).toBe(ConnectionState.ErrorDevice)
+      expect(right.previousState).toBe(ConnectionState.ScanningDevice)
+      expect(right.error).toBe(message)
+    })
+  })
 })

@@ -26,6 +26,10 @@ export enum ConnectionState {
   ConnectingBridge = 'connecting-bridge',
   ConnectedBridge = 'connected-bridge',
   ErrorBridge = 'error-bridge',
+  ScanningDevice = 'scanning-device',
+  NotFoundDevice = 'not-found-device',
+  DiscoveredDevice = 'discovered-device',
+  ErrorDevice = 'error-device',
   Disconnected = 'disconnected',
 }
 
@@ -39,6 +43,9 @@ export enum ActionType {
   ConnectToBridge = 'connect-to-bridge',
   ConnectToBridgeSuccess = 'connect-to-bridge-success',
   ConnectToBridgeFailure = 'connect-to-bridge-failure',
+  ListDevices = 'list-devices',
+  ListDevicesSuccess = 'list-devices-success',
+  ListDevicesFailure = 'list-devices-failure',
   DisconnectFromBridge = 'disconnect-from-bridge',
 }
 
@@ -52,6 +59,9 @@ export type Action =
   | { type: ActionType.ConnectToBridge, name: string}
   | { type: ActionType.ConnectToBridgeSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToBridgeFailure, message: string, name: string }
+  | { type: ActionType.ListDevices, name: string }
+  | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, name: string }
+  | { type: ActionType.ListDevicesFailure, message: string, name: string }
   | { type: ActionType.DisconnectFromBridge, name: string }
 type Dispatch = (action: Action) => void
 
@@ -246,6 +256,56 @@ export const omniReducer = (state: State, action: Action) => {
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.Disconnected
+      })
+
+      return { left, right }
+    }
+    case ActionType.ListDevices: {
+      const { name } = action
+
+      ;[left, right].forEach(item => {
+        if (item.connectionState !== ConnectionState.ConnectedBridge) { return }
+
+        if (name !== item.name) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.ScanningDevice
+      })
+
+      return { left, right }
+    }
+    case ActionType.ListDevicesSuccess: {
+      const { devices, name } = action
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+        if (item.connectionState !== ConnectionState.ScanningDevice) { return }
+
+        /**
+         * TODO (BNR): This isn't working right. I need to make sure that when I call success
+         *             it only updates the things from the list-devices call. i.e. When I call
+         *             list-devices with name foobar it should only update devices with name foobar
+         */
+        if (devices.find(({ name }) => item.name.startsWith(name)) !== undefined) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.DiscoveredDevice
+        } else {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.NotFoundDevice
+        }
+      })
+
+      return { left, right }
+    }
+    case ActionType.ListDevicesFailure: {
+      const { message, name } = action
+
+      ;[left, right].forEach(item => {
+        if (name !== item.name) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.ErrorDevice
+        item.error = message
       })
 
       return { left, right }
