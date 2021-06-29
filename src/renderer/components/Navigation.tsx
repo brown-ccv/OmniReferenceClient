@@ -2,8 +2,15 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons'
+import { ConnectionState, useOmni } from '../util/OmniContext'
 
-const Navigation: React.FC = () => {
+interface NavigationProp {
+  isRecording: boolean
+}
+
+const Navigation: React.FC<NavigationProp> = ({ isRecording }) => {
+  const { state } = useOmni()
+
   return (
     <aside className='menu is-large is-flex is-justify-content-center'>
       <ul>
@@ -11,10 +18,10 @@ const Navigation: React.FC = () => {
           <Link to='/'>Status <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/recording'>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
+          <Link to='/recording' id={state.left.connectionState === ConnectionState.ConnectedDevice && state.right.connectionState === ConnectionState.ConnectedDevice ? '' : 'disabled-link'}>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/playground'>Playground <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
+          <Link to='/playground' id={isRecording ? '' : 'disabled-link'}>Playground <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
           <Link to='/settings'>Settings <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>

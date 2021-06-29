@@ -57,3 +57,9 @@
 #task-box{
   max-width: 260px;
 }
+
+#disabled-link{
+  pointer-events: none;
+  color: gray;
+  background-color: #353a40;
+}

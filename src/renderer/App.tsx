@@ -143,7 +143,7 @@ const App: React.FC = () => {
           {/* Sidebar */}
           <div id='sidebar'>
             <Logo />
-            <Navigation />
+            <Navigation isRecording={isRecording} />
           </div>
           {/* Main area */}
           <div id='main-window'>
