@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { faTimesCircle, faCircle } from '@fortawesome/free-solid-svg-icons'
 import Clock from './Clock'
 import ConnectionStatusHeader from './ConnectionStatusHeader'
+import Battery from './Battery'
 import { useOmni } from '../util/OmniContext'
 
 const mywindow: any = window
@@ -35,9 +36,9 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
         </div>
         {/* Right Side of header */}
         <div className='level-right mt-1'>
-          <p className='level-item has-text-white'>L:</p>
+          <p className='level-item has-text-white'>L<Battery percent={50}/>:</p>
           <ConnectionStatusHeader status={state.left.connectionState} />
-          <p className='level-item has-text-white'>R:</p>
+          <p className='level-item has-text-white'>R<Battery percent={100}/>:</p>
           <ConnectionStatusHeader status={state.right.connectionState} />
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>
