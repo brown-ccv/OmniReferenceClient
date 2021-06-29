@@ -21,7 +21,7 @@ const Clock: React.FC = () => {
   )
 
   return (
-    <h3 className='level-item has-text-white'>{formatTime(currentTime)}</h3>
+    <h3 className='level-item has-text-white mt-2'>{formatTime(currentTime)}</h3>
   )
 }
 
