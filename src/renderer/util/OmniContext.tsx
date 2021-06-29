@@ -45,13 +45,14 @@ export enum ActionType {
   ConnectToBridge = 'connect-to-bridge',
   ConnectToBridgeSuccess = 'connect-to-bridge-success',
   ConnectToBridgeFailure = 'connect-to-bridge-failure',
+  DisconnectFromBridge = 'disconnect-from-bridge',
   ListDevices = 'list-devices',
   ListDevicesSuccess = 'list-devices-success',
   ListDevicesFailure = 'list-devices-failure',
   ConnectToDevice = 'connect-to-device',
   ConnectToDeviceSuccess = 'connect-to-device-success',
   ConnectToDeviceFailure = 'connect-to-device-failure',
-  DisconnectFromBridge = 'disconnect-from-bridge',
+  DisconnectFromDevice = 'disconnect-from-device',
 }
 
 export type Action =
@@ -71,6 +72,7 @@ export type Action =
   | { type: ActionType.ConnectToDevice, name: string }
   | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToDeviceFailure, message: string, name: string }
+  | { type: ActionType.DisconnectFromDevice, name: string }
 type Dispatch = (action: Action) => void
 
 export interface BridgeDevicePairState {
@@ -369,6 +371,20 @@ export const omniReducer = (state: State, action: Action) => {
             item.error = details?.connectionStatus
           }
         }
+      })
+
+      return { left, right }
+    }
+    case ActionType.DisconnectFromDevice: {
+      const { name } = action
+
+      ;[left, right].forEach(item => {
+        if (item.connectionState !== ConnectionState.ConnectedDevice) { return }
+
+        if (name !== item.name) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.Disconnected
       })
 
       return { left, right }
