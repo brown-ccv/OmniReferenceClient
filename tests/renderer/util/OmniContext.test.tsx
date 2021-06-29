@@ -367,4 +367,30 @@ describe('omniReducer', () => {
       expect(left.error).toBe(message)
     })
   })
+
+  describe('DisconnectFromDevice', () => {
+    it('does nothing if the device has not been connected', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.DiscoveredDevice
+      left.previousState = ConnectionState.ConnectedBridge
+      
+      ;({ left } = omniReducer(initState, { type: ActionType.DisconnectFromDevice, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.DiscoveredDevice)
+      expect(left.previousState).toBe(ConnectionState.ConnectedBridge)
+    })
+
+    it('transitions to disconnected if the bridge is connected', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.previousState = ConnectionState.ConnectingDevice
+
+      ;({ left } = omniReducer(initState, { type: ActionType.DisconnectFromDevice, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.Disconnected)
+      expect(left.previousState).toBe(ConnectionState.ConnectedDevice)
+    })
+  })
 })
