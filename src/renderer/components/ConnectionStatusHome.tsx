@@ -24,7 +24,7 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
     connectINS: 'not-started'
   }
   // Error case
-  if (status === ConnectionState.ErrorBridge || status === ConnectionState.NotFoundBridge) {
+  if (status === ConnectionState.ErrorBridge || status === ConnectionState.NotFoundBridge || status === ConnectionState.ErrorDevice) {
     switch (prevStatus) {
       case ConnectionState.Unknown: {
         connectionJSON.scanCTM = 'error'
@@ -49,6 +49,32 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
         connectionJSON.connectCTM = 'error'
         break
       }
+      case ConnectionState.ScanningDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'error'
+        break
+      }
+      case ConnectionState.DiscoveredDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'error'
+        break
+      }
+      case ConnectionState.ConnectingDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'success'
+        connectionJSON.connectINS = 'error'
+        break
+      }
+      case ConnectionState.ConnectedDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'success'
+        connectionJSON.connectINS = 'error'
+        break
+      }
     }
   }
   // Success case
@@ -71,6 +97,32 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
       case ConnectionState.ConnectedBridge: {
         connectionJSON.scanCTM = 'success'
         connectionJSON.connectCTM = 'success'
+        break
+      }
+      case ConnectionState.ScanningDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'in-progress'
+        break
+      }
+      case ConnectionState.DiscoveredDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'success'
+        break
+      }
+      case ConnectionState.ConnectingDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'success'
+        connectionJSON.connectINS = 'in-progress'
+        break
+      }
+      case ConnectionState.ConnectedDevice: {
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'success'
+        connectionJSON.scanINS = 'success'
+        connectionJSON.connectINS = 'success'
         break
       }
     }

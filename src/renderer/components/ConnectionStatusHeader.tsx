@@ -47,18 +47,9 @@ const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
     )
     case ConnectionState.ConnectedBridge: return (
       <div className='level-item'>
-        <a className='box has-background-success is-flex py-1'>
+        <a className='box has-background-warning is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Connected<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
-          </p>
-        </a>
-      </div>
-    )
-    case ConnectionState.Disconnected: return (
-      <div className='level-item'>
-        <a className='box has-background-grey has-text-white is-flex py-1'>
-          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-            Disconnected<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
           </p>
         </a>
       </div>
@@ -68,6 +59,60 @@ const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
         <a className='box has-background-grey has-text-white is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Not Found<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
+          </p>
+        </a>
+      </div>
+    )
+    case ConnectionState.ScanningDevice: return (
+      <div className='level-item'>
+        <a className='box has-background-warning is-flex py-1'>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Scanning D<FontAwesomeIcon className='icon is-small ml-2' icon={faSpinner} spin />
+          </p>
+        </a>
+      </div>
+    )
+    case ConnectionState.DiscoveredDevice: return (
+      <div className='level-item'>
+        <a className='box has-background-warning is-flex py-1'>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Discovered D<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
+          </p>
+        </a>
+      </div>
+    )
+    case ConnectionState.ConnectingDevice: return (
+      <div className='level-item'>
+        <a className='box has-background-warning is-flex py-1'>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Connecting D<FontAwesomeIcon className='icon is-small ml-2' icon={faSpinner} spin />
+          </p>
+        </a>
+      </div>
+    )
+    case ConnectionState.ConnectedDevice: return (
+      <div className='level-item'>
+        <a className='box has-background-success is-flex py-1'>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Connected D<FontAwesomeIcon className='icon is-small ml-2' icon={faCheck} />
+          </p>
+        </a>
+      </div>
+    )
+    case ConnectionState.NotFoundDevice: return (
+      <div className='level-item'>
+        <a className='box has-background-grey has-text-white is-flex py-1'>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Not Found D<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
+          </p>
+        </a>
+      </div>
+    )
+    case ConnectionState.Disconnected: return (
+      <div className='level-item'>
+        <a className='box has-background-grey has-text-white is-flex py-1'>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Disconnected<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
           </p>
         </a>
       </div>
