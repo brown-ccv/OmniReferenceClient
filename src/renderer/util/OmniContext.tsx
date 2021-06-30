@@ -133,7 +133,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => name === item.name) !== undefined) {
+        if (bridges.find(({ name }) => item.name.startsWith(name)) !== undefined) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
         } else {
@@ -273,7 +273,6 @@ export const omniReducer = (state: State, action: Action) => {
           case 'CTM Disposed!':
           case 'CTM Connection Failed!':
           case 'CTM Retry Failed!':
-            console.log('disconnected')
             item.connectionState = ConnectionState.Disconnected
             break
           case 'CTM Connected!':

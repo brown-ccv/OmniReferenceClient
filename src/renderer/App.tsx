@@ -33,17 +33,12 @@ const App: React.FC = () => {
    */
   React.useEffect(() => {
     const getInitialConnectionState = async () => {
-      const { left, right } = state
-      // await timeout(3000)
-      if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
-        try {
-          dispatch({ type: ActionType.ConnectedBridges })
-          const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-          // await timeout(3000)
-          dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
-        } catch (e) {
-          dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
-        }
+      try {
+        dispatch({ type: ActionType.ConnectedBridges })
+        const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+        dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
+      } catch (e) {
+        dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
       }
     }
     getInitialConnectionState()
@@ -60,17 +55,16 @@ const App: React.FC = () => {
        * If the state of the bridge connection is still unknown, list all the available
        * bridges.
        */
-      // await timeout(3000)
-      if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
+      if ([left.connectionState, right.connectionState].includes(ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ListBridges })
           const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-          // await timeout(3000)
           dispatch({ type: ActionType.ListBridgesSuccess, bridges })
         } catch (e) {
           dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
         }
       }
+
       /**
        * If a bridge is discovered, finalize the connection to that bridge
        */
