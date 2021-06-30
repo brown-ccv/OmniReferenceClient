@@ -34,12 +34,12 @@ const App: React.FC = () => {
   React.useEffect(() => {
     const getInitialConnectionState = async () => {
       const { left, right } = state
-      await timeout(3000)
+      // await timeout(3000)
       if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ConnectedBridges })
           const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-          await timeout(3000)
+          // await timeout(3000)
           dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
         } catch (e) {
           dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
@@ -60,12 +60,12 @@ const App: React.FC = () => {
        * If the state of the bridge connection is still unknown, list all the available
        * bridges.
        */
-      await timeout(3000)
+      // await timeout(3000)
       if ([left, right].every(({ connectionState }) => connectionState === ConnectionState.Unknown)) {
         try {
           dispatch({ type: ActionType.ListBridges })
           const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-          await timeout(3000)
+          // await timeout(3000)
           dispatch({ type: ActionType.ListBridgesSuccess, bridges })
         } catch (e) {
           dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
@@ -83,9 +83,11 @@ const App: React.FC = () => {
           dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
 
           // After connection, register callback for connection streaming stuff
-          ;(window as any).deviceManagerService.connectionStatusStream(
+          ;(window as any).bridgeManagerService.connectionStatusStream(
             { name, enableStream: true },
-            ({ message, name }: { message: string, name: string }) => dispatch({ type: ActionType.ConnectionStatusUpdate, message, name })
+            ({ connectionStatus: message, name }: {connectionStatus: string, name: string}) => {
+              dispatch({ type: ActionType.ConnectionStatusUpdate, message, name })
+            }
           )
         } catch (e) {
           dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
@@ -122,7 +124,8 @@ const App: React.FC = () => {
         }
       })
 
-      console.log(state)
+      console.log(`left- current: ${state.left.connectionState}, previous ${state.left.previousState}`)
+      console.log(`right- current: ${state.right.connectionState}, previous ${state.right.previousState}`)
     }
     updateConnectionState()
   }, [state])

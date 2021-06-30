@@ -261,25 +261,27 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ConnectionStatusUpdate: {
       const { message, name } = action
+      console.log(message, name)
 
       ;[left, right].forEach(item => {
-        if (item.name !== name) { return }
+        if (!item.name.startsWith(name)) { return }
 
         item.previousState = item.connectionState
 
-        switch(message) {
-          case "CTM Disconnected!":
-          case "CTM Disposed!":
-          case "CTM Connection Failed!":
-          case "CTM Retry Failed!":
+        switch (message) {
+          case 'CTM Disconnected!':
+          case 'CTM Disposed!':
+          case 'CTM Connection Failed!':
+          case 'CTM Retry Failed!':
+            console.log('disconnected')
             item.connectionState = ConnectionState.Disconnected
-            break;
-          case "CTM Connected!":
+            break
+          case 'CTM Connected!':
             item.connectionState = ConnectionState.ConnectedBridge
-            break;
+            break
           default:
             item.connectionState = ConnectionState.ErrorBridge
-            break;
+            break
         }
       })
 

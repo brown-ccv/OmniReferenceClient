@@ -75,6 +75,12 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
         connectionJSON.connectINS = 'error'
         break
       }
+      case ConnectionState.Disconnected: {
+        console.log('here')
+        connectionJSON.scanCTM = 'success'
+        connectionJSON.connectCTM = 'error'
+        break
+      }
     }
   }
   // Success case
