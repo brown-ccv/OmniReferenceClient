@@ -83,7 +83,7 @@ const App: React.FC = () => {
           dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
 
           // After connection, register callback for connection streaming stuff
-          ;(window as any).deviceManagerService.connectionStatusStream(
+          ;(window as any).bridgeManagerService.connectionStatusStream(
             { name, enableStream: true },
             ({ message, name }: { message: string, name: string }) => dispatch({ type: ActionType.ConnectionStatusUpdate, message, name })
           )
