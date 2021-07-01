@@ -31,7 +31,7 @@ contextBridge.exposeInMainWorld('bridgeManagerService', {
     return await ipcRenderer.invoke('disconnect-from-bridge', request)
   },
 
-  connectionStatusStream: (request: any, callback: any): void => {
+  connectionStatusStream: (request: any, callback: Function): void => {
     const { enableStream } = request
     if (enableStream) {
       ipcRenderer.send('connection-status-stream', request)

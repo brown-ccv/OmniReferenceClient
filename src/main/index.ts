@@ -148,8 +148,6 @@ ipcMain.on('connection-status-stream', async (event, { name, enableStream }) => 
     event.reply('connection-update', resp)
   })
 
-  call.on('status', console.log)
-
   call.on('end', () => {
     call.removeAllListeners('data')
   })
