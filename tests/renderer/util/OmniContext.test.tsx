@@ -398,56 +398,6 @@ describe('omniReducer', () => {
     })
   })
 
-  describe("ConnectionStatusUpdate", () => {
-    it("transitions to disconnected when the CTM sends a disconnect update", () => {
-      let { left, right } = initState
-
-      left.connectionState = ConnectionState.ConnectedDevice
-      left.previousState = ConnectionState.ConnectingDevice
-
-      const message = 'CTM Disconnected!'
-      ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectionStatusUpdate, message, name: left.name }))
-
-      expect(left.connectionState).toBe(ConnectionState.Disconnected)
-      expect(left.previousState).toBe(ConnectionState.ConnectedDevice)
-
-      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
-      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
-    })
-
-    it("transitions to connected-bridge when the CTM sends a connection update", () => {
-      let { left, right } = initState
-
-      left.connectionState = ConnectionState.Disconnected
-      left.previousState = ConnectionState.ConnectedDevice
-
-      const message = 'CTM Connected!'
-      ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectionStatusUpdate, message, name: left.name }))
-
-      expect(left.connectionState).toBe(ConnectionState.ConnectedBridge)
-      expect(left.previousState).toBe(ConnectionState.Disconnected)
-
-      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
-      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
-    })
-
-    it('transitions to error-bridge when any other message is sent', () => {
-      let { left, right } = initState
-
-      left.connectionState = ConnectionState.ConnectedDevice
-      left.previousState = ConnectionState.ConnectingDevice
-
-      const message = 'unhandled status update message'
-      ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectionStatusUpdate, message, name: left.name }))
-
-      expect(left.connectionState).toBe(ConnectionState.ErrorBridge)
-      expect(left.previousState).toBe(ConnectionState.ConnectedDevice)
-
-      expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
-      expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
-    })
-  })
-
   describe('BatteryBridge', () => {
     it('does nothing when initiated', () => {
       const { left } = initState

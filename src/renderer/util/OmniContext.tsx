@@ -46,7 +46,6 @@ export enum ActionType {
   ConnectToBridge = 'connect-to-bridge',
   ConnectToBridgeSuccess = 'connect-to-bridge-success',
   ConnectToBridgeFailure = 'connect-to-bridge-failure',
-  ConnectionStatusUpdate = 'connection-status-update',
   DisconnectFromBridge = 'disconnect-from-bridge',
   BatteryBridge = 'battery-bridge',
   BatteryBridgeSuccess = 'battery-bridge-success',
@@ -73,7 +72,6 @@ export type Action =
   | { type: ActionType.ConnectToBridge, name: string}
   | { type: ActionType.ConnectToBridgeSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToBridgeFailure, message: string, name: string }
-  | { type: ActionType.ConnectionStatusUpdate, message: string, name: string }
   | { type: ActionType.DisconnectFromBridge, name: string, error?: string }
   | { type: ActionType.BatteryBridge, name: string }
   | { type: ActionType.BatteryBridgeSuccess, response: {details: any, error: any}, name: string }
@@ -273,32 +271,6 @@ export const omniReducer = (state: State, action: Action) => {
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ErrorBridge
         item.error = message
-      })
-
-      return { left, right }
-    }
-    case ActionType.ConnectionStatusUpdate: {
-      const { message, name } = action
-
-      ;[left, right].forEach(item => {
-        if (!item.name.startsWith(name)) { return }
-
-        item.previousState = item.connectionState
-
-        switch (message) {
-          case 'CTM Disconnected!':
-          case 'CTM Disposed!':
-          case 'CTM Connection Failed!':
-          case 'CTM Retry Failed!':
-            item.connectionState = ConnectionState.Disconnected
-            break
-          case 'CTM Connected!':
-            item.connectionState = ConnectionState.ConnectedBridge
-            break
-          default:
-            item.connectionState = ConnectionState.ErrorBridge
-            break
-        }
       })
 
       return { left, right }
