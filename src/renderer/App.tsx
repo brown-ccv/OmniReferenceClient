@@ -103,14 +103,6 @@ const App: React.FC = () => {
           dispatch({ type: ActionType.ConnectToBridge, name })
           const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: -1 })
           dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
-
-          // After connection, register callback for connection streaming stuff
-          ;(window as any).bridgeManagerService.connectionStatusStream(
-            { name, enableStream: true },
-            ({ connectionStatus: message, name }: {connectionStatus: string, name: string}) => {
-              dispatch({ type: ActionType.ConnectionStatusUpdate, message, name })
-            }
-          )
         } catch (e) {
           dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
         }

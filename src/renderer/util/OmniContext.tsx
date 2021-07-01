@@ -6,8 +6,7 @@ import config from '../config.json'
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
  * be hidden in a configuration file. The configuration file will have a structure:
  *
- *   {
- *     "left": {
+ *   { *     "left": {
  *       "name": "//summit/bridge/foo/device/bar",
  *       "config": {}
  *     }
@@ -46,7 +45,6 @@ export enum ActionType {
   ConnectToBridge = 'connect-to-bridge',
   ConnectToBridgeSuccess = 'connect-to-bridge-success',
   ConnectToBridgeFailure = 'connect-to-bridge-failure',
-  ConnectionStatusUpdate = 'connection-status-update',
   DisconnectFromBridge = 'disconnect-from-bridge',
   BatteryBridge = 'battery-bridge',
   BatteryBridgeSuccess = 'battery-bridge-success',
@@ -73,7 +71,6 @@ export type Action =
   | { type: ActionType.ConnectToBridge, name: string}
   | { type: ActionType.ConnectToBridgeSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToBridgeFailure, message: string, name: string }
-  | { type: ActionType.ConnectionStatusUpdate, message: string, name: string }
   | { type: ActionType.DisconnectFromBridge, name: string, error?: string }
   | { type: ActionType.BatteryBridge, name: string }
   | { type: ActionType.BatteryBridgeSuccess, response: {details: any, error: any}, name: string }
@@ -277,32 +274,6 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
-    case ActionType.ConnectionStatusUpdate: {
-      const { message, name } = action
-
-      ;[left, right].forEach(item => {
-        if (!item.name.startsWith(name)) { return }
-
-        item.previousState = item.connectionState
-
-        switch (message) {
-          case 'CTM Disconnected!':
-          case 'CTM Disposed!':
-          case 'CTM Connection Failed!':
-          case 'CTM Retry Failed!':
-            item.connectionState = ConnectionState.Disconnected
-            break
-          case 'CTM Connected!':
-            item.connectionState = ConnectionState.ConnectedBridge
-            break
-          default:
-            item.connectionState = ConnectionState.ErrorBridge
-            break
-        }
-      })
-
-      return { left, right }
-    }
     case ActionType.DisconnectFromBridge: {
       const { name } = action
 
@@ -311,6 +282,8 @@ export const omniReducer = (state: State, action: Action) => {
 
         if (name !== item.name) { return }
 
+        item.bridgeBattery = -1
+        item.deviceBattery = -1
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.Disconnected
       })
@@ -342,6 +315,8 @@ export const omniReducer = (state: State, action: Action) => {
         if (error && ['NO_CTM_CONNECTED', 'CTM_COMMAND_TIMEOUT', 'CTM_UNEXPECTED_DISCONNECT'].includes(error.rejectCode)) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.Disconnected
+          item.bridgeBattery = -1
+          item.deviceBattery = -1
           item.error = error.message
           return
         }
@@ -478,6 +453,8 @@ export const omniReducer = (state: State, action: Action) => {
 
         if (name !== item.name) { return }
 
+        item.bridgeBattery = -1
+        item.deviceBattery = -1
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.Disconnected
       })
@@ -495,6 +472,8 @@ export const omniReducer = (state: State, action: Action) => {
         if (error && error.rejectCode !== 'NO_ERROR') {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.Disconnected
+          item.bridgeBattery = -1
+          item.deviceBattery = -1
           item.error = error.message
           return
         }
