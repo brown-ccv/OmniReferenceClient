@@ -54,6 +54,10 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 
   disconnectFromDevice: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('disconnect-from-device', request)
+  },
+
+  deviceStatus: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('device-status', request)
   }
 })
 

@@ -4,4 +4,4 @@ export const bridgeConnected = ({ connectionState }: BridgeDevicePairState): boo
   ConnectionState.Unknown, ConnectionState.ScanningBridge, ConnectionState.DiscoveredBridge, ConnectionState.ConnectingBridge
 ].includes(connectionState)
 
-export const deviceConnected = ({ connectionState }: BridgeDevicePairState): boolean => connectionState !== ConnectionState.ConnectedDevice
+export const deviceConnected = ({ connectionState }: BridgeDevicePairState): boolean => connectionState === ConnectionState.ConnectedDevice

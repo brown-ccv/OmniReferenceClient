@@ -58,6 +58,9 @@ export enum ActionType {
   ConnectToDeviceSuccess = 'connect-to-device-success',
   ConnectToDeviceFailure = 'connect-to-device-failure',
   DisconnectFromDevice = 'disconnect-from-device',
+  BatteryDevice = 'battery-device',
+  BatteryDeviceSuccess = 'battery-device-success',
+  BatteryDeviceFailure = 'battery-device-failure',
 }
 
 export type Action =
@@ -82,6 +85,9 @@ export type Action =
   | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToDeviceFailure, message: string, name: string }
   | { type: ActionType.DisconnectFromDevice, name: string }
+  | { type: ActionType.BatteryDevice, name: string }
+  | { type: ActionType.BatteryDeviceSuccess, response: {batteryLevelPercent: { value: number }, error: any}, name: string }
+  | { type: ActionType.BatteryDeviceFailure, message: string, name: string }
 type Dispatch = (action: Action) => void
 
 export interface BridgeDevicePairState {
@@ -114,14 +120,14 @@ const initialState: State = {
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
-    deviceBattery: -1,
+    deviceBattery: -1
   },
   right: {
     name: config.right.name,
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
-    deviceBattery: -1,
+    deviceBattery: -1
   }
 }
 
@@ -273,7 +279,6 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ConnectionStatusUpdate: {
       const { message, name } = action
-      console.log(message, name)
 
       ;[left, right].forEach(item => {
         if (!item.name.startsWith(name)) { return }
@@ -312,6 +317,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.BatteryDevice:
     case ActionType.BatteryBridge: {
       /**
        * HACK (BNR): When we return { left, right } we're creating a new object whose contents
@@ -340,8 +346,20 @@ export const omniReducer = (state: State, action: Action) => {
           return
         }
 
-        console.log(details)
         item.bridgeBattery = details.batteryLevel
+      })
+
+      return { left, right }
+    }
+    case ActionType.BatteryBridgeFailure: {
+      const { message, name } = action
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.ErrorBridge
+        item.error = message
       })
 
       return { left, right }
@@ -383,7 +401,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
-    case ActionType.BatteryBridgeFailure:
+    case ActionType.BatteryDeviceFailure:
     case ActionType.ConnectToDeviceFailure:
     case ActionType.ListDevicesFailure: {
       const { message, name } = action
@@ -462,6 +480,26 @@ export const omniReducer = (state: State, action: Action) => {
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.Disconnected
+      })
+
+      return { left, right }
+    }
+    case ActionType.BatteryDeviceSuccess: {
+      const { name, response } = action
+      const { error, batteryLevelPercent } = response
+      const { value: batteryLevel } = batteryLevelPercent
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        if (error && error.rejectCode !== 'NO_ERROR') {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.Disconnected
+          item.error = error.message
+          return
+        }
+
+        item.deviceBattery = batteryLevel
       })
 
       return { left, right }

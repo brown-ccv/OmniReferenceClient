@@ -35,9 +35,13 @@ const App: React.FC = () => {
       ;[left, right].forEach(async item => {
         // If we're connected to a device, check the device status by polling battery
         if (deviceConnected(item)) {
-          // poll battery level of INS
-          //  if success: update battery status
-          //  if error: update state to disconnected-device
+          try {
+            dispatch({ type: ActionType.BatteryDevice, name: item.name })
+            const response = await (window as any).deviceManagerService.deviceStatus({ name: item.name })
+            dispatch({ type: ActionType.BatteryDeviceSuccess, response, name: item.name })
+          } catch (e) {
+            dispatch({ type: ActionType.BatteryDeviceFailure, message: e.message, name: item.name })
+          }
         }
 
         // If we're connected to a bridge, check the bridge status by polling battery
@@ -45,7 +49,6 @@ const App: React.FC = () => {
           try {
             dispatch({ type: ActionType.BatteryBridge, name: item.name })
             const response = await (window as any).bridgeManagerService.describeBridge({ name: item.name })
-            console.log(response)
             dispatch({ type: ActionType.BatteryBridgeSuccess, response, name: item.name })
           } catch (e) {
             dispatch({ type: ActionType.BatteryBridgeFailure, message: e.message, name: item.name })

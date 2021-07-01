@@ -9,6 +9,8 @@ describe('omniReducer', () => {
         name: '//summit/bridge/foo/device/bar',
         connectionState: ConnectionState.Unknown,
         previousState: ConnectionState.Unknown,
+        bridgeBattery: -1,
+        deviceBattery: -1,
       },
       /**
        * NOTE (BNR): This right bridge/device pair will always be connected. We
@@ -19,6 +21,8 @@ describe('omniReducer', () => {
         name: '//summit/bridge/bar/device/baz',
         connectionState: ConnectionState.ConnectedBridge,
         previousState: ConnectionState.ConnectingBridge,
+        bridgeBattery: -1,
+        deviceBattery: -1,
       }
     }
   })
@@ -441,6 +445,116 @@ describe('omniReducer', () => {
 
       expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)
       expect(right.previousState).toBe(ConnectionState.ConnectingBridge)
+    })
+  })
+
+  describe('BatteryBridge', () => {
+    it('does nothing when initiated', () => {
+      const { left } = initState
+      let newLeft
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      ;({ left: newLeft } = omniReducer(initState, { type: ActionType.BatteryBridge, name: left.name }))
+
+      expect(left).toEqual(newLeft)
+    })
+
+    it('updates the battery level on success', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      const response = { details: { batteryLevel: 100 }, error: null }
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryBridgeSuccess, response, name: left.name }))
+
+      expect(left.bridgeBattery).toBe(response.details.batteryLevel)
+    })
+
+    it('disconnects if the api call failed', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      const details = { batteryLevel: 100 }
+      const error = { rejectCode: 'NO_CTM_CONNECTED', message: 'faliure message' }
+      const response = { details, error }
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryBridgeSuccess, response, name: left.name }))
+
+      expect(left.bridgeBattery).toBe(-1)
+      expect(left.connectionState).toBe(ConnectionState.Disconnected)
+      expect(left.error).toBe(error.message)
+    })
+
+    it('transitions to error-bridge on failure', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      const message = 'failure message'
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryBridgeFailure, message, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(left.error).toBe(message)
+    })
+  })
+
+  describe('BatteryDevice', () => {
+    it('does nothing when initiated', () => {
+      const { left } = initState
+      let newLeft
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      ;({ left: newLeft } = omniReducer(initState, { type: ActionType.BatteryDevice, name: left.name }))
+
+      expect(left).toEqual(newLeft)
+    })
+
+    it('updates the battery level on success', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      const response = { batteryLevelPercent: { value: 100 }, error: null }
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryDeviceSuccess, response, name: left.name }))
+
+      expect(left.deviceBattery).toBe(response.batteryLevelPercent.value)
+    })
+
+    it('disconnects if the api call failed', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      const details = { batteryLevel: 100 }
+      const error = { rejectCode: 'NO_CTM_CONNECTED', message: 'faliure message' }
+      const response = { batteryLevelPercent: { value: 100 }, error }
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryDeviceSuccess, response, name: left.name }))
+
+      expect(left.deviceBattery).toBe(-1)
+      expect(left.connectionState).toBe(ConnectionState.Disconnected)
+      expect(left.error).toBe(error.message)
+    })
+
+    it('transitions to error-device on failure', () => {
+      let { left } = initState
+
+      left.connectionState = ConnectionState.ConnectedDevice
+      left.connectionState = ConnectionState.ConnectingDevice
+
+      const message = 'failure message'
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryDeviceFailure, message, name: left.name }))
+
+      expect(left.connectionState).toBe(ConnectionState.ErrorDevice)
+      expect(left.error).toBe(message)
     })
   })
 })
