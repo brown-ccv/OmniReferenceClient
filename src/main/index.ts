@@ -1,4 +1,5 @@
 import * as path from 'path'
+import * as fs from 'fs'
 
 import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
@@ -62,12 +63,12 @@ app.on('activate', () => {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+const CONFIG_PATH = isDevelopment ? path.join(__dirname, '../../config.json') : path.join(__dirname, '../../../config.json')
+const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'))
+
 const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.join(__dirname, '../../../protos')
 const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
 
-// TODO: Configure to make enums strings
 const packageDefinition = protoLoader.loadSync(PROTO_FILES, {
   longs: String,
   enums: String,
@@ -78,9 +79,8 @@ const packageDefinition = protoLoader.loadSync(PROTO_FILES, {
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition).openmind
 const protobuf = protobufjs.loadSync(PROTO_FILES)
 
-// TODO: Make the URL for the backend configurable
-const bridgeClient = new (protoDescriptor as any).BridgeManagerService('localhost:50051', grpc.credentials.createInsecure())
-const deviceClient = new (protoDescriptor as any).DeviceManagerService('localhost:50051', grpc.credentials.createInsecure())
+const bridgeClient = new (protoDescriptor as any).BridgeManagerService(config.serverAddress, grpc.credentials.createInsecure())
+const deviceClient = new (protoDescriptor as any).DeviceManagerService(config.serverAddress, grpc.credentials.createInsecure())
 
 const parseAny = (message: any) => {
   if (message.type_url === undefined || message.value === undefined) { throw new Error('No type found') }
@@ -198,4 +198,8 @@ ipcMain.on('task-launch', (event, { appName }) => {
 ipcMain.on('quit', (event, args) => {
   // quit app
   app.quit()
+})
+
+ipcMain.on('config', (event) => {
+  event.returnValue = config
 })

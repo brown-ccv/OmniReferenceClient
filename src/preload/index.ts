@@ -64,5 +64,9 @@ contextBridge.exposeInMainWorld('appService', {
 
   closeApp: (): void => {
     ipcRenderer.send('quit')
+  },
+
+  config: (): any => {
+    return ipcRenderer.sendSync('config')
   }
 })
