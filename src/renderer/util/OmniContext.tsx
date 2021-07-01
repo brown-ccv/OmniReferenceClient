@@ -48,6 +48,9 @@ export enum ActionType {
   ConnectToBridgeFailure = 'connect-to-bridge-failure',
   ConnectionStatusUpdate = 'connection-status-update',
   DisconnectFromBridge = 'disconnect-from-bridge',
+  BatteryBridge = 'battery-bridge',
+  BatteryBridgeSuccess = 'battery-bridge-success',
+  BatteryBridgeFailure = 'battery-bridge-failure',
   ListDevices = 'list-devices',
   ListDevicesSuccess = 'list-devices-success',
   ListDevicesFailure = 'list-devices-failure',
@@ -68,7 +71,10 @@ export type Action =
   | { type: ActionType.ConnectToBridgeSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToBridgeFailure, message: string, name: string }
   | { type: ActionType.ConnectionStatusUpdate, message: string, name: string }
-  | { type: ActionType.DisconnectFromBridge, name: string }
+  | { type: ActionType.DisconnectFromBridge, name: string, error?: string }
+  | { type: ActionType.BatteryBridge, name: string }
+  | { type: ActionType.BatteryBridgeSuccess, response: {details: any, error: any}, name: string }
+  | { type: ActionType.BatteryBridgeFailure, message: string, name: string }
   | { type: ActionType.ListDevices, name: string }
   | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
@@ -82,6 +88,8 @@ export interface BridgeDevicePairState {
   name: string
   connectionState: ConnectionState
   previousState: ConnectionState
+  bridgeBattery: number
+  deviceBattery: number
   error?: string
 }
 
@@ -104,12 +112,16 @@ const initialState: State = {
   left: {
     name: config.left.name,
     connectionState: ConnectionState.Unknown,
-    previousState: ConnectionState.Unknown
+    previousState: ConnectionState.Unknown,
+    bridgeBattery: -1,
+    deviceBattery: -1,
   },
   right: {
     name: config.right.name,
     connectionState: ConnectionState.Unknown,
-    previousState: ConnectionState.Unknown
+    previousState: ConnectionState.Unknown,
+    bridgeBattery: -1,
+    deviceBattery: -1,
   }
 }
 
@@ -300,6 +312,40 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.BatteryBridge: {
+      /**
+       * HACK (BNR): When we return { left, right } we're creating a new object whose contents
+       *             are the same as the previous state. This causes a rerender as the ID of the
+       *             state object changes. If we return the original state object the ID does not
+       *             change and the component does not rerender.
+       *
+       * TODO (BNR): Can we return state in more places instead of returning { left, right }?
+       *             Can we reduce the number of rerenders we get?
+       *
+       * TODO (BNR): Is there a need for a state that reflects a pending API call?
+       */
+      return state
+    }
+    case ActionType.BatteryBridgeSuccess: {
+      const { response, name } = action
+      const { error, details } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        if (error && ['NO_CTM_CONNECTED', 'CTM_COMMAND_TIMEOUT', 'CTM_UNEXPECTED_DISCONNECT'].includes(error.rejectCode)) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.Disconnected
+          item.error = error.message
+          return
+        }
+
+        console.log(details)
+        item.bridgeBattery = details.batteryLevel
+      })
+
+      return { left, right }
+    }
     case ActionType.ListDevices: {
       const { name } = action
 
@@ -337,6 +383,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.BatteryBridgeFailure:
     case ActionType.ConnectToDeviceFailure:
     case ActionType.ListDevicesFailure: {
       const { message, name } = action

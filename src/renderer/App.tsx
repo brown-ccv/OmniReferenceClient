@@ -17,6 +17,7 @@ import Status from './pages/Status'
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
+import { bridgeConnected, deviceConnected } from './util/helpers'
 
 const App: React.FC = () => {
   const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
@@ -24,14 +25,36 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
 
-  async function timeout (delay: number) {
-    return await new Promise(res => setTimeout(res, delay))
-  }
-
   /**
    * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
    */
   React.useEffect(() => {
+    const pollConnectionState = async () => {
+      const { left, right } = state
+
+      ;[left, right].forEach(async item => {
+        // If we're connected to a device, check the device status by polling battery
+        if (deviceConnected(item)) {
+          // poll battery level of INS
+          //  if success: update battery status
+          //  if error: update state to disconnected-device
+        }
+
+        // If we're connected to a bridge, check the bridge status by polling battery
+        if (bridgeConnected(item)) {
+          try {
+            dispatch({ type: ActionType.BatteryBridge, name: item.name })
+            const response = await (window as any).bridgeManagerService.describeBridge({ name: item.name })
+            console.log(response)
+            dispatch({ type: ActionType.BatteryBridgeSuccess, response, name: item.name })
+          } catch (e) {
+            dispatch({ type: ActionType.BatteryBridgeFailure, message: e.message, name: item.name })
+          }
+        }
+      })
+    }
+    const pollConnectionStateHandle = setInterval(pollConnectionState, 15000)
+
     const getInitialConnectionState = async () => {
       try {
         dispatch({ type: ActionType.ConnectedBridges })
@@ -42,6 +65,8 @@ const App: React.FC = () => {
       }
     }
     getInitialConnectionState()
+
+    return () => clearInterval(pollConnectionStateHandle)
   }, [])
 
   /**
