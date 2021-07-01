@@ -83,6 +83,7 @@ const bridgeClient = new (protoDescriptor as any).BridgeManagerService(config.se
 const deviceClient = new (protoDescriptor as any).DeviceManagerService(config.serverAddress, grpc.credentials.createInsecure())
 
 const parseAny = (message: any) => {
+  if (message === undefined || message === null) { return undefined }
   if (message.type_url === undefined || message.value === undefined) { throw new Error('No type found') }
 
   const [_, typeUrl] = message.type_url.split('/')
@@ -92,9 +93,9 @@ const parseAny = (message: any) => {
   return protobufType.decode(message.value)
 }
 
-ipcMain.handle('list-bridges', async (event, query: string) => {
+ipcMain.handle('list-bridges', async (event, request: any) => {
   return await new Promise((resolve, reject) => {
-    bridgeClient.listBridges({ query }, (err: Error, resp: any) => {
+    bridgeClient.listBridges(request, (err: Error, resp: any) => {
       if (err) return reject(err)
       return resolve(resp)
     })
@@ -110,18 +111,18 @@ ipcMain.handle('connect-to-bridge', async (event, { name }) => {
   })
 })
 
-ipcMain.handle('connected-bridges', async (event, query: string) => {
+ipcMain.handle('connected-bridges', async (event, request) => {
   return await new Promise((resolve, reject) => {
-    bridgeClient.ConnectedBridges({ query }, (err: Error, resp: any) => {
+    bridgeClient.ConnectedBridges(request, (err: Error, resp: any) => {
       if (err) return reject(err)
       return resolve(resp)
     })
   })
 })
 
-ipcMain.handle('describe-bridge', async (event, { name }) => {
+ipcMain.handle('describe-bridge', async (event, request) => {
   return await new Promise((resolve, reject) => {
-    bridgeClient.DescribeBridge({ name }, (err: Error, resp: any) => {
+    bridgeClient.DescribeBridge(request, (err: Error, resp: any) => {
       if (err) return reject(err)
 
       const DetailsType = protobuf.root.lookupType(resp.details.type_url.split('/')[1])
@@ -132,17 +133,17 @@ ipcMain.handle('describe-bridge', async (event, { name }) => {
   })
 })
 
-ipcMain.handle('disconnect-from-bridge', async (event, { name }) => {
+ipcMain.handle('disconnect-from-bridge', async (event, request) => { 
   return await new Promise((resolve, reject) => {
-    bridgeClient.DisconnectBridge({ name }, (err: Error, resp: any) => {
+    bridgeClient.DisconnectBridge(request, (err: Error, resp: any) => {
       if (err) return reject(err)
       return resolve(resp)
     })
   })
 })
 
-ipcMain.on('connection-status-stream', async (event, { name, enableStream }) => {
-  const call = bridgeClient.connectionStatusStream({ name, enableStream })
+ipcMain.on('connection-status-stream', async (event, request) => {
+  const call = bridgeClient.connectionStatusStream(request)
 
   call.on('data', (resp: any) => {
     event.reply('connection-update', resp)
@@ -174,7 +175,8 @@ ipcMain.handle('connect-to-device', async (event, request) => {
       if (err) return reject(err)
 
       const details = parseAny(resp.details)
-      return resolve({ ...resp, details })
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, details, error })
     })
   })
 })
@@ -196,7 +198,6 @@ ipcMain.on('task-launch', (event, { appName }) => {
 })
 
 ipcMain.on('quit', (event, args) => {
-  // quit app
   app.quit()
 })
 

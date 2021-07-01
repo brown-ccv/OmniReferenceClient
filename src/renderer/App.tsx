@@ -5,7 +5,7 @@ import {
   Route
 } from 'react-router-dom'
 
-import { useOmni, ConnectionState, ActionType } from './util/OmniContext'
+import { useOmni, ConnectionState, ActionType, State, Dispatch } from './util/OmniContext'
 
 import Buttons from './pages/Buttons'
 import Help from './pages/Help'
@@ -18,110 +18,109 @@ import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
 
+
+
 const App: React.FC = () => {
   const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
 
-  async function timeout (delay: number) {
-    return await new Promise(res => setTimeout(res, delay))
-  }
-
   /**
-   * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
+   * NOTE (BNR): In react, when the state updates a component rerenders, and optionally
+   *             fires useEffect hooks based on their dependency arrays. We want the app
+   *             to try and move the state machine forward whenever the state changes.
+   * 
+   *             If we take the simple approach and use an async function in the useEffect
+   *             hook, the async function will cause a state update which causes the component
+   *             to rerender and the useEffect hook to fire again _before_ the first call
+   *             even finishes. What we wind up with is a stack of pending async calls, all
+   *             manipulating the state machine at the same time. It's chaos
+   * 
+   *             What we need is a way to halt the async function after the state has been updated
+   *             and resume it after the rerender is complete. To accomplish this we use a refernce
+   *             to a generator.
+   * 
+   *             The generator function yields after every state change, effectively halting our
+   *             async function. The useEffect hook calls next() on the generator after the
+   *             rerender completes, and the next() call moves the state machine forward one tick.
+   * 
+   *             In react, state, variables and other data are regenerated on rerender. To ensure
+   *             that doesn't happen we use the useRef hook to pull the generator out of the
+   *             state update loop so it cannot change on rerenders or component updates.
    */
-  React.useEffect(() => {
-    const getInitialConnectionState = async () => {
-      try {
-        dispatch({ type: ActionType.ConnectedBridges })
-        const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-        dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
-      } catch (e) {
-        dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
+  async function* updateConnectionState() {
+    const { left, right } = state
+
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve))
+      for (const item of [left, right]) {
+        const { connectionState, name } = item
+
+        if (connectionState === ConnectionState.Unknown) {
+          try {
+            yield dispatch({ type: ActionType.ConnectedBridges })
+            const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+            yield dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
+          } catch (e) {
+            yield dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
+          }
+        }
+
+        if (connectionState === ConnectionState.NotConnectedBridge) {
+          try {
+            yield dispatch({ type: ActionType.ListBridges })
+            const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+            yield dispatch({ type: ActionType.ListBridgesSuccess, bridges })
+          } catch (e) {
+            yield dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
+          }
+        }
+
+        if (connectionState === ConnectionState.DiscoveredBridge) {
+          try {
+            yield dispatch({ type: ActionType.ConnectToBridge, name })
+            const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: 0 })
+            yield dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
+          } catch (e) {
+            yield dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
+          }
+        }
+
+        if (connectionState === ConnectionState.ConnectedBridge) {
+          try {
+            yield dispatch({ type: ActionType.ListDevices, name })
+            const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
+            yield dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
+          } catch (e) {
+            yield dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
+          }
+        }
+
+        if (connectionState === ConnectionState.DiscoveredDevice) {
+          try {
+            yield dispatch({ type: ActionType.ConnectToDevice, name })
+            const connection = await (window as any).deviceManagerService.connectToDevice({ name })
+            yield dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
+          } catch (e) {
+            yield dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
+          }
+        }
       }
     }
-    getInitialConnectionState()
-  }, [])
+  }
+
+  const updateStateGenerator = React.useRef(updateConnectionState())
 
   /**
    * NOTE (BNR): This hook runs whenever the state is updated.
    */
   React.useEffect(() => {
-    const updateConnectionState = async () => {
-      const { left, right } = state
-
-      /**
-       * If the state of the bridge connection is still unknown, list all the available
-       * bridges.
-       */
-      if ([left.connectionState, right.connectionState].includes(ConnectionState.Unknown)) {
-        try {
-          dispatch({ type: ActionType.ListBridges })
-          const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-          dispatch({ type: ActionType.ListBridgesSuccess, bridges })
-        } catch (e) {
-          dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
-        }
-      }
-
-      /**
-       * If a bridge is discovered, finalize the connection to that bridge
-       */
-      ;[left, right].forEach(async ({ connectionState, name }) => {
-        if (connectionState !== ConnectionState.DiscoveredBridge) { return }
-
-        try {
-          dispatch({ type: ActionType.ConnectToBridge, name })
-          const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: -1 })
-          dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
-
-          // After connection, register callback for connection streaming stuff
-          ;(window as any).bridgeManagerService.connectionStatusStream(
-            { name, enableStream: true },
-            ({ connectionStatus: message, name }: {connectionStatus: string, name: string}) => {
-              dispatch({ type: ActionType.ConnectionStatusUpdate, message, name })
-            }
-          )
-        } catch (e) {
-          dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
-        }
-      })
-
-      /**
-       * If a bridge is connected, start listing out the devices available to that bridge
-       */
-      ;[left, right].forEach(async ({ connectionState, name }) => {
-        if (connectionState !== ConnectionState.ConnectedBridge) { return }
-
-        try {
-          dispatch({ type: ActionType.ListDevices, name })
-          const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
-          dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
-        } catch (e) {
-          dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
-        }
-      })
-
-      /**
-       * If a device is discovered, finalize the connection to that device
-       */
-      ;[left, right].forEach(async ({ connectionState, name }) => {
-        if (connectionState !== ConnectionState.DiscoveredDevice) { return }
-
-        try {
-          dispatch({ type: ActionType.ConnectToDevice, name })
-          const connection = await (window as any).deviceManagerService.connectToDevice({ name })
-          dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
-        } catch (e) {
-          dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
-        }
-      })
-
-      console.log(`left- current: ${state.left.connectionState}, previous ${state.left.previousState}`)
-      console.log(`right- current: ${state.right.connectionState}, previous ${state.right.previousState}`)
-    }
-    updateConnectionState()
+    (() => {
+      console.log('before', state.left.connectionState, state.right.connectionState)
+      updateStateGenerator.current.next()
+      console.log('after', state.left.connectionState, state.right.connectionState)
+    })()
   }, [state])
 
   React.useEffect(() => {

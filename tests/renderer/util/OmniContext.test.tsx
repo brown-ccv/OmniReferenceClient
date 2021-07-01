@@ -40,7 +40,7 @@ describe('omniReducer', () => {
 
       ;({ left, right } = omniReducer(initState, { type: ActionType.ConnectedBridgesSuccess, bridges: [] }))
 
-      expect(left.connectionState).toBe(ConnectionState.Unknown)
+      expect(left.connectionState).toBe(ConnectionState.NotConnectedBridge)
       expect(left.previousState).toBe(ConnectionState.ScanningBridge)
 
       expect(right.connectionState).toBe(ConnectionState.ConnectedBridge)

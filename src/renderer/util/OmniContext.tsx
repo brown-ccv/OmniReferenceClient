@@ -1,4 +1,3 @@
-import { MenuItem } from 'electron/main'
 import React, { useContext, useReducer } from 'react'
 
 /**
@@ -21,6 +20,7 @@ import React, { useContext, useReducer } from 'react'
 export enum ConnectionState {
   Unknown = 'unknown',
   ScanningBridge = 'scanning-bridge',
+  NotConnectedBridge = 'not-connected-bridge',
   NotFoundBridge = 'not-found-bridge',
   DiscoveredBridge = 'discovered-bridge',
   ConnectingBridge = 'connecting-bridge',
@@ -75,7 +75,7 @@ export type Action =
   | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToDeviceFailure, message: string, name: string }
   | { type: ActionType.DisconnectFromDevice, name: string }
-type Dispatch = (action: Action) => void
+export type Dispatch = (action: Action) => void
 
 export interface BridgeDevicePairState {
   name: string
@@ -128,15 +128,15 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ConnectedBridgesSuccess: {
       const { bridges } = action
-
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name)) !== undefined) {
+        if (bridges.find(({ name }) => item.name.startsWith(name))) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
         } else {
-          [item.connectionState, item.previousState] = [item.previousState, item.connectionState]
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.NotConnectedBridge
         }
       })
 
@@ -144,7 +144,7 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ListBridges: {
       ;[left, right].forEach(item => {
-        if (![ConnectionState.Unknown, ConnectionState.NotFoundBridge].includes(item.connectionState)) { return }
+        if (![ConnectionState.Unknown, ConnectionState.NotConnectedBridge].includes(item.connectionState)) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -158,7 +158,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name)) !== undefined) {
+        if (bridges.find(({ name }) => item.name.startsWith(name))) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredBridge
         } else {
@@ -260,7 +260,6 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ConnectionStatusUpdate: {
       const { message, name } = action
-      console.log(message, name)
 
       ;[left, right].forEach(item => {
         if (!item.name.startsWith(name)) { return }
@@ -325,7 +324,7 @@ export const omniReducer = (state: State, action: Action) => {
          *             it only updates the things from the list-devices call. i.e. When I call
          *             list-devices with name foobar it should only update devices with name foobar
          */
-        if (devices.find(({ name }) => item.name.startsWith(name)) !== undefined) {
+        if (devices.find(({ name }) => item.name.startsWith(name))) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredDevice
         } else {

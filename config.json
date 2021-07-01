@@ -1,9 +1,9 @@
 {
-  "serverAddress": "localhost:50051",
+  "serverAddress": "192.168.0.105:50051",
   "left": {
-    "name": "//summit/bridge/foobar/device/abc"
+    "name": "//summit/bridge/NKW005449N/device/NPC700365H"
   },
   "right": {
-    "name": "//summit/bridge/barbaz/device/xyz"
+    "name": "//summit/bridge/NKW021653N/device/NPC700365H"
   }
 }
