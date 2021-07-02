@@ -8,7 +8,6 @@ interface NavigationProp {
 }
 
 const Navigation: React.FC<NavigationProp> = ({ isRecording }) => {
-
   return (
     <aside className='menu is-large is-flex is-justify-content-center'>
       <ul>
@@ -16,7 +15,7 @@ const Navigation: React.FC<NavigationProp> = ({ isRecording }) => {
           <Link to='/'>Status <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/recording' >Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
+          <Link to='/recording'>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
           <Link to='/playground' id={isRecording ? '' : 'disabled-link'}>Playground <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
