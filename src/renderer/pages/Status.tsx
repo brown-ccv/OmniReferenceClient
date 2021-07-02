@@ -28,7 +28,7 @@ const Status: React.FC = () => {
           </div>
         </div>
         <div className='block is-flex is-justify-content-center mt-6'>
-          <Link to='/recording' className='button is-light has-text-danger' id={state.left.connectionState === ConnectionState.ConnectedDevice && state.right.connectionState === ConnectionState.ConnectedDevice ? '' : 'disabled-link'}>Go to recording</Link>
+          <Link to='/recording' className='button is-light has-text-danger'>Go to recording</Link>
         </div>
         <a className='content has-text-white is-flex is-justify-content-center mt-3'>Troubleshoot</a>
 
