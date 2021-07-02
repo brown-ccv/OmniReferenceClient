@@ -23,7 +23,7 @@ const createWindow = (): void => {
     height: 800,
     width: 1200,
     minHeight: 600,
-    minWidth: 900,
+    minWidth: 1000,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY
     }
