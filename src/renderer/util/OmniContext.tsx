@@ -4,7 +4,8 @@ import React, { useContext, useReducer } from 'react'
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
  * be hidden in a configuration file. The configuration file will have a structure:
  *
- *   { *     "left": {
+ *   { 
+ *     "left": {
  *       "name": "//summit/bridge/foo/device/bar",
  *       "config": {}
  *     }
@@ -17,21 +18,22 @@ import React, { useContext, useReducer } from 'react'
  * Where the name is the complete name of the bridge and device combo.
  */
 export enum ConnectionState {
-  Unknown = 'unknown',
-  ScanningBridge = 'scanning-bridge',
-  NotConnectedBridge = 'not-connected-bridge',
-  NotFoundBridge = 'not-found-bridge',
-  DiscoveredBridge = 'discovered-bridge',
-  ConnectingBridge = 'connecting-bridge',
-  ConnectedBridge = 'connected-bridge',
-  ErrorBridge = 'error-bridge',
-  ScanningDevice = 'scanning-device',
-  NotFoundDevice = 'not-found-device',
-  DiscoveredDevice = 'discovered-device',
-  ConnectingDevice = 'connecting-device',
-  ConnectedDevice = 'connected-device',
-  ErrorDevice = 'error-device',
-  Disconnected = 'disconnected',
+  ErrorBridge,
+  ErrorDevice,
+  Disconnected,
+  Unknown,
+  ScanningBridge,
+  NotConnectedBridge,
+  NotFoundBridge,
+  DiscoveredBridge,
+  ConnectingBridge,
+  ConnectedBridge,
+  ScanningDevice,
+  NotFoundDevice,
+  DiscoveredDevice,
+  ConnectingDevice,
+  ConnectedDevice,
+  Streaming,
 }
 
 export enum ActionType {
@@ -291,18 +293,7 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.BatteryDevice:
     case ActionType.BatteryBridge: {
-      /**
-       * HACK (BNR): When we return { left, right } we're creating a new object whose contents
-       *             are the same as the previous state. This causes a rerender as the ID of the
-       *             state object changes. If we return the original state object the ID does not
-       *             change and the component does not rerender.
-       *
-       * TODO (BNR): Can we return state in more places instead of returning { left, right }?
-       *             Can we reduce the number of rerenders we get?
-       *
-       * TODO (BNR): Is there a need for a state that reflects a pending API call?
-       */
-      return state
+      return { left, right }
     }
     case ActionType.BatteryBridgeSuccess: {
       const { response, name } = action
@@ -359,11 +350,6 @@ export const omniReducer = (state: State, action: Action) => {
         if (item.name !== name) { return }
         if (item.connectionState !== ConnectionState.ScanningDevice) { return }
 
-        /**
-         * TODO (BNR): This isn't working right. I need to make sure that when I call success
-         *             it only updates the things from the list-devices call. i.e. When I call
-         *             list-devices with name foobar it should only update devices with name foobar
-         */
         if (devices.find(({ name }) => item.name.startsWith(name))) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredDevice
@@ -468,7 +454,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.name !== name) { return }
 
-        if (error && error.rejectCode !== 'NO_ERROR') {
+        if (error && error.rejectCode !== undefined) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.Disconnected
           item.bridgeBattery = -1
