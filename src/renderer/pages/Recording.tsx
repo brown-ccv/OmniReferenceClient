@@ -2,6 +2,7 @@ import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircle } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionState, useOmni } from '../util/OmniContext'
+import { recordTimeFormat } from '../util/helpers'
 const RecordLogo = require('../../../public/logos/record.svg')
 const RecordingLogo = require('../../../public/logos/recording.svg')
 const RecordDisabled = require('../../../public/logos/recordDisabled.svg')
@@ -11,10 +12,6 @@ interface RecordingProp {
   setRecording: Function
   recordingTime: number
   setRecordingTime: Function
-}
-
-const recordTimeFormat = (seconds: number) => {
-  return new Date(seconds * 1000).toISOString().substr(11, 8)
 }
 
 const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordingTime, setRecordingTime }) => {
