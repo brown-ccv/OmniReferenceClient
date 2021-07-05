@@ -17,7 +17,7 @@ import Status from './pages/Status'
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
-import { bridgeConnected, deviceConnected } from './util/helpers'
+import { bridgeConnected, deviceConnected, connectionStateString, slowPolling } from './util/helpers'
 
 
 
@@ -26,53 +26,6 @@ const App: React.FC = () => {
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
-
-  /**
-   * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
-   */
-  React.useEffect(() => {
-    const pollConnectionState = async () => {
-      const { left, right } = state
-
-      ;[left, right].forEach(async item => {
-        // If we're connected to a device, check the device status by polling battery
-        if (deviceConnected(item)) {
-          try {
-            dispatch({ type: ActionType.BatteryDevice, name: item.name })
-            const response = await (window as any).deviceManagerService.deviceStatus({ name: item.name })
-            dispatch({ type: ActionType.BatteryDeviceSuccess, response, name: item.name })
-          } catch (e) {
-            dispatch({ type: ActionType.BatteryDeviceFailure, message: e.message, name: item.name })
-          }
-        }
-
-        // If we're connected to a bridge, check the bridge status by polling battery
-        if (bridgeConnected(item)) {
-          try {
-            dispatch({ type: ActionType.BatteryBridge, name: item.name })
-            const response = await (window as any).bridgeManagerService.describeBridge({ name: item.name })
-            dispatch({ type: ActionType.BatteryBridgeSuccess, response, name: item.name })
-          } catch (e) {
-            dispatch({ type: ActionType.BatteryBridgeFailure, message: e.message, name: item.name })
-          }
-        }
-      })
-    }
-    const pollConnectionStateHandle = setInterval(pollConnectionState, 15000)
-
-    const getInitialConnectionState = async () => {
-      try {
-        dispatch({ type: ActionType.ConnectedBridges })
-        const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-        dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
-      } catch (e) {
-        dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
-      }
-    }
-    getInitialConnectionState()
-
-    return () => clearInterval(pollConnectionStateHandle)
-  }, [])
 
   /**
    * NOTE (BNR): In react, when the state updates a component rerenders, and optionally
@@ -105,69 +58,110 @@ const App: React.FC = () => {
       for (const item of [left, right]) {
         const { connectionState, name } = item
 
-        if (connectionState === ConnectionState.Unknown) {
-          try {
-            yield dispatch({ type: ActionType.ConnectedBridges })
-            const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-            yield dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
+        console.group((name === left.name) ? "left" : "right")
+
+        switch (connectionState) {
+          case ConnectionState.NotFoundDevice:
+          case ConnectionState.Unknown:
+          case ConnectionState.Disconnected:
+          case ConnectionState.NotConnectedBridge: {
+            console.group('ListBridges')
+            try {
+              yield dispatch({ type: ActionType.ListBridges })
+              const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+              console.log(bridges)
+              yield dispatch({ type: ActionType.ListBridgesSuccess, bridges })
+              console.log('ListBridges Success')
+            } catch (e) {
+              yield dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
+              console.log('ListBridges Failure')
+            }
+            console.groupEnd()
+            break
+          }
+          case ConnectionState.DiscoveredBridge: {
+            console.group('ConnectToBridge')
+            try {
+              yield dispatch({ type: ActionType.ConnectToBridge, name })
+              const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: 0 })
+              console.log(connection)
+              yield dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
+              console.log('ConnectToBridge Success')
+            } catch (e) {
+              yield dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
+              console.log('ConnectToBridge Failure')
+            }
+            console.groupEnd()
+            break;
+          }
+          case ConnectionState.NotFoundDevice:
+          case ConnectionState.ConnectedBridge: {
+            console.group('ListDevices')
+            try {
+              yield dispatch({ type: ActionType.ListDevices, name })
+              const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
+              yield dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
+              console.log('ListDevices Success')
+            } catch (e) {
+              yield dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
+              console.log('ListDevices Failure')
+            }
+            console.groupEnd()
+            break;
+          }
+          case ConnectionState.DiscoveredDevice: {
+            console.group('ConnectToDevice')
+            try {
+              yield dispatch({ type: ActionType.ConnectToDevice, name })
+              const connection = await (window as any).deviceManagerService.connectToDevice({ name })
+              yield dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
+              console.log('ConnectToDevice Success')
+            } catch (e) {
+              yield dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
+              console.log('ConnectToDevice Failure')
+            }
+            console.groupEnd()
+            break;
           }
         }
 
-        if (connectionState === ConnectionState.NotConnectedBridge) {
+        console.log(`connectionState: ${connectionStateString(connectionState)}`)
+
+        if (deviceConnected(item)) {
+          console.group('DeviceStatus')
           try {
-            yield dispatch({ type: ActionType.ListBridges })
-            const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-            yield dispatch({ type: ActionType.ListBridgesSuccess, bridges })
+            yield dispatch({ type: ActionType.BatteryDevice, name: item.name })
+            const response = await (window as any).deviceManagerService.deviceStatus({ name: item.name })
+            yield dispatch({ type: ActionType.BatteryDeviceSuccess, response, name: item.name })
           } catch (e) {
-            yield dispatch({ type: ActionType.ListBridgesFailure, message: e.message })
+            yield dispatch({ type: ActionType.BatteryDeviceFailure, message: e.message, name: item.name })
           }
+          console.groupEnd()
         }
 
-        if (connectionState === ConnectionState.DiscoveredBridge) {
-          try {
-            yield dispatch({ type: ActionType.ConnectToBridge, name })
-            const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: 0 })
-            yield dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
-          }
-        }
+       console.groupEnd()
+      }
 
-        if (connectionState === ConnectionState.ConnectedBridge) {
-          try {
-            yield dispatch({ type: ActionType.ListDevices, name })
-            const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
-            yield dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
-          }
-        }
-
-        if (connectionState === ConnectionState.DiscoveredDevice) {
-          try {
-            yield dispatch({ type: ActionType.ConnectToDevice, name })
-            const connection = await (window as any).deviceManagerService.connectToDevice({ name })
-            yield dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
-          }
-        }
+      /**
+       * HACK (BNR): Our polling loop is the same as our connection loop for the worse. That means
+       *             the polling speed determines how quickly we cna advance through the state machine.
+       *             As an egregious hack we slow down the loop if both sides are connected or if
+       *             one side is connected and the bridge isn't found for the other side.
+       *
+       * TODO (BNR): If I split out the loop into two would it help?
+       */
+      if (slowPolling({left, right})) {
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
     }
   }
-
   const updateStateGenerator = React.useRef(updateConnectionState())
-
-  /**
-   * NOTE (BNR): This hook runs whenever the state is updated.
-   */
+  
   React.useEffect(() => {
-    (() => {
-      console.log('before', state.left.connectionState, state.right.connectionState)
-      updateStateGenerator.current.next()
-      console.log('after', state.left.connectionState, state.right.connectionState)
+    (async () => {
+      await updateStateGenerator.current.next()
     })()
   }, [state])
 

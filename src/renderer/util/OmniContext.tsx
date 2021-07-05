@@ -4,7 +4,8 @@ import React, { useContext, useReducer } from 'react'
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
  * be hidden in a configuration file. The configuration file will have a structure:
  *
- *   { *     "left": {
+ *   { 
+ *     "left": {
  *       "name": "//summit/bridge/foo/device/bar",
  *       "config": {}
  *     }
@@ -17,21 +18,22 @@ import React, { useContext, useReducer } from 'react'
  * Where the name is the complete name of the bridge and device combo.
  */
 export enum ConnectionState {
-  Unknown = 'unknown',
-  ScanningBridge = 'scanning-bridge',
-  NotConnectedBridge = 'not-connected-bridge',
-  NotFoundBridge = 'not-found-bridge',
-  DiscoveredBridge = 'discovered-bridge',
-  ConnectingBridge = 'connecting-bridge',
-  ConnectedBridge = 'connected-bridge',
-  ErrorBridge = 'error-bridge',
-  ScanningDevice = 'scanning-device',
-  NotFoundDevice = 'not-found-device',
-  DiscoveredDevice = 'discovered-device',
-  ConnectingDevice = 'connecting-device',
-  ConnectedDevice = 'connected-device',
-  ErrorDevice = 'error-device',
-  Disconnected = 'disconnected',
+  ErrorBridge,
+  ErrorDevice,
+  Disconnected,
+  Unknown,
+  ScanningBridge,
+  NotConnectedBridge,
+  NotFoundBridge,
+  DiscoveredBridge,
+  ConnectingBridge,
+  ConnectedBridge,
+  ScanningDevice,
+  NotFoundDevice,
+  DiscoveredDevice,
+  ConnectingDevice,
+  ConnectedDevice,
+  Streaming,
 }
 
 export enum ActionType {
@@ -58,6 +60,7 @@ export enum ActionType {
   BatteryDevice = 'battery-device',
   BatteryDeviceSuccess = 'battery-device-success',
   BatteryDeviceFailure = 'battery-device-failure',
+  ResetConnection = 'reset-connection',
 }
 
 export type Action =
@@ -84,6 +87,7 @@ export type Action =
   | { type: ActionType.BatteryDevice, name: string }
   | { type: ActionType.BatteryDeviceSuccess, response: {batteryLevelPercent: { value: number }, error: any}, name: string }
   | { type: ActionType.BatteryDeviceFailure, message: string, name: string }
+  | { type: ActionType.ResetConnection, name: string }
 export type Dispatch = (action: Action) => void
 
 export interface BridgeDevicePairState {
@@ -131,9 +135,19 @@ export const omniReducer = (state: State, action: Action) => {
   const { left, right } = state
 
   switch (action.type) {
+    /**
+     * NOTE (BNR): ConnectedBridges is unreliable. In the case there was a recent
+     *             connection that has gone dark, ConnectedBridges will return the
+     *             dark bridge as a connected bridge. Because of this, there are
+     *             situations in which the call to ListDevices will succeed on a
+     *             dark bridge. To deal with this, we allow ConnectedBridges to
+     *             be called when the device pair is in the NotFoundDevice state.
+     */
     case ActionType.ConnectedBridges: {
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown) { return }
+        if (item.connectionState !== ConnectionState.Unknown
+          && item.connectionState !== ConnectionState.Disconnected
+          && item.connectionState !== ConnectionState.NotFoundDevice) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -159,7 +173,10 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ListBridges: {
       ;[left, right].forEach(item => {
-        if (![ConnectionState.Unknown, ConnectionState.NotConnectedBridge].includes(item.connectionState)) { return }
+        if (item.connectionState !== ConnectionState.Unknown
+          && item.connectionState !== ConnectionState.Disconnected
+          && item.connectionState !== ConnectionState.NotFoundDevice
+          && item.connectionState !== ConnectionState.NotConnectedBridge) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -226,36 +243,27 @@ export const omniReducer = (state: State, action: Action) => {
         if (item.connectionState !== ConnectionState.ConnectingBridge) { return }
         if (name !== item.name) { return }
 
-        switch (connectionStatus) {
-          case 'CONNECTION_SUCCESS': {
-            item.previousState = item.connectionState
-            item.connectionState = ConnectionState.ConnectedBridge
-            break
-          }
-          /**
-           * NOTE (BNR): Why handle errors here instead of ActionType.ConnectToBridgeFailure?
-           *
-           *             Good question, the ActionType.ConnectToBridgeFailure action is for
-           *             when the _call_ to the bridge fails, not when the _call_ succeeds
-           *             but the result was a bridge connection failure.
-           *
-           *             The motivation is that I don't want the callers of dispatch to
-           *             think about what's in the response from the server. All that logic
-           *             should be here in the reducer
-           */
-          case 'CONNECTION_FAILURE':
-          case 'CONNECT_BRIDGE_STATUS_UNSPECIFIED':
-          default: {
-            item.previousState = item.connectionState
-            item.connectionState = ConnectionState.ErrorBridge
-            /**
-             * TODO (BNR): The connection status enum off of the details object
-             *             is in 'CONSTANT_CASE' should I reformat to 'human case'
-             *             or should I leave it as is?
-             */
-            item.error = details?.connectionStatus
-          }
+        if (connectionStatus === 'CONNECTION_SUCCESS') {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.ConnectedBridge
+          return
         }
+
+        if (connectionStatus === 'CONNECTION_FAILURE' && details?.connectionStatus === 4) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.Disconnected
+          return
+        }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.ErrorBridge
+
+        /**
+         * TODO (BNR): The connection status enum off of the details object
+         *             is in 'CONSTANT_CASE' should I reformat to 'human case'
+         *             or should I leave it as is?
+         */
+        item.error = details?.connectionStatus
       })
 
       return { left, right }
@@ -291,18 +299,7 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.BatteryDevice:
     case ActionType.BatteryBridge: {
-      /**
-       * HACK (BNR): When we return { left, right } we're creating a new object whose contents
-       *             are the same as the previous state. This causes a rerender as the ID of the
-       *             state object changes. If we return the original state object the ID does not
-       *             change and the component does not rerender.
-       *
-       * TODO (BNR): Can we return state in more places instead of returning { left, right }?
-       *             Can we reduce the number of rerenders we get?
-       *
-       * TODO (BNR): Is there a need for a state that reflects a pending API call?
-       */
-      return state
+      return { left, right }
     }
     case ActionType.BatteryBridgeSuccess: {
       const { response, name } = action
@@ -359,11 +356,6 @@ export const omniReducer = (state: State, action: Action) => {
         if (item.name !== name) { return }
         if (item.connectionState !== ConnectionState.ScanningDevice) { return }
 
-        /**
-         * TODO (BNR): This isn't working right. I need to make sure that when I call success
-         *             it only updates the things from the list-devices call. i.e. When I call
-         *             list-devices with name foobar it should only update devices with name foobar
-         */
         if (devices.find(({ name }) => item.name.startsWith(name))) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredDevice
@@ -463,12 +455,16 @@ export const omniReducer = (state: State, action: Action) => {
     case ActionType.BatteryDeviceSuccess: {
       const { name, response } = action
       const { error, batteryLevelPercent } = response
-      const { value: batteryLevel } = batteryLevelPercent
+      let batteryLevel: number
+
+      if (batteryLevelPercent !== null) {
+        ({ value: batteryLevel } = batteryLevelPercent)
+      }
 
       ;[left, right].forEach(item => {
         if (item.name !== name) { return }
 
-        if (error && error.rejectCode !== 'NO_ERROR') {
+        if (error && error.rejectCode !== undefined) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.Disconnected
           item.bridgeBattery = -1
@@ -478,6 +474,19 @@ export const omniReducer = (state: State, action: Action) => {
         }
 
         item.deviceBattery = batteryLevel
+      })
+
+      return { left, right }
+    }
+    case ActionType.ResetConnection: {
+      const { name } = action
+
+      ;[left, right].forEach(item => {
+        if (name !== item.name) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.Unknown
+        item.error = undefined
       })
 
       return { left, right }

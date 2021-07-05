@@ -107,7 +107,8 @@ ipcMain.handle('connect-to-bridge', async (event, { name }) => {
   return await new Promise((resolve, reject) => {
     bridgeClient.ConnectBridge({ name }, (err: Error, resp: any) => {
       if (err) return reject(err)
-      return resolve(resp)
+      const details = parseAny(resp.details)
+      return resolve({...resp, details})
     })
   })
 })
@@ -126,10 +127,9 @@ ipcMain.handle('describe-bridge', async (event, request) => {
     bridgeClient.DescribeBridge(request, (err: Error, resp: any) => {
       if (err) return reject(err)
 
-      const DetailsType = protobuf.root.lookupType(resp.details.type_url.split('/')[1])
-      const details = DetailsType.decode(resp.details.value).toJSON()
-
-      return resolve({ ...resp, details })
+      const details = parseAny(resp.details)
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, details, error })
     })
   })
 })
@@ -195,7 +195,10 @@ ipcMain.handle('device-status', async (event, request) => {
   return await new Promise((resolve, reject) => {
     deviceClient.DeviceStatus(request, (err: Error, resp: any) => {
       if (err) return reject(err)
-      return resolve(resp)
+
+      const details = parseAny(resp.details)
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, details, error })
     })
   })
 })
