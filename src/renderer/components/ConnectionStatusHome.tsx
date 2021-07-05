@@ -136,7 +136,7 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
 
   return (
     <div className='box has-background-grey-darker has-text-grey-light'>
-      <p className='subtitle has-text-white is-5'>{name} Status: {status}</p>
+      <p className='subtitle has-text-white is-5'>{name} Status:</p>
       <ConnectionProgressCheckHome text='Scanning for CTM' progress={connectionJSON.scanCTM} />
       <ConnectionProgressCheckHome text='Connecting to CTM' progress={connectionJSON.connectCTM} />
       <ConnectionProgressCheckHome text='Scanning for INS' progress={connectionJSON.scanINS} />
