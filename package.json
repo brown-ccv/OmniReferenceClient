@@ -24,7 +24,8 @@
     "forge": {
       "packagerConfig": {
         "extraResource": [
-          "./protos"
+          "./protos",
+          "config.json"
         ]
       },
       "makers": [

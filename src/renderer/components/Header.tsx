@@ -15,6 +15,8 @@ interface HeaderProp {
 
 const Header: React.FC<HeaderProp> = ({ isRecording }) => {
   const { state } = useOmni()
+  const leftBatteryPercent = state.left.deviceBattery
+  const rightBatteryPercent = state.right.deviceBattery
 
   const quitHandler = () => {
     mywindow.appService.closeApp()
@@ -28,7 +30,7 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
           <Clock />
           {isRecording
             ? <Link to='/recording' className='level-item'>
-              <p className='content has-text-danger pb-1' id='blink'><FontAwesomeIcon className='icon pt-2 mx-2' icon={faCircle} />
+              <p className='content has-text-danger' id='blink'><FontAwesomeIcon className='icon pt-2 mx-2' icon={faCircle} />
                 Recording
               </p>
               </Link>
@@ -36,9 +38,15 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
         </div>
         {/* Right Side of header */}
         <div className='level-right mt-1'>
-          <p className='level-item has-text-white'>L{state.left.connectionState === ConnectionState.ConnectedDevice ? <Battery percent={state.left.deviceBattery} /> : ''}:</p>
+          <p className='level-item has-text-white'>L:</p>
+          {state.left.connectionState === ConnectionState.ConnectedDevice
+            ? <p className='level-item is-size-7 has-text-white'>{leftBatteryPercent}%<Battery percent={leftBatteryPercent} /></p>
+            : ''}
           <ConnectionStatusHeader status={state.left.connectionState} />
-          <p className='level-item has-text-white'>R{state.right.connectionState === ConnectionState.ConnectedDevice ? <Battery percent={state.right.deviceBattery} /> : ''}:</p>
+          <p className='level-item has-text-white'>R:</p>
+          {state.right.connectionState === ConnectionState.ConnectedDevice
+            ? <p className='level-item is-size-7 has-text-white'>{rightBatteryPercent}%<Battery percent={rightBatteryPercent} /></p>
+            : ''}
           <ConnectionStatusHeader status={state.right.connectionState} />
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>

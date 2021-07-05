@@ -1,4 +1,5 @@
 {
+  "serverAddress": "localhost:50051",
   "left": {
     "name": "//summit/bridge/foobar/device/abc"
   },

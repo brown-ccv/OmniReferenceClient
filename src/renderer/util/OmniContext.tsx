@@ -1,6 +1,5 @@
 import { MenuItem } from 'electron/main'
 import React, { useContext, useReducer } from 'react'
-import config from '../config.json'
 
 /**
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
@@ -113,14 +112,14 @@ const splitName = (name: string) => {
 const OmniContext = React.createContext<{state: State, dispatch: Dispatch} | undefined>(undefined)
 const initialState: State = {
   left: {
-    name: config.left.name,
+    name: (window as any).appService.config().left.name,
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
     deviceBattery: -1
   },
   right: {
-    name: config.right.name,
+    name: (window as any).appService.config().right.name,
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
