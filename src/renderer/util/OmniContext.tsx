@@ -135,7 +135,7 @@ export const omniReducer = (state: State, action: Action) => {
   switch (action.type) {
     case ActionType.ConnectedBridges: {
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown) { return }
+        if (item.connectionState !== ConnectionState.Unknown && item.connectionState !== ConnectionState.Disconnected) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -355,7 +355,7 @@ export const omniReducer = (state: State, action: Action) => {
           item.connectionState = ConnectionState.DiscoveredDevice
         } else {
           item.previousState = item.connectionState
-          item.connectionState = ConnectionState.NotFoundDevice
+          item.connectionState = ConnectionState.Disconnected
         }
       })
 
@@ -449,7 +449,11 @@ export const omniReducer = (state: State, action: Action) => {
     case ActionType.BatteryDeviceSuccess: {
       const { name, response } = action
       const { error, batteryLevelPercent } = response
-      const { value: batteryLevel } = batteryLevelPercent
+      let batteryLevel: number
+
+      if (batteryLevelPercent !== null) {
+        ({ value: batteryLevel } = batteryLevelPercent)
+      }
 
       ;[left, right].forEach(item => {
         if (item.name !== name) { return }
