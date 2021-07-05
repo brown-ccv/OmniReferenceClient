@@ -17,6 +17,7 @@ import Status from './pages/Status'
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
+import { bridgeConnected, deviceConnected } from './util/helpers'
 
 
 
@@ -25,6 +26,53 @@ const App: React.FC = () => {
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
+
+  /**
+   * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
+   */
+  React.useEffect(() => {
+    const pollConnectionState = async () => {
+      const { left, right } = state
+
+      ;[left, right].forEach(async item => {
+        // If we're connected to a device, check the device status by polling battery
+        if (deviceConnected(item)) {
+          try {
+            dispatch({ type: ActionType.BatteryDevice, name: item.name })
+            const response = await (window as any).deviceManagerService.deviceStatus({ name: item.name })
+            dispatch({ type: ActionType.BatteryDeviceSuccess, response, name: item.name })
+          } catch (e) {
+            dispatch({ type: ActionType.BatteryDeviceFailure, message: e.message, name: item.name })
+          }
+        }
+
+        // If we're connected to a bridge, check the bridge status by polling battery
+        if (bridgeConnected(item)) {
+          try {
+            dispatch({ type: ActionType.BatteryBridge, name: item.name })
+            const response = await (window as any).bridgeManagerService.describeBridge({ name: item.name })
+            dispatch({ type: ActionType.BatteryBridgeSuccess, response, name: item.name })
+          } catch (e) {
+            dispatch({ type: ActionType.BatteryBridgeFailure, message: e.message, name: item.name })
+          }
+        }
+      })
+    }
+    const pollConnectionStateHandle = setInterval(pollConnectionState, 15000)
+
+    const getInitialConnectionState = async () => {
+      try {
+        dispatch({ type: ActionType.ConnectedBridges })
+        const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+        dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges })
+      } catch (e) {
+        dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message })
+      }
+    }
+    getInitialConnectionState()
+
+    return () => clearInterval(pollConnectionStateHandle)
+  }, [])
 
   /**
    * NOTE (BNR): In react, when the state updates a component rerenders, and optionally

@@ -6,6 +6,7 @@ import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
 import Electron, { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { isTcpSubchannelAddress } from '@grpc/grpc-js/build/src/subchannel'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -184,6 +185,15 @@ ipcMain.handle('connect-to-device', async (event, request) => {
 ipcMain.handle('disconnect-from-device', async (event, request) => {
   return await new Promise((resolve, reject) => {
     deviceClient.DisconnectDevice(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
+    })
+  })
+})
+
+ipcMain.handle('device-status', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.DeviceStatus(request, (err: Error, resp: any) => {
       if (err) return reject(err)
       return resolve(resp)
     })

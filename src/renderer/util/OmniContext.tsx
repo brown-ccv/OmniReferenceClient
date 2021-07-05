@@ -4,8 +4,7 @@ import React, { useContext, useReducer } from 'react'
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
  * be hidden in a configuration file. The configuration file will have a structure:
  *
- *   {
- *     "left": {
+ *   { *     "left": {
  *       "name": "//summit/bridge/foo/device/bar",
  *       "config": {}
  *     }
@@ -45,8 +44,10 @@ export enum ActionType {
   ConnectToBridge = 'connect-to-bridge',
   ConnectToBridgeSuccess = 'connect-to-bridge-success',
   ConnectToBridgeFailure = 'connect-to-bridge-failure',
-  ConnectionStatusUpdate = 'connection-status-update',
   DisconnectFromBridge = 'disconnect-from-bridge',
+  BatteryBridge = 'battery-bridge',
+  BatteryBridgeSuccess = 'battery-bridge-success',
+  BatteryBridgeFailure = 'battery-bridge-failure',
   ListDevices = 'list-devices',
   ListDevicesSuccess = 'list-devices-success',
   ListDevicesFailure = 'list-devices-failure',
@@ -54,6 +55,9 @@ export enum ActionType {
   ConnectToDeviceSuccess = 'connect-to-device-success',
   ConnectToDeviceFailure = 'connect-to-device-failure',
   DisconnectFromDevice = 'disconnect-from-device',
+  BatteryDevice = 'battery-device',
+  BatteryDeviceSuccess = 'battery-device-success',
+  BatteryDeviceFailure = 'battery-device-failure',
 }
 
 export type Action =
@@ -66,8 +70,10 @@ export type Action =
   | { type: ActionType.ConnectToBridge, name: string}
   | { type: ActionType.ConnectToBridgeSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToBridgeFailure, message: string, name: string }
-  | { type: ActionType.ConnectionStatusUpdate, message: string, name: string }
-  | { type: ActionType.DisconnectFromBridge, name: string }
+  | { type: ActionType.DisconnectFromBridge, name: string, error?: string }
+  | { type: ActionType.BatteryBridge, name: string }
+  | { type: ActionType.BatteryBridgeSuccess, response: {details: any, error: any}, name: string }
+  | { type: ActionType.BatteryBridgeFailure, message: string, name: string }
   | { type: ActionType.ListDevices, name: string }
   | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
@@ -75,12 +81,17 @@ export type Action =
   | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
   | { type: ActionType.ConnectToDeviceFailure, message: string, name: string }
   | { type: ActionType.DisconnectFromDevice, name: string }
+  | { type: ActionType.BatteryDevice, name: string }
+  | { type: ActionType.BatteryDeviceSuccess, response: {batteryLevelPercent: { value: number }, error: any}, name: string }
+  | { type: ActionType.BatteryDeviceFailure, message: string, name: string }
 export type Dispatch = (action: Action) => void
 
 export interface BridgeDevicePairState {
   name: string
   connectionState: ConnectionState
   previousState: ConnectionState
+  bridgeBattery: number
+  deviceBattery: number
   error?: string
 }
 
@@ -103,12 +114,16 @@ const initialState: State = {
   left: {
     name: (window as any).appService.config().left.name,
     connectionState: ConnectionState.Unknown,
-    previousState: ConnectionState.Unknown
+    previousState: ConnectionState.Unknown,
+    bridgeBattery: -1,
+    deviceBattery: -1
   },
   right: {
     name: (window as any).appService.config().right.name,
     connectionState: ConnectionState.Unknown,
-    previousState: ConnectionState.Unknown
+    previousState: ConnectionState.Unknown,
+    bridgeBattery: -1,
+    deviceBattery: -1
   }
 }
 
@@ -258,32 +273,6 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
-    case ActionType.ConnectionStatusUpdate: {
-      const { message, name } = action
-
-      ;[left, right].forEach(item => {
-        if (!item.name.startsWith(name)) { return }
-
-        item.previousState = item.connectionState
-
-        switch (message) {
-          case 'CTM Disconnected!':
-          case 'CTM Disposed!':
-          case 'CTM Connection Failed!':
-          case 'CTM Retry Failed!':
-            item.connectionState = ConnectionState.Disconnected
-            break
-          case 'CTM Connected!':
-            item.connectionState = ConnectionState.ConnectedBridge
-            break
-          default:
-            item.connectionState = ConnectionState.ErrorBridge
-            break
-        }
-      })
-
-      return { left, right }
-    }
     case ActionType.DisconnectFromBridge: {
       const { name } = action
 
@@ -292,8 +281,59 @@ export const omniReducer = (state: State, action: Action) => {
 
         if (name !== item.name) { return }
 
+        item.bridgeBattery = -1
+        item.deviceBattery = -1
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.Disconnected
+      })
+
+      return { left, right }
+    }
+    case ActionType.BatteryDevice:
+    case ActionType.BatteryBridge: {
+      /**
+       * HACK (BNR): When we return { left, right } we're creating a new object whose contents
+       *             are the same as the previous state. This causes a rerender as the ID of the
+       *             state object changes. If we return the original state object the ID does not
+       *             change and the component does not rerender.
+       *
+       * TODO (BNR): Can we return state in more places instead of returning { left, right }?
+       *             Can we reduce the number of rerenders we get?
+       *
+       * TODO (BNR): Is there a need for a state that reflects a pending API call?
+       */
+      return state
+    }
+    case ActionType.BatteryBridgeSuccess: {
+      const { response, name } = action
+      const { error, details } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        if (error && ['NO_CTM_CONNECTED', 'CTM_COMMAND_TIMEOUT', 'CTM_UNEXPECTED_DISCONNECT'].includes(error.rejectCode)) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.Disconnected
+          item.bridgeBattery = -1
+          item.deviceBattery = -1
+          item.error = error.message
+          return
+        }
+
+        item.bridgeBattery = details.batteryLevel
+      })
+
+      return { left, right }
+    }
+    case ActionType.BatteryBridgeFailure: {
+      const { message, name } = action
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.ErrorBridge
+        item.error = message
       })
 
       return { left, right }
@@ -335,6 +375,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.BatteryDeviceFailure:
     case ActionType.ConnectToDeviceFailure:
     case ActionType.ListDevicesFailure: {
       const { message, name } = action
@@ -411,8 +452,32 @@ export const omniReducer = (state: State, action: Action) => {
 
         if (name !== item.name) { return }
 
+        item.bridgeBattery = -1
+        item.deviceBattery = -1
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.Disconnected
+      })
+
+      return { left, right }
+    }
+    case ActionType.BatteryDeviceSuccess: {
+      const { name, response } = action
+      const { error, batteryLevelPercent } = response
+      const { value: batteryLevel } = batteryLevelPercent
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        if (error && error.rejectCode !== 'NO_ERROR') {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.Disconnected
+          item.bridgeBattery = -1
+          item.deviceBattery = -1
+          item.error = error.message
+          return
+        }
+
+        item.deviceBattery = batteryLevel
       })
 
       return { left, right }
