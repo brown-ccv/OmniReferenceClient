@@ -17,6 +17,7 @@ import Status from './pages/Status'
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
+import { bridgeConnected, deviceConnected } from './util/helpers'
 
 const App: React.FC = () => {
   const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
@@ -24,14 +25,39 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const { state, dispatch } = useOmni()
 
-  async function timeout (delay: number) {
-    return await new Promise(res => setTimeout(res, delay))
-  }
-
   /**
    * NOTE (BNR): This hook runs on initial load. Check to see if any bridges are already connected.
    */
   React.useEffect(() => {
+    const pollConnectionState = async () => {
+      const { left, right } = state
+
+      ;[left, right].forEach(async item => {
+        // If we're connected to a device, check the device status by polling battery
+        if (deviceConnected(item)) {
+          try {
+            dispatch({ type: ActionType.BatteryDevice, name: item.name })
+            const response = await (window as any).deviceManagerService.deviceStatus({ name: item.name })
+            dispatch({ type: ActionType.BatteryDeviceSuccess, response, name: item.name })
+          } catch (e) {
+            dispatch({ type: ActionType.BatteryDeviceFailure, message: e.message, name: item.name })
+          }
+        }
+
+        // If we're connected to a bridge, check the bridge status by polling battery
+        if (bridgeConnected(item)) {
+          try {
+            dispatch({ type: ActionType.BatteryBridge, name: item.name })
+            const response = await (window as any).bridgeManagerService.describeBridge({ name: item.name })
+            dispatch({ type: ActionType.BatteryBridgeSuccess, response, name: item.name })
+          } catch (e) {
+            dispatch({ type: ActionType.BatteryBridgeFailure, message: e.message, name: item.name })
+          }
+        }
+      })
+    }
+    const pollConnectionStateHandle = setInterval(pollConnectionState, 15000)
+
     const getInitialConnectionState = async () => {
       try {
         dispatch({ type: ActionType.ConnectedBridges })
@@ -42,6 +68,8 @@ const App: React.FC = () => {
       }
     }
     getInitialConnectionState()
+
+    return () => clearInterval(pollConnectionStateHandle)
   }, [])
 
   /**
@@ -75,14 +103,6 @@ const App: React.FC = () => {
           dispatch({ type: ActionType.ConnectToBridge, name })
           const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: -1 })
           dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
-
-          // After connection, register callback for connection streaming stuff
-          ;(window as any).bridgeManagerService.connectionStatusStream(
-            { name, enableStream: true },
-            ({ connectionStatus: message, name }: {connectionStatus: string, name: string}) => {
-              dispatch({ type: ActionType.ConnectionStatusUpdate, message, name })
-            }
-          )
         } catch (e) {
           dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
         }

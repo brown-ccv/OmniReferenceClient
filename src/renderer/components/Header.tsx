@@ -15,8 +15,8 @@ interface HeaderProp {
 
 const Header: React.FC<HeaderProp> = ({ isRecording }) => {
   const { state } = useOmni()
-  const leftBatteryPercent = 50
-  const rightBatteryPercent = 100
+  const leftBatteryPercent = state.left.deviceBattery
+  const rightBatteryPercent = state.right.deviceBattery
 
   const quitHandler = () => {
     mywindow.appService.closeApp()
