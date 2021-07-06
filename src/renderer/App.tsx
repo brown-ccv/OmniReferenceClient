@@ -55,61 +55,55 @@ const App: React.FC = () => {
     console.log(`${(state.name === left.state.name)? "left" : "right"} connectionState: ${connectionStateString(connectionState)}`)
 
     while (true) {
-      await new Promise(resolve => setTimeout(resolve, 500))
+      console.log('top of while')
 
-      switch (connectionState) {
-        case ConnectionState.NotFoundDevice:
-        case ConnectionState.Unknown:
-        case ConnectionState.Disconnected: {
-          try {
-            yield dispatch({ type: ActionType.ConnectedBridges, name })
-            const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
-            yield dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges, name })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message, name })
-          }
-          break
+      if ([ConnectionState.NotFoundDevice, ConnectionState.Unknown, ConnectionState.Disconnected].includes(connectionState)) {
+        try {
+          yield dispatch({ type: ActionType.ConnectedBridges, name })
+          const { bridges } = await (window as any).bridgeManagerService.connectedBridges({})
+          yield dispatch({ type: ActionType.ConnectedBridgesSuccess, bridges, name })
+        } catch (e) {
+          yield dispatch({ type: ActionType.ConnectedBridgesFailure, message: e.message, name })
         }
-        case ConnectionState.NotConnectedBridge: {
-          try {
-            yield dispatch({ type: ActionType.ListBridges, name })
-            const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-            yield dispatch({ type: ActionType.ListBridgesSuccess, bridges, name })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ListBridgesFailure, message: e.message, name })
-          }
-          break
+      }
+
+      if (connectionState === ConnectionState.NotConnectedBridge) {
+        try {
+          yield dispatch({ type: ActionType.ListBridges, name })
+          const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+          yield dispatch({ type: ActionType.ListBridgesSuccess, bridges, name })
+        } catch (e) {
+          yield dispatch({ type: ActionType.ListBridgesFailure, message: e.message, name })
         }
-        case ConnectionState.DiscoveredBridge: {
-          try {
-            yield dispatch({ type: ActionType.ConnectToBridge, name })
-            const response = await (window as any).bridgeManagerService.connectToBridge({ name, retries: 0 })
-            yield dispatch({ type: ActionType.ConnectToBridgeSuccess, response, name })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
-          }
-          break
+      }
+
+      if (connectionState === ConnectionState.DiscoveredBridge) {
+        try {
+          yield dispatch({ type: ActionType.ConnectToBridge, name })
+          const response = await (window as any).bridgeManagerService.connectToBridge({ name, retries: 0 })
+          yield dispatch({ type: ActionType.ConnectToBridgeSuccess, response, name })
+        } catch (e) {
+          yield dispatch({ type: ActionType.ConnectToBridgeFailure, message: e.message, name })
         }
-        case ConnectionState.NotFoundDevice:
-        case ConnectionState.ConnectedBridge: {
-          try {
-            yield dispatch({ type: ActionType.ListDevices, name })
-            const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
-            yield dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
-          }
-          break
+      }
+
+      if ([ConnectionState.NotFoundDevice, ConnectionState.ConnectedBridge].includes(connectionState)) {
+        try {
+          yield dispatch({ type: ActionType.ListDevices, name })
+          const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
+          yield dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
+        } catch (e) {
+          yield dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
         }
-        case ConnectionState.DiscoveredDevice: {
-          try {
-            yield dispatch({ type: ActionType.ConnectToDevice, name })
-            const response = await (window as any).deviceManagerService.connectToDevice({ name })
-            yield dispatch({ type: ActionType.ConnectToDeviceSuccess, response, name })
-          } catch (e) {
-            yield dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
-          }
-          break
+      }
+
+      if (connectionState === ConnectionState.DiscoveredDevice) {
+        try {
+          yield dispatch({ type: ActionType.ConnectToDevice, name })
+          const response = await (window as any).deviceManagerService.connectToDevice({ name })
+          yield dispatch({ type: ActionType.ConnectToDeviceSuccess, response, name })
+        } catch (e) {
+          yield dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
         }
       }
 
@@ -157,13 +151,13 @@ const App: React.FC = () => {
     (async () => {
       await updateLeftStateGenerator.current.next()
     })()
-  }, [left.state])
+  }, [left.state.connectionState])
 
   React.useEffect(() => {
     (async () => {
       await updateRightStateGenerator.current.next()
     })()
-  }, [right.state])
+  }, [right.state.connectionState])
 
   React.useEffect(() => {
     // Manage recording time

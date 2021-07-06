@@ -1,4 +1,5 @@
 import React, { useContext, useReducer } from 'react'
+import { connectionStateString } from './helpers'
 
 /**
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
@@ -104,15 +105,6 @@ export interface State {
   right: BridgeDevicePairState
 }
 
-const splitName = (name: string) => {
-  const match = name.match(/^(\/\/summit\/bridge\/\w+)\/device\/\w+$/)
-  if (match === null) {
-    throw new Error(`invalid name: ${name}`)
-  }
-
-  return [match[1], match[0]]
-}
-
 const OmniContext = React.createContext<{left: {state: BridgeDevicePairState, dispatch: Dispatch}, right: {state: BridgeDevicePairState, dispatch: Dispatch}} | undefined>(undefined)
 const initialState: State = {
   left: {
@@ -175,7 +167,7 @@ export const omniReducer = (state: BridgeDevicePairState, action: Action): Bridg
       break
     }
     case ActionType.ListBridges: {
-      if (![ConnectionState.Unknown, ConnectionState.NotConnectedBridge].includes(connectionState)) { break }
+      if (connectionState !== ConnectionState.NotConnectedBridge) { break }
 
       previousState = connectionState
       connectionState = ConnectionState.ScanningBridge
@@ -423,6 +415,7 @@ export const omniReducer = (state: BridgeDevicePairState, action: Action): Bridg
     }
   }
 
+  console.log({ ...state, connectionState: connectionStateString(connectionState), previousState, bridgeBattery, deviceBattery, error })
   return { ...state, connectionState, previousState, bridgeBattery, deviceBattery, error }
 }
 
