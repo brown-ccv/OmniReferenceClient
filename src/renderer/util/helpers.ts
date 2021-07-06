@@ -21,3 +21,7 @@ export const slowPolling = ({ left, right }: State): boolean => {
   if (left.connectionState === ConnectionState.ErrorDevice || right.connectionState === ConnectionState.ErrorDevice) { return true }
   return false
 }
+
+export const recordTimeFormat = (seconds: number) => {
+  return new Date(seconds * 1000).toISOString().substr(11, 8)
+}

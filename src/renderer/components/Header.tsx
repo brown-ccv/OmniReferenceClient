@@ -6,14 +6,16 @@ import Clock from './Clock'
 import ConnectionStatusHeader from './ConnectionStatusHeader'
 import Battery from './Battery'
 import { ConnectionState, useOmni } from '../util/OmniContext'
+import { recordTimeFormat } from '../util/helpers'
 
 const mywindow: any = window
 
 interface HeaderProp {
   isRecording: boolean
+  recordingTime: number
 }
 
-const Header: React.FC<HeaderProp> = ({ isRecording }) => {
+const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime }) => {
   const { state } = useOmni()
   const leftBatteryPercent = state.left.deviceBattery
   const rightBatteryPercent = state.right.deviceBattery
@@ -29,10 +31,11 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
         <div className='level-left ml-3'>
           <Clock />
           {isRecording
-            ? <Link to='/recording' className='level-item'>
-              <p className='content has-text-danger' id='blink'><FontAwesomeIcon className='icon pt-2 mx-2' icon={faCircle} />
-                Recording
-              </p>
+            ? <Link to='/recording' className='level pt-1'>
+                <p className='level-item has-text-danger'><FontAwesomeIcon className='icon mx-2' icon={faCircle} />
+                Recording for: 
+                </p>
+                <p className='level-item has-text-white'>{recordTimeFormat(recordingTime)}</p>
               </Link>
             : ''}
         </div>
