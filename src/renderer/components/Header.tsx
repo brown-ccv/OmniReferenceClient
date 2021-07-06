@@ -14,9 +14,9 @@ interface HeaderProp {
 }
 
 const Header: React.FC<HeaderProp> = ({ isRecording }) => {
-  const { state } = useOmni()
-  const leftBatteryPercent = state.left.deviceBattery
-  const rightBatteryPercent = state.right.deviceBattery
+  const { left, right } = useOmni()
+  const leftBatteryPercent = left.state.deviceBattery
+  const rightBatteryPercent = right.state.deviceBattery
 
   const quitHandler = () => {
     mywindow.appService.closeApp()
@@ -39,15 +39,15 @@ const Header: React.FC<HeaderProp> = ({ isRecording }) => {
         {/* Right Side of header */}
         <div className='level-right mt-1'>
           <p className='level-item has-text-white'>L:</p>
-          {state.left.connectionState === ConnectionState.ConnectedDevice
+          {left.state.connectionState === ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{leftBatteryPercent}%<Battery percent={leftBatteryPercent} /></p>
             : ''}
-          <ConnectionStatusHeader status={state.left.connectionState} />
+          <ConnectionStatusHeader status={left.state.connectionState} />
           <p className='level-item has-text-white'>R:</p>
-          {state.right.connectionState === ConnectionState.ConnectedDevice
+          {right.state.connectionState === ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{rightBatteryPercent}%<Battery percent={rightBatteryPercent} /></p>
             : ''}
-          <ConnectionStatusHeader status={state.right.connectionState} />
+          <ConnectionStatusHeader status={right.state.connectionState} />
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>
               <p className='content has-text-white'>

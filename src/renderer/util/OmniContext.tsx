@@ -64,14 +64,14 @@ export enum ActionType {
 }
 
 export type Action =
-  | { type: ActionType.ListBridges }
-  | { type: ActionType.ListBridgesSuccess, bridges: Array<{name: string}> }
-  | { type: ActionType.ListBridgesFailure, message: string }
-  | { type: ActionType.ConnectedBridges }
-  | { type: ActionType.ConnectedBridgesSuccess, bridges: Array<{name: string}> }
-  | { type: ActionType.ConnectedBridgesFailure, message: string }
+  | { type: ActionType.ListBridges, name: string }
+  | { type: ActionType.ListBridgesSuccess, bridges: Array<{name: string}>, name: string }
+  | { type: ActionType.ListBridgesFailure, message: string, name: string }
+  | { type: ActionType.ConnectedBridges, name: string }
+  | { type: ActionType.ConnectedBridgesSuccess, bridges: Array<{name: string}>, name: string }
+  | { type: ActionType.ConnectedBridgesFailure, message: string, name: string }
   | { type: ActionType.ConnectToBridge, name: string}
-  | { type: ActionType.ConnectToBridgeSuccess, connection: {name: string, connectionStatus: string, details: any}}
+  | { type: ActionType.ConnectToBridgeSuccess, response: {name: string, connectionStatus: string, details: any}, name: string}
   | { type: ActionType.ConnectToBridgeFailure, message: string, name: string }
   | { type: ActionType.DisconnectFromBridge, name: string, error?: string }
   | { type: ActionType.BatteryBridge, name: string }
@@ -81,7 +81,7 @@ export type Action =
   | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
   | { type: ActionType.ConnectToDevice, name: string }
-  | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
+  | { type: ActionType.ConnectToDeviceSuccess, response: {name: string, connectionStatus: string, details: any}, name: string}
   | { type: ActionType.ConnectToDeviceFailure, message: string, name: string }
   | { type: ActionType.DisconnectFromDevice, name: string }
   | { type: ActionType.BatteryDevice, name: string }
@@ -113,7 +113,7 @@ const splitName = (name: string) => {
   return [match[1], match[0]]
 }
 
-const OmniContext = React.createContext<{state: State, dispatch: Dispatch} | undefined>(undefined)
+const OmniContext = React.createContext<{left: {state: BridgeDevicePairState, dispatch: Dispatch}, right: {state: BridgeDevicePairState, dispatch: Dispatch}} | undefined>(undefined)
 const initialState: State = {
   left: {
     name: (window as any).appService.config().left.name,
@@ -131,8 +131,12 @@ const initialState: State = {
   }
 }
 
-export const omniReducer = (state: State, action: Action) => {
-  const { left, right } = state
+export const omniReducer = (state: BridgeDevicePairState, action: Action): BridgeDevicePairState => {
+  let { connectionState, previousState, error, bridgeBattery, deviceBattery} = state 
+
+  if (state.name !== action.name) {
+    return { ...state }
+  }
 
   switch (action.type) {
     /**
@@ -144,368 +148,292 @@ export const omniReducer = (state: State, action: Action) => {
      *             be called when the device pair is in the NotFoundDevice state.
      */
     case ActionType.ConnectedBridges: {
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown
-          && item.connectionState !== ConnectionState.Disconnected
-          && item.connectionState !== ConnectionState.NotFoundDevice) { return }
+      if (![ConnectionState.Unknown, ConnectionState.Disconnected, ConnectionState.NotFoundDevice].includes(connectionState)) {
+        break
+      }
 
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ScanningBridge
-      })
+      previousState = connectionState
+      connectionState = ConnectionState.ScanningBridge
 
-      return { left, right }
+      break
     }
     case ActionType.ConnectedBridgesSuccess: {
       const { bridges } = action
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name))) {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.ConnectedBridge
-        } else {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.NotConnectedBridge
-        }
-      })
+      if (connectionState !== ConnectionState.ScanningBridge) { 
+        break
+      }
 
-      return { left, right }
+      if (bridges.find(({ name }) => state.name.startsWith(name))) {
+        previousState = connectionState
+        connectionState = ConnectionState.ConnectedBridge
+      } else {
+        previousState = connectionState
+        connectionState = ConnectionState.NotConnectedBridge
+      }
+
+      break
     }
     case ActionType.ListBridges: {
-      ;[left, right].forEach(item => {
-        if (![ConnectionState.Unknown, ConnectionState.NotConnectedBridge].includes(item.connectionState)) { return }
+      if (![ConnectionState.Unknown, ConnectionState.NotConnectedBridge].includes(connectionState)) { break }
 
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ScanningBridge
-      })
+      previousState = connectionState
+      connectionState = ConnectionState.ScanningBridge
 
-      return { left, right }
+      break
     }
     case ActionType.ListBridgesSuccess: {
       const { bridges } = action
 
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.ScanningBridge) { return }
+      if (connectionState !== ConnectionState.ScanningBridge) {
+        break
+      }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name))) {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.DiscoveredBridge
-        } else {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.NotFoundBridge
-        }
-      })
+      if (bridges.find(({ name }) => state.name.startsWith(name))) {
+        previousState = connectionState
+        connectionState = ConnectionState.DiscoveredBridge
+      } else {
+        previousState = connectionState
+        connectionState = ConnectionState.NotFoundBridge
+      }
 
-      return { left, right }
+      break
     }
+    case ActionType.BatteryBridgeFailure:
+    case ActionType.ConnectToBridgeFailure:
     case ActionType.ConnectedBridgesFailure:
     case ActionType.ListBridgesFailure: {
       const { message } = action
 
-      /**
-       * NOTE (BNR): Errors for both ListBridges and ConnectedBridges indicate
-       *             a system wide error. Because of this we set both the left
-       *             and right side to ErrorBridge.
-       */
-      ;[left, right].forEach(item => {
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorBridge
-        item.error = message
-      })
+      previousState = connectionState
+      connectionState = ConnectionState.ErrorBridge
+      error = message
 
-      return { left, right }
+      break
     }
     case ActionType.ConnectToBridge: {
-      const { name } = action
-
       /**
        * NOTE (BNR): If we try to connect to a device that isn't left or right
        *             we nop and continue along. Is that the right behavior? I
        *             can't think of a different/better thing to do
        */
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.DiscoveredBridge) { return }
-        if (name !== item.name) { return }
+      if (connectionState !== ConnectionState.DiscoveredBridge) {
+        break
+      }
 
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ConnectingBridge
-      })
-
-      return { left, right }
+      previousState = connectionState
+      connectionState = ConnectionState.ConnectingBridge
+      
+      break
     }
     case ActionType.ConnectToBridgeSuccess: {
-      const { name, connectionStatus, details } = action?.connection
+      const { connectionStatus, details } = action?.response
 
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.ConnectingBridge) { return }
-        if (name !== item.name) { return }
+      if (connectionState !== ConnectionState.ConnectingBridge) {
+        break
+      }
 
-        switch (connectionStatus) {
-          case 'CONNECTION_SUCCESS': {
-            item.previousState = item.connectionState
-            item.connectionState = ConnectionState.ConnectedBridge
-            break
-          }
-          /**
-           * NOTE (BNR): Why handle errors here instead of ActionType.ConnectToBridgeFailure?
-           *
-           *             Good question, the ActionType.ConnectToBridgeFailure action is for
-           *             when the _call_ to the bridge fails, not when the _call_ succeeds
-           *             but the result was a bridge connection failure.
-           *
-           *             The motivation is that I don't want the callers of dispatch to
-           *             think about what's in the response from the server. All that logic
-           *             should be here in the reducer
-           */
-          case 'CONNECTION_FAILURE':
-          case 'CONNECT_BRIDGE_STATUS_UNSPECIFIED':
-          default: {
-            item.previousState = item.connectionState
-            item.connectionState = ConnectionState.ErrorBridge
-            /**
-             * TODO (BNR): The connection status enum off of the details object
-             *             is in 'CONSTANT_CASE' should I reformat to 'human case'
-             *             or should I leave it as is?
-             */
-            item.error = details?.connectionStatus
-          }
+      switch (connectionStatus) {
+        case 'CONNECTION_SUCCESS': {
+          previousState = connectionState
+          connectionState = ConnectionState.ConnectedBridge
+          break
         }
-      })
+        /**
+         * NOTE (BNR): Why handle errors here instead of ActionType.ConnectToBridgeFailure?
+         *
+         *             Good question, the ActionType.ConnectToBridgeFailure action is for
+         *             when the _call_ to the bridge fails, not when the _call_ succeeds
+         *             but the result was a bridge connection failure.
+         *
+         *             The motivation is that I don't want the callers of dispatch to
+         *             think about what's in the response from the server. All that logic
+         *             should be here in the reducer
+         */
+        case 'CONNECTION_FAILURE':
+        case 'CONNECT_BRIDGE_STATUS_UNSPECIFIED':
+        default: {
+          previousState = connectionState
+          connectionState = ConnectionState.ErrorBridge
+          /**
+           * TODO (BNR): The connection status enum off of the details object
+           *             is in 'CONSTANT_CASE' should I reformat to 'human case'
+           *             or should I leave it as is?
+           */
+          error = details?.connectionStatus
+          break
+        }
+      }
 
-      return { left, right }
-    }
-    case ActionType.ConnectToBridgeFailure: {
-      const { message, name } = action
-
-      ;[left, right].forEach(item => {
-        if (name !== item.name) { return }
-
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorBridge
-        item.error = message
-      })
-
-      return { left, right }
+      break
     }
     case ActionType.DisconnectFromBridge: {
       const { name } = action
 
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.ConnectedBridge) { return }
+      if (connectionState !== ConnectionState.ConnectedBridge) { break }
 
-        if (name !== item.name) { return }
+      bridgeBattery = -1
+      deviceBattery = -1
 
-        item.bridgeBattery = -1
-        item.deviceBattery = -1
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.Disconnected
-      })
+      previousState = connectionState
+      connectionState = ConnectionState.Disconnected
 
-      return { left, right }
+      break
     }
     case ActionType.BatteryDevice:
     case ActionType.BatteryBridge: {
-      return { left, right }
+      break // nop
     }
     case ActionType.BatteryBridgeSuccess: {
-      const { response, name } = action
-      const { error, details } = response
+      const { response } = action
 
-      ;[left, right].forEach(item => {
-        if (item.name !== name) { return }
+      if (!response.error || !['NO_CTM_CONNECTED', 'CTM_COMMAND_TIMEOUT', 'CTM_UNEXPECTED_DISCONNECT'].includes(response.error.rejectCode)) {
+        bridgeBattery = response.details.batteryLevel
+      }
 
-        if (error && ['NO_CTM_CONNECTED', 'CTM_COMMAND_TIMEOUT', 'CTM_UNEXPECTED_DISCONNECT'].includes(error.rejectCode)) {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.Disconnected
-          item.bridgeBattery = -1
-          item.deviceBattery = -1
-          item.error = error.message
-          return
-        }
-
-        item.bridgeBattery = details.batteryLevel
-      })
-
-      return { left, right }
-    }
-    case ActionType.BatteryBridgeFailure: {
-      const { message, name } = action
-
-      ;[left, right].forEach(item => {
-        if (item.name !== name) { return }
-
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorBridge
-        item.error = message
-      })
-
-      return { left, right }
+      previousState = connectionState
+      connectionState = ConnectionState.Disconnected
+      bridgeBattery = -1
+      deviceBattery = -1
+      error = response.error.message
+      break
     }
     case ActionType.ListDevices: {
-      const { name } = action
+      if (connectionState !== ConnectionState.ConnectedBridge) { break }
 
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.ConnectedBridge) { return }
+      previousState = connectionState
+      connectionState = ConnectionState.ScanningDevice
 
-        if (name !== item.name) { return }
-
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ScanningDevice
-      })
-
-      return { left, right }
+      break
     }
     case ActionType.ListDevicesSuccess: {
-      const { devices, name } = action
+      const { devices } = action
 
-      ;[left, right].forEach(item => {
-        if (item.name !== name) { return }
-        if (item.connectionState !== ConnectionState.ScanningDevice) { return }
+      if (connectionState !== ConnectionState.ScanningDevice) { break }
 
-        if (devices.find(({ name }) => item.name.startsWith(name))) {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.DiscoveredDevice
-        } else {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.NotFoundDevice
-        }
-      })
+      if (devices.find(({ name }) => state.name.startsWith(name))) {
+        previousState = connectionState
+        connectionState = ConnectionState.DiscoveredDevice
+      } else {
+        previousState = connectionState
+        connectionState = ConnectionState.NotFoundDevice
+      }
 
-      return { left, right }
+      break
     }
     case ActionType.BatteryDeviceFailure:
     case ActionType.ConnectToDeviceFailure:
     case ActionType.ListDevicesFailure: {
-      const { message, name } = action
+      const { message } = action
 
-      ;[left, right].forEach(item => {
-        if (name !== item.name) { return }
+      previousState = connectionState
+      connectionState = ConnectionState.ErrorDevice
+      error = message
 
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorDevice
-        item.error = message
-      })
-
-      return { left, right }
+      break
     }
     case ActionType.ConnectToDevice: {
-      const { name } = action
+      if (connectionState !== ConnectionState.DiscoveredDevice) { break }
 
-      ;[left, right].forEach(item => {
-        if (item.name !== name) { return }
-        if (item.connectionState !== ConnectionState.DiscoveredDevice) { return }
+      previousState = connectionState
+      connectionState = ConnectionState.ConnectingDevice
 
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ConnectingDevice
-      })
-
-      return { left, right }
+      break
     }
     case ActionType.ConnectToDeviceSuccess: {
-      const { name, connectionStatus, details } = action?.connection
+      const { connectionStatus, details } = action?.response
 
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.ConnectingDevice) { return }
-        if (name !== item.name) { return }
+      if (connectionState !== ConnectionState.ConnectingDevice) { break }
 
-        switch (connectionStatus) {
-          case 'CONNECTION_SUCCESS': {
-            item.previousState = item.connectionState
-            item.connectionState = ConnectionState.ConnectedDevice
-            break
-          }
-          /**
-           * NOTE (BNR): Why handle errors here instead of ActionType.ConnectToDeviceFailure?
-           *
-           *             Good question, the ActionType.ConnectToDeviceFailure action is for
-           *             when the _call_ to the device fails, not when the _call_ succeeds
-           *             but the result was a device connection failure.
-           *
-           *             The motivation is that I don't want the callers of dispatch to
-           *             think about what's in the response from the server. All that logic
-           *             should be here in the reducer
-           */
-          case 'CONNECTION_FAILURE':
-          case 'CONNECT_DEVICE_STATUS_UNSPECIFIED':
-          default: {
-            item.previousState = item.connectionState
-            item.connectionState = ConnectionState.ErrorDevice
-            /**
-             * TODO (BNR): The connection status enum off of the details object
-             *             is in 'CONSTANT_CASE' should I reformat to 'human case'
-             *             or should I leave it as is?
-             */
-            item.error = details?.connectionStatus
-          }
+      switch (connectionStatus) {
+        case 'CONNECTION_SUCCESS': {
+          previousState = connectionState
+          connectionState = ConnectionState.ConnectedDevice
+          break
         }
-      })
-
-      return { left, right }
-    }
-    case ActionType.DisconnectFromDevice: {
-      const { name } = action
-
-      ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.ConnectedDevice) { return }
-
-        if (name !== item.name) { return }
-
-        item.bridgeBattery = -1
-        item.deviceBattery = -1
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.Disconnected
-      })
-
-      return { left, right }
-    }
-    case ActionType.BatteryDeviceSuccess: {
-      const { name, response } = action
-      const { error, batteryLevelPercent } = response
-      let batteryLevel: number
-
-      if (batteryLevelPercent !== null) {
-        ({ value: batteryLevel } = batteryLevelPercent)
+        /**
+         * NOTE (BNR): Why handle errors here instead of ActionType.ConnectToDeviceFailure?
+         *
+         *             Good question, the ActionType.ConnectToDeviceFailure action is for
+         *             when the _call_ to the device fails, not when the _call_ succeeds
+         *             but the result was a device connection failure.
+         *
+         *             The motivation is that I don't want the callers of dispatch to
+         *             think about what's in the response from the server. All that logic
+         *             should be here in the reducer
+         */
+        case 'CONNECTION_FAILURE':
+        case 'CONNECT_DEVICE_STATUS_UNSPECIFIED':
+        default: {
+          previousState = connectionState
+          connectionState = ConnectionState.ErrorDevice
+          /**
+           * TODO (BNR): The connection status enum off of the details object
+           *             is in 'CONSTANT_CASE' should I reformat to 'human case'
+           *             or should I leave it as is?
+           */
+          error = details?.connectionStatus
+          break
+        }
       }
 
-      ;[left, right].forEach(item => {
-        if (item.name !== name) { return }
+      break
+    }
+    case ActionType.DisconnectFromDevice: {
+      if (connectionState !== ConnectionState.ConnectedDevice) { break }
 
-        if (error && error.rejectCode !== undefined) {
-          item.previousState = item.connectionState
-          item.connectionState = ConnectionState.Disconnected
-          item.bridgeBattery = -1
-          item.deviceBattery = -1
-          item.error = error.message
-          return
-        }
+      bridgeBattery = -1
+      deviceBattery = -1
+      previousState = connectionState
+      connectionState = ConnectionState.Disconnected
 
-        item.deviceBattery = batteryLevel
-      })
+      break
+    }
+    case ActionType.BatteryDeviceSuccess: {
+      const { response } = action
 
-      return { left, right }
+      if (response.error && response.error.rejectCode !== undefined) {
+        previousState = connectionState
+        connectionState = ConnectionState.Disconnected
+        bridgeBattery = -1
+        deviceBattery = -1
+        error = response.error.message
+        break
+      }
+
+      if (response.batteryLevelPercent !== null) {
+        deviceBattery = response.batteryLevelPercent.value
+      }
+
+      break
     }
     case ActionType.ResetConnection: {
-      const { name } = action
+      previousState = connectionState
+      connectionState = ConnectionState.Unknown
 
-      ;[left, right].forEach(item => {
-        if (name !== item.name) { return }
+      bridgeBattery = -1
+      deviceBattery = -1
 
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.Unknown
-        item.error = undefined
-      })
+      error = undefined
 
-      return { left, right }
+      break
     }
     default: {
       throw new Error(`Unhandled action type: ${action}`)
     }
   }
+
+  return { ...state, connectionState, previousState, bridgeBattery, deviceBattery, error }
 }
 
 const OmniProvider: React.FC = ({ children }) => {
-  const [state, dispatch] = useReducer(omniReducer, initialState)
-  const value = { state, dispatch }
+  const [stateLeft, dispatchLeft] = useReducer(omniReducer, initialState.left)
+  const [stateRight, dispatchRight] = useReducer(omniReducer, initialState.right)
+  const value = {
+    left: { state: stateLeft, dispatch: dispatchLeft },
+    right: { state: stateRight, dispatch: dispatchRight }
+  }
+
   return <OmniContext.Provider value={value}>{children}</OmniContext.Provider>
 }
 

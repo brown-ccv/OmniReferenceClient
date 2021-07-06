@@ -9,7 +9,7 @@ interface NavigationProp {
 }
 
 const Navigation: React.FC<NavigationProp> = ({ isRecording }) => {
-  const { state } = useOmni()
+  const { left, right } = useOmni()
 
   return (
     <aside className='menu is-large is-flex is-justify-content-center'>
@@ -18,7 +18,7 @@ const Navigation: React.FC<NavigationProp> = ({ isRecording }) => {
           <Link to='/'>Status <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/recording' id={state.left.connectionState === ConnectionState.ConnectedDevice && state.right.connectionState === ConnectionState.ConnectedDevice ? '' : 'disabled-link'}>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
+          <Link to='/recording' id={left.state.connectionState === ConnectionState.ConnectedDevice && right.state.connectionState === ConnectionState.ConnectedDevice ? '' : 'disabled-link'}>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
           <Link to='/playground' id={isRecording ? '' : 'disabled-link'}>Playground <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
