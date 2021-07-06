@@ -170,6 +170,8 @@ const App: React.FC = () => {
        *             the polling speed determines how quickly we cna advance through the state machine.
        *             As an egregious hack we slow down the loop if both sides are connected or if
        *             one side is connected and the bridge isn't found for the other side.
+       *
+       * TODO (BNR): If I split out the loop into two would it help?
        */
       if (slowPolling(state)) {
         await new Promise(resolve => setTimeout(resolve, 5000))

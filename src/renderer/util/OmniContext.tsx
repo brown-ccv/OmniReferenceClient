@@ -135,9 +135,19 @@ export const omniReducer = (state: State, action: Action) => {
   const { left, right } = state
 
   switch (action.type) {
+    /**
+     * NOTE (BNR): ConnectedBridges is unreliable. In the case there was a recent
+     *             connection that has gone dark, ConnectedBridges will return the
+     *             dark bridge as a connected bridge. Because of this, there are
+     *             situations in which the call to ListDevices will succeed on a
+     *             dark bridge. To deal with this, we allow ConnectedBridges to
+     *             be called when the device pair is in the NotFoundDevice state.
+     */
     case ActionType.ConnectedBridges: {
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown && item.connectionState !== ConnectionState.Disconnected) { return }
+        if (item.connectionState !== ConnectionState.Unknown
+          && item.connectionState !== ConnectionState.Disconnected
+          && item.connectionState !== ConnectionState.NotFoundDevice) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
