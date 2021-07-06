@@ -58,6 +58,12 @@
   max-width: 260px;
 }
 
+#task-box-disabled{
+  max-width: 260px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
 #disabled-link{
   pointer-events: none;
   color: gray;

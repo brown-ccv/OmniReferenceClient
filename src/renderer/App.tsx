@@ -166,13 +166,13 @@ const App: React.FC = () => {
           {/* Sidebar */}
           <div id='sidebar'>
             <Logo />
-            <Navigation isRecording={isRecording} />
+            <Navigation />
           </div>
           {/* Main area */}
           <div id='main-window'>
             <Switch>
               <Route path='/playground'>
-                <Playground showProvocationTask={showProvocationTask} />
+                <Playground showProvocationTask={showProvocationTask} isRecording={isRecording} />
               </Route>
               <Route path='/settings'>
                 <Settings showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask} />
