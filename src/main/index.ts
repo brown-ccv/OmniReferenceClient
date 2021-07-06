@@ -64,8 +64,10 @@ app.on('activate', () => {
   }
 })
 
-const CONFIG_PATH = isDevelopment ? path.join(__dirname, '../../config.json') : path.join(__dirname, '../../../config.json')
-const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'))
+const CONFIG_DIR = isDevelopment ? path.join(__dirname, '../../config') : path.join(__dirname, '../../../config')
+const config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'config.json'), 'utf-8'))
+config.left.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.left.configPath), 'utf-8'))
+config.right.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.right.configPath), 'utf-8'))
 
 const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.join(__dirname, '../../../protos')
 const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
