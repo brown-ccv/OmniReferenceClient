@@ -5,3 +5,7 @@ export const bridgeConnected = ({ connectionState }: BridgeDevicePairState): boo
 ].includes(connectionState)
 
 export const deviceConnected = ({ connectionState }: BridgeDevicePairState): boolean => connectionState === ConnectionState.ConnectedDevice
+
+export const recordTimeFormat = (seconds: number) => {
+  return new Date(seconds * 1000).toISOString().substr(11, 8)
+}
