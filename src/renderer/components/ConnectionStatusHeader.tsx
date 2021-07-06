@@ -9,6 +9,7 @@ interface ConnectionProp {
 
 const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
   switch (status) {
+    case ConnectionState.NotConnectedBridge:
     case ConnectionState.Unknown: return (
       <div className='level-item'>
         <a className='box has-background-danger has-text-white is-flex py-1'>

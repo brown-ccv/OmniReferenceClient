@@ -60,6 +60,7 @@ export enum ActionType {
   BatteryDevice = 'battery-device',
   BatteryDeviceSuccess = 'battery-device-success',
   BatteryDeviceFailure = 'battery-device-failure',
+  ResetConnection = 'reset-connection',
 }
 
 export type Action =
@@ -86,6 +87,7 @@ export type Action =
   | { type: ActionType.BatteryDevice, name: string }
   | { type: ActionType.BatteryDeviceSuccess, response: {batteryLevelPercent: { value: number }, error: any}, name: string }
   | { type: ActionType.BatteryDeviceFailure, message: string, name: string }
+  | { type: ActionType.ResetConnection, name: string }
 export type Dispatch = (action: Action) => void
 
 export interface BridgeDevicePairState {
@@ -355,7 +357,7 @@ export const omniReducer = (state: State, action: Action) => {
           item.connectionState = ConnectionState.DiscoveredDevice
         } else {
           item.previousState = item.connectionState
-          item.connectionState = ConnectionState.Disconnected
+          item.connectionState = ConnectionState.NotFoundDevice
         }
       })
 
@@ -468,6 +470,19 @@ export const omniReducer = (state: State, action: Action) => {
         }
 
         item.deviceBattery = batteryLevel
+      })
+
+      return { left, right }
+    }
+    case ActionType.ResetConnection: {
+      const { name } = action
+
+      ;[left, right].forEach(item => {
+        if (name !== item.name) { return }
+
+        item.previousState = item.connectionState
+        item.connectionState = ConnectionState.Unknown
+        item.error = undefined
       })
 
       return { left, right }
