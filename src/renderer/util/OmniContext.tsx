@@ -400,7 +400,20 @@ export const omniReducer = (state: State, action: Action) => {
         if (name !== item.name) { return }
 
         item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorDevice
+
+        /**
+         * HACK (BNR): Difficult to fix race condition in the server where a
+         *             connection can be disposed of before all pending calls are
+         *             complete. This is a workaround to treat that as a successful
+         *             disconnect. It basically swallows null-reference exceptions
+         *             in the server. 
+         */
+        if (message.includes('device-status')) {
+          item.connectionState = ConnectionState.Disconnected
+        } else {
+          item.connectionState = ConnectionState.ErrorDevice
+        }
+
         item.error = message
       })
 

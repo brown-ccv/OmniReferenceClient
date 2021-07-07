@@ -18,11 +18,12 @@ const recordTimeFormat = (seconds: number) => {
 
 const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordingTime, setRecordingTime, onClick }) => {
   const handleRecording = async () => {
+    await onClick(!isRecording)
+
     if (isRecording) {
       setRecordingTime(0)
     }
 
-    await onClick(!isRecording)
     setRecording(!isRecording)
   }
 

@@ -132,6 +132,7 @@ const App: React.FC = () => {
             const response = await (window as any).deviceManagerService.deviceStatus({ name: item.name })
             yield dispatch({ type: ActionType.BatteryDeviceSuccess, response, name: item.name })
           } catch (e) {
+            console.log(e)
             yield dispatch({ type: ActionType.BatteryDeviceFailure, message: e.message, name: item.name })
           }
           console.groupEnd()
@@ -191,7 +192,8 @@ const App: React.FC = () => {
         try {
           dispatch({ type: ActionType.StreamDisable, name})
           const response = await (window as any).deviceManagerService.streamDisable({ name, parameters: streamConfig })
-          dispatch({ type: ActionType.StreamDisableSuccess, response, name })
+          await (window as any).bridgeManagerService.disconnectFromBridge({ name })
+          dispatch({ type: ActionType.DisconnectFromBridge, name })
         } catch (e) {
           dispatch({ type: ActionType.StreamDisableFailure, name, message: e.message })
         }
