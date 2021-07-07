@@ -177,6 +177,33 @@ const App: React.FC = () => {
     return () => clearInterval(recordingInterval)
   }, [isRecording])
 
+  const setRecordingHandler = async (isRecording: boolean): Promise<void> => {
+    const { left, right } = state
+    const config = (window as any).appService.config()
+
+    // Do something here to configure streams and enable the streaming watchdog
+    for (const item of [left, right]) {
+      const { connectionState, name }  = item
+
+      if (connectionState < ConnectionState.ConnectedDevice) { return }
+      let senseConfig = (config.left.name === name) ? config.left.config : config.right.config
+
+      try {
+        dispatch({ type: ActionType.ConfigureSense, config: senseConfig, name }) // NOP
+        const response = await (window as any).deviceManagerService.configureAllSense({ name, config: senseConfig })
+        dispatch({ type: ActionType.ConfigureSenseSuccess, response, name }) // Rerender
+
+        // Make a watchdog here?
+        // Rerender?
+
+        // Lastly set recording state after everything has been initialized
+        setRecording(isRecording) // Rerender
+      } catch (e) {
+        dispatch({ type: ActionType.ConfigureSenseFailure, name, message: e.message })
+      }
+    }
+  }
+
   return (
     <Router>
       {/* Container for entire window */}

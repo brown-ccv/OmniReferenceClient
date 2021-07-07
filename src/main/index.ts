@@ -5,8 +5,7 @@ import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
-import Electron, { app, BrowserWindow, ipcMain, shell } from 'electron'
-import { isTcpSubchannelAddress } from '@grpc/grpc-js/build/src/subchannel'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string

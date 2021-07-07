@@ -60,6 +60,9 @@ export enum ActionType {
   BatteryDevice = 'battery-device',
   BatteryDeviceSuccess = 'battery-device-success',
   BatteryDeviceFailure = 'battery-device-failure',
+  ConfigureSense = 'configure-sense',
+  ConfigureSenseSuccess = 'configure-sense-success',
+  ConfigureSenseFailure = 'configure-sense-failure',
   ResetConnection = 'reset-connection',
 }
 
@@ -87,6 +90,9 @@ export type Action =
   | { type: ActionType.BatteryDevice, name: string }
   | { type: ActionType.BatteryDeviceSuccess, response: {batteryLevelPercent: { value: number }, error: any}, name: string }
   | { type: ActionType.BatteryDeviceFailure, message: string, name: string }
+  | { type: ActionType.ConfigureSense, config: any, name: string }
+  | { type: ActionType.ConfigureSenseSuccess, response: any, name: string }
+  | { type: ActionType.ConfigureSenseFailure, message: string, name: string }
   | { type: ActionType.ResetConnection, name: string }
 export type Dispatch = (action: Action) => void
 
@@ -297,6 +303,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.ConfigureSense:
     case ActionType.BatteryDevice:
     case ActionType.BatteryBridge: {
       return { left, right }
@@ -367,6 +374,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.ConfigureSenseFailure:
     case ActionType.BatteryDeviceFailure:
     case ActionType.ConnectToDeviceFailure:
     case ActionType.ListDevicesFailure: {
@@ -474,6 +482,25 @@ export const omniReducer = (state: State, action: Action) => {
         }
 
         item.deviceBattery = batteryLevel
+      })
+
+      return { left, right }
+    }
+    case ActionType.ConfigureSenseSuccess: {
+      const { response, name } = action
+      const { senseConfigureStatus, error } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        if (error && error.rejectCode !== undefined) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.Disconnected
+          item.bridgeBattery = -1
+          item.deviceBattery = -1
+          item.error = error.message
+          return
+        }
       })
 
       return { left, right }
