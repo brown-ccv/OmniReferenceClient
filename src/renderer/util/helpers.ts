@@ -97,9 +97,9 @@ export const senseConfigConvert = (config: any): any => {
   let windowLoad
   switch(config.FFT.WindowLoad) {
     default:
-    case 25: windowLoad = 0x2a; break
-    case 50: windowLoad = 0x16; break
     case 100: windowLoad = 0x02; break
+    case 50: windowLoad = 0x16; break
+    case 25: windowLoad = 0x2a; break
   }
 
   let bandFormationConfig
@@ -155,7 +155,7 @@ export const senseConfigConvert = (config: any): any => {
   }
 
   let loopRecordTriggers = 0
-  if (config.Misc.LoopRecordingTriggersIsEnabled) {
+  if (!config.Misc.LoopRecordingTriggersIsEnabled) {
       loopRecordTriggers = 0x0000
   } else {
     switch (config.Misc.LoopRecordingTriggersState) {
@@ -168,6 +168,7 @@ export const senseConfigConvert = (config: any): any => {
       case 6: loopRecordTriggers = 0x0040; break
       case 7: loopRecordTriggers = 0x0080; break
       case 8: loopRecordTriggers = 0x0100; break
+      default: loopRecordTriggers = 0x0000; break
     }
   }
 
@@ -188,6 +189,7 @@ export const senseConfigConvert = (config: any): any => {
       case 16: sampleRate = 0x02; break
       case 8: sampleRate = 0x03; break
       case 4: sampleRate = 0x04; break
+      default: sampleRate = 0xff; break
     }
   }
 

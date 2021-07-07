@@ -214,9 +214,9 @@ const App: React.FC = () => {
       senseConfig = {
         ...senseConfig,
         senseEnablesConfig: {
-          fftStreamChannel: itemConfig.SenseOptions.FFTChannel,
+          fftStreamChannel: itemConfig.Sense.FFT.Channel,
           enableTimedomain: itemConfig.SenseOptions.TimeDomain,
-          enableFft: itemConfig.SenseOptions.FFTChannel,
+          enableFft: itemConfig.SenseOptions.FFT,
           enablePower: itemConfig.SenseOptions.Power,
           enableLd0: itemConfig.SenseOptions.LD0,
           enableLd1: itemConfig.SenseOptions.LD1,
