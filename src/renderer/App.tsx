@@ -17,9 +17,7 @@ import Status from './pages/Status'
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
-import { bridgeConnected, deviceConnected, connectionStateString, slowPolling, configToMessage } from './util/helpers'
-
-
+import { deviceConnected, connectionStateString, slowPolling, streamConfigConvert, senseConfigConvert } from './util/helpers'
 
 const App: React.FC = () => {
   const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
@@ -181,27 +179,73 @@ const App: React.FC = () => {
     const { left, right } = state
     const config = (window as any).appService.config()
 
-    if (!isRecording) { return }
+    if (!isRecording) { 
+      console.log('disable streaming')
+      for (const item of [left, right]) {
+        const { connectionState, name }  = item
+        if (connectionState < ConnectionState.ConnectedDevice) { continue }
 
+        let streamConfig = (config.left.name === name) ? config.left.config.StreamEnables : config.right.config.StreamEnables
+        streamConfig = streamConfigConvert(streamConfig)
+
+        try {
+          dispatch({ type: ActionType.StreamDisable, name})
+          const response = await (window as any).deviceManagerService.streamDisable({ name, parameters: streamConfig })
+          dispatch({ type: ActionType.StreamDisableSuccess, response, name })
+        } catch (e) {
+          dispatch({ type: ActionType.StreamDisableFailure, name, message: e.message })
+        }
+
+      }
+
+      return
+    }
+
+    console.log('enable streaming')
     // Do something here to configure streams and enable the streaming watchdog
     for (const item of [left, right]) {
       const { connectionState, name }  = item
+      const itemConfig = (config.left.name === name) ? config.left.config : config.right.config
 
       if (connectionState < ConnectionState.ConnectedDevice) { continue }
-      let senseConfig = (config.left.name === name) ? config.left.config.Sense : config.right.config.Sense
-      senseConfig = configToMessage(senseConfig)
+
+      let senseConfig = itemConfig.Sense
+      senseConfig = senseConfigConvert(senseConfig)
+      senseConfig = {
+        ...senseConfig,
+        senseEnablesConfig: {
+          fftStreamChannel: itemConfig.SenseOptions.FFTChannel,
+          enableTimedomain: itemConfig.SenseOptions.TimeDomain,
+          enableFft: itemConfig.SenseOptions.FFTChannel,
+          enablePower: itemConfig.SenseOptions.Power,
+          enableLd0: itemConfig.SenseOptions.LD0,
+          enableLd1: itemConfig.SenseOptions.LD1,
+          enableAdaptiveStim: itemConfig.SenseOptions.AdaptiveState,
+          enableLoopRecording: itemConfig.SenseOptions.LoopRecording,
+        }
+      }
 
       try {
-        dispatch({ type: ActionType.ConfigureSense, config: senseConfig, name }) // NOP
+        dispatch({ type: ActionType.ConfigureSense, name }) // NOP
+        console.log(senseConfig)
         const response = await (window as any).deviceManagerService.senseConfiguration({ name, parameters: senseConfig })
         dispatch({ type: ActionType.ConfigureSenseSuccess, response, name }) // Rerender
       } catch (e) {
         dispatch({ type: ActionType.ConfigureSenseFailure, name, message: e.message })
       }
 
+      let streamConfig = itemConfig.StreamEnables
+      streamConfig = streamConfigConvert(streamConfig)
+
+      try {
+        dispatch({ type: ActionType.StreamEnable, name})
+        const response = await (window as any).deviceManagerService.streamEnable({ name, parameters: streamConfig })
+        dispatch({ type: ActionType.StreamEnableSuccess, response, name })
+      } catch (e) {
+        dispatch({ type: ActionType.StreamEnableFailure, name, message: e.message })
+      }
+
       // Make a watchdog here?
-      // I need to actually start streaming here.
-      // Rerender?
     }
   }
 

@@ -63,6 +63,12 @@ export enum ActionType {
   ConfigureSense = 'configure-sense',
   ConfigureSenseSuccess = 'configure-sense-success',
   ConfigureSenseFailure = 'configure-sense-failure',
+  StreamEnable = 'stream-enable',
+  StreamEnableSuccess = 'stream-enable-success',
+  StreamEnableFailure = 'stream-enable-failure',
+  StreamDisable = 'stream-disable',
+  StreamDisableSuccess = 'stream-disable-success',
+  StreamDisableFailure = 'stream-disable-failure',
   ResetConnection = 'reset-connection',
 }
 
@@ -90,9 +96,15 @@ export type Action =
   | { type: ActionType.BatteryDevice, name: string }
   | { type: ActionType.BatteryDeviceSuccess, response: {batteryLevelPercent: { value: number }, error: any}, name: string }
   | { type: ActionType.BatteryDeviceFailure, message: string, name: string }
-  | { type: ActionType.ConfigureSense, config: any, name: string }
+  | { type: ActionType.ConfigureSense, name: string }
   | { type: ActionType.ConfigureSenseSuccess, response: any, name: string }
   | { type: ActionType.ConfigureSenseFailure, message: string, name: string }
+  | { type: ActionType.StreamEnable, name: string }
+  | { type: ActionType.StreamEnableSuccess, response: any, name: string }
+  | { type: ActionType.StreamEnableFailure, message: string, name: string }
+  | { type: ActionType.StreamDisable, name: string }
+  | { type: ActionType.StreamDisableSuccess, response: any, name: string }
+  | { type: ActionType.StreamDisableFailure, message: string, name: string }
   | { type: ActionType.ResetConnection, name: string }
 export type Dispatch = (action: Action) => void
 
@@ -303,6 +315,8 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.StreamDisable:
+    case ActionType.StreamEnable:
     case ActionType.ConfigureSense:
     case ActionType.BatteryDevice:
     case ActionType.BatteryBridge: {
@@ -374,6 +388,8 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.StreamDisableFailure:
+    case ActionType.StreamEnableFailure:
     case ActionType.ConfigureSenseFailure:
     case ActionType.BatteryDeviceFailure:
     case ActionType.ConnectToDeviceFailure:
@@ -500,6 +516,58 @@ export const omniReducer = (state: State, action: Action) => {
           item.deviceBattery = -1
           item.error = error.message
           return
+        }
+      })
+
+      return { left, right }
+    }
+    case ActionType.StreamEnableSuccess: {
+      const { response, name } = action
+      const { streamConfigureStatus, error } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        switch(streamConfigureStatus) {
+          case 'STREAM_CONFIGURE_STATUS_SUCCESS':
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.Streaming
+            return
+          case 'STREAM_CONFIGURE_STATUS_UNKNOWN':
+          case 'STREAM_CONFIGURE_STATUS_FAILURE':
+          default:
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.Disconnected
+            item.bridgeBattery = -1
+            item.deviceBattery = -1
+            item.error = error?.message
+            return
+        }
+      })
+
+      return { left, right }
+    }
+    case ActionType.StreamDisableSuccess: {
+      const { response, name } = action
+      const { streamConfigureStatus, error } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        switch(streamConfigureStatus) {
+          case 'STREAM_CONFIGURE_STATUS_SUCCESS':
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.ConnectedDevice
+            return
+          case 'STREAM_CONFIGURE_STATUS_UNKNOWN':
+          case 'STREAM_CONFIGURE_STATUS_FAILURE':
+          default:
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.Disconnected
+            item.bridgeBattery = -1
+            item.deviceBattery = -1
+            item.error = error?.message
+            return
         }
       })
 

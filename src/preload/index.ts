@@ -62,6 +62,14 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 
   senseConfiguration: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('sense-configuration', request)
+  },
+
+  streamEnable: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('stream-enable', request)
+  },
+
+  streamDisable: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('stream-disable', request)
   }
 })
 

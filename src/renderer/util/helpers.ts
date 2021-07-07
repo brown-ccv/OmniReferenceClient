@@ -22,7 +22,7 @@ export const slowPolling = ({ left, right }: State): boolean => {
   return false
 }
 
-export const configToMessage = (config: any): any => {
+export const senseConfigConvert = (config: any): any => {
   let timedomainSamplingRate = 0x00
   switch(config.TDSampleRate) {
     case 250: timedomainSamplingRate = 0x00; break
@@ -78,30 +78,33 @@ export const configToMessage = (config: any): any => {
     return {
       minus: mapMux(entry.Inputs[0]),
       plus: mapMux(entry.Inputs[1]),
-      evokedMode: entry.TdEvokedResponseEnable,
+      evokedMode: entry.TdEvokedResponseEnable || false,
       disabled: !entry.IsEnabled,
-      lowPassFilterStage1: mapLpfs1(entry.Lpfs1),
-      lowPassFilterStage2: mapLpfs2(entry.Lpfs2),
+      lowPassFilterStage1: mapLpfs1(entry.Lpf1),
+      lowPassFilterStage2: mapLpfs2(entry.Lpf2),
       highPassFilters: mapHpf(entry.Hpf)
     }
   })
 
-  let size = 0
+  let size
   switch (config.FFT.FftSize) {
+    default:
     case 64: size = 0x00; break
     case 256: size = 0x01; break
     case 1024: size = 0x03; break
   }
 
-  let windowLoad = 0
+  let windowLoad
   switch(config.FFT.WindowLoad) {
+    default:
     case 25: windowLoad = 0x2a; break
     case 50: windowLoad = 0x16; break
     case 100: windowLoad = 0x02; break
   }
 
-  let bandFormationConfig = 0
+  let bandFormationConfig
   switch (config.FFT.WeightMultiplies) {
+    default: 
     case 7: bandFormationConfig = 8; break
     case 6: bandFormationConfig = 9; break
     case 5: bandFormationConfig = 10; break
@@ -130,16 +133,17 @@ export const configToMessage = (config: any): any => {
     return { bandStart, bandStop }
   })
 
-  let bridging = 0
+  let bridging
   switch (config.Misc.Bridging) {
+    default:
     case 0: bridging = 0x00; break
     case 1: bridging = 0x04; break
     case 2: bridging = 0x08; break
-    default: bridging = 0x00; break
   }
 
-  let streamingRate = 0
+  let streamingRate
   switch (config.Misc.StreamingRate) {
+    default:
     case 30: streamingRate = 3; break
     case 40: streamingRate = 4; break
     case 50: streamingRate = 5; break
@@ -148,7 +152,6 @@ export const configToMessage = (config: any): any => {
     case 80: streamingRate = 8; break
     case 90: streamingRate = 9; break
     case 100: streamingRate = 10; break
-    default: streamingRate = 0; break
   }
 
   let loopRecordTriggers = 0
@@ -201,5 +204,20 @@ export const configToMessage = (config: any): any => {
     accelerometerConfig: {
       sampleRate
     },
+  }
+}
+
+export const streamConfigConvert = (config: any): any => {
+  console.log(config)
+  return {
+    '@type': 'types.googleapis.com/openmind.SummitStreamEnablesConfiguration',
+    enableTimedomain: config.TimeDomain,
+    enableFft: config.FFT,
+    enablePower: config.Power,
+    enableAccelerometry: config.Accelerometry,
+    enableDetector: config.AdaptiveTherapy,
+    enableAdaptiveState: config.AdaptiveState,
+    enableLoopRecordMarkerEcho: config.EventMarker,
+    enableTime: config.TimeStamp,
   }
 }
