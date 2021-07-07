@@ -17,7 +17,7 @@ import Status from './pages/Status'
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
-import { bridgeConnected, deviceConnected, connectionStateString, slowPolling } from './util/helpers'
+import { bridgeConnected, deviceConnected, connectionStateString, slowPolling, configToMessage } from './util/helpers'
 
 
 
@@ -177,30 +177,31 @@ const App: React.FC = () => {
     return () => clearInterval(recordingInterval)
   }, [isRecording])
 
-  const setRecordingHandler = async (isRecording: boolean): Promise<void> => {
+  const recordingClickHandler = async (isRecording: boolean): Promise<void> => {
     const { left, right } = state
     const config = (window as any).appService.config()
+
+    if (!isRecording) { return }
 
     // Do something here to configure streams and enable the streaming watchdog
     for (const item of [left, right]) {
       const { connectionState, name }  = item
 
-      if (connectionState < ConnectionState.ConnectedDevice) { return }
-      let senseConfig = (config.left.name === name) ? config.left.config : config.right.config
+      if (connectionState < ConnectionState.ConnectedDevice) { continue }
+      let senseConfig = (config.left.name === name) ? config.left.config.Sense : config.right.config.Sense
+      senseConfig = configToMessage(senseConfig)
 
       try {
         dispatch({ type: ActionType.ConfigureSense, config: senseConfig, name }) // NOP
-        const response = await (window as any).deviceManagerService.configureAllSense({ name, config: senseConfig })
+        const response = await (window as any).deviceManagerService.senseConfiguration({ name, parameters: senseConfig })
         dispatch({ type: ActionType.ConfigureSenseSuccess, response, name }) // Rerender
-
-        // Make a watchdog here?
-        // Rerender?
-
-        // Lastly set recording state after everything has been initialized
-        setRecording(isRecording) // Rerender
       } catch (e) {
         dispatch({ type: ActionType.ConfigureSenseFailure, name, message: e.message })
       }
+
+      // Make a watchdog here?
+      // I need to actually start streaming here.
+      // Rerender?
     }
   }
 
@@ -232,7 +233,7 @@ const App: React.FC = () => {
                 <Buttons />
               </Route>
               <Route path='/recording'>
-                <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} />
+                <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} onClick={recordingClickHandler} />
               </Route>
               <Route path='/'>
                 <Status />

@@ -204,6 +204,18 @@ ipcMain.handle('device-status', async (event, request) => {
   })
 })
 
+ipcMain.handle('sense-configuration', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.SenseConfiguration(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      console.log('here', err)
+
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, error })
+    })
+  })
+})
+
 // Function to launch jsPsych tasks
 ipcMain.on('task-launch', (event, { appName }) => {
   // const home = app.getPath('home');

@@ -9,17 +9,20 @@ interface RecordingProp {
   setRecording: Function
   recordingTime: number
   setRecordingTime: Function
+  onClick: Function
 }
 
 const recordTimeFormat = (seconds: number) => {
   return new Date(seconds * 1000).toISOString().substr(11, 8)
 }
 
-const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordingTime, setRecordingTime }) => {
-  const handleRecording = () => {
+const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordingTime, setRecordingTime, onClick }) => {
+  const handleRecording = async () => {
     if (isRecording) {
       setRecordingTime(0)
     }
+
+    await onClick(!isRecording)
     setRecording(!isRecording)
   }
 

@@ -24,14 +24,14 @@ export const slowPolling = ({ left, right }: State): boolean => {
 
 export const configToMessage = (config: any): any => {
   let timedomainSamplingRate = 0x00
-  switch(config.Sense.TDSampleRate) {
+  switch(config.TDSampleRate) {
     case 250: timedomainSamplingRate = 0x00; break
     case 500: timedomainSamplingRate = 0x01; break
     case 1000: timedomainSamplingRate = 0x02; break
     default: timedomainSamplingRate = 0xf0; break
   }
 
-  const tdChannelConfigs = config.Sense.TimeDomains.map((entry: any) => {
+  const tdChannelConfigs = config.TimeDomains.map((entry: any) => {
     const mapMux = (input: number): number => {
       switch(input){
         case 0: case 8: return 0x01

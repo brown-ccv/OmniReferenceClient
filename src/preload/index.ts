@@ -58,6 +58,10 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 
   deviceStatus: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('device-status', request)
+  },
+
+  senseConfiguration: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('sense-configuration', request)
   }
 })
 
