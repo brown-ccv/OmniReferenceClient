@@ -13,6 +13,9 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
+// Auto update
+require('update-electron-app')()
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup') === undefined) { // eslint-disable-line global-require
   app.quit()
