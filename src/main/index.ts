@@ -166,7 +166,8 @@ ipcMain.handle('list-devices', async (event, request) => {
   return await new Promise((resolve, reject) => {
     deviceClient.ListDevices(request, (err: Error, resp: any) => {
       if (err) return reject(err)
-      return resolve(resp)
+      const error = parseAny(resp.error)
+      return resolve({...resp, error})
     })
   })
 })
@@ -234,6 +235,15 @@ ipcMain.handle('stream-disable', async (event, request) => {
 
       const error = parseAny(resp.error)
       return resolve({ ...resp, error })
+    })
+  })
+})
+
+ipcMain.handle('integrity-test', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.LeadIntegrityTest(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+      return resolve(resp)
     })
   })
 })

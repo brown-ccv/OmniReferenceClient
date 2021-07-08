@@ -70,6 +70,10 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 
   streamDisable: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('stream-disable', request)
+  },
+
+  integrityTest: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('integrity-test', request)
   }
 })
 

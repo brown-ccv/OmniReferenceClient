@@ -69,6 +69,9 @@ export enum ActionType {
   StreamDisable = 'stream-disable',
   StreamDisableSuccess = 'stream-disable-success',
   StreamDisableFailure = 'stream-disable-failure',
+  IntegrityTest = 'integrity-test',
+  IntegrityTestSuccess = 'integrity-test-success',
+  IntegrityTestFailure = 'integrity-test-failure',
   ResetConnection = 'reset-connection',
 }
 
@@ -87,7 +90,7 @@ export type Action =
   | { type: ActionType.BatteryBridgeSuccess, response: {details: any, error: any}, name: string }
   | { type: ActionType.BatteryBridgeFailure, message: string, name: string }
   | { type: ActionType.ListDevices, name: string }
-  | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, name: string }
+  | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, error: any, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
   | { type: ActionType.ConnectToDevice, name: string }
   | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
@@ -105,6 +108,9 @@ export type Action =
   | { type: ActionType.StreamDisable, name: string }
   | { type: ActionType.StreamDisableSuccess, response: any, name: string }
   | { type: ActionType.StreamDisableFailure, message: string, name: string }
+  | { type: ActionType.IntegrityTest, name: string }
+  | { type: ActionType.IntegrityTestSuccess, name: string }
+  | { type: ActionType.IntegrityTestFailure, message: string, name: string }
   | { type: ActionType.ResetConnection, name: string }
 export type Dispatch = (action: Action) => void
 
@@ -315,6 +321,8 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.IntegrityTest:
+    case ActionType.IntegrityTestSuccess:
     case ActionType.StreamDisable:
     case ActionType.StreamEnable:
     case ActionType.ConfigureSense:
@@ -371,13 +379,16 @@ export const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ListDevicesSuccess: {
-      const { devices, name } = action
+      const { devices, error, name } = action
 
       ;[left, right].forEach(item => {
         if (item.name !== name) { return }
         if (item.connectionState !== ConnectionState.ScanningDevice) { return }
 
-        if (devices.find(({ name }) => item.name.startsWith(name))) {
+        if (error?.message === "InsAlreadyConnected") {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.ConnectedDevice
+        } else if (devices.find(({ name }) => item.name.startsWith(name))) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredDevice
         } else {
@@ -388,6 +399,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.IntegrityTestFailure:
     case ActionType.StreamDisableFailure:
     case ActionType.StreamEnableFailure:
     case ActionType.ConfigureSenseFailure:

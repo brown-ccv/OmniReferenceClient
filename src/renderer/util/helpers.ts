@@ -223,3 +223,18 @@ export const streamConfigConvert = (config: any): any => {
     enableTime: config.TimeStamp,
   }
 }
+
+export const integrityTestPairs = () => {
+  const leads = [[1, 2, 3, 4, 17], [9, 10, 11, 12, 17]]
+  const pairs: Array<{lead1: number, lead2: number}> = []
+  for (const i of leads) {
+    for (const j of i) {
+      for (const k of i) {
+        if (j === k) { continue }
+        if (pairs.find(p => p.lead1 === k && p.lead2 === j)) { continue }
+        pairs.push({lead1: j, lead2: k})
+      }
+    }
+  }
+  return pairs
+}

@@ -17,7 +17,7 @@ import Status from './pages/Status'
 import Logo from './components/Logo'
 import Header from './components/Header'
 import Navigation from './components/Navigation'
-import { deviceConnected, connectionStateString, slowPolling, streamConfigConvert, senseConfigConvert } from './util/helpers'
+import { deviceConnected, connectionStateString, slowPolling, streamConfigConvert, senseConfigConvert, integrityTestPairs } from './util/helpers'
 
 const App: React.FC = () => {
   const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
@@ -67,7 +67,6 @@ const App: React.FC = () => {
             try {
               yield dispatch({ type: ActionType.ListBridges })
               const { bridges } = await (window as any).bridgeManagerService.listBridges({})
-              console.log(bridges)
               yield dispatch({ type: ActionType.ListBridgesSuccess, bridges })
               console.log('ListBridges Success')
             } catch (e) {
@@ -97,8 +96,9 @@ const App: React.FC = () => {
             console.group('ListDevices')
             try {
               yield dispatch({ type: ActionType.ListDevices, name })
-              const { devices } = await (window as any).deviceManagerService.listDevices({ query: name })
-              yield dispatch({ type: ActionType.ListDevicesSuccess, devices, name })
+              const { devices, error } = await (window as any).deviceManagerService.listDevices({ query: name })
+              console.log(devices, error)
+              yield dispatch({ type: ActionType.ListDevicesSuccess, devices, name, error })
               console.log('ListDevices Success')
             } catch (e) {
               yield dispatch({ type: ActionType.ListDevicesFailure, message: e.message, name })
@@ -112,6 +112,7 @@ const App: React.FC = () => {
             try {
               yield dispatch({ type: ActionType.ConnectToDevice, name })
               const connection = await (window as any).deviceManagerService.connectToDevice({ name })
+              console.log(connection)
               yield dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
               console.log('ConnectToDevice Success')
             } catch (e) {
@@ -206,6 +207,7 @@ const App: React.FC = () => {
     console.log('enable streaming')
     // Do something here to configure streams and enable the streaming watchdog
     for (const item of [left, right]) {
+      console.log((item.name === left.name)? "left" : "right")
       const { connectionState, name }  = item
       const itemConfig = (config.left.name === name) ? config.left.config : config.right.config
 
@@ -227,9 +229,18 @@ const App: React.FC = () => {
         }
       }
 
+      console.log('here')
+      try {
+        dispatch({ type: ActionType.IntegrityTest, name }) // NOP
+        const response = await (window as any).deviceManagerService.integrityTest({ name, leadList: integrityTestPairs() })
+        console.log(response)
+        dispatch({ type: ActionType.IntegrityTestSuccess, name }) // NOP
+      } catch (e) {
+        dispatch({ type: ActionType.IntegrityTestFailure, message: e.message, name })
+      }
+
       try {
         dispatch({ type: ActionType.ConfigureSense, name }) // NOP
-        console.log(senseConfig)
         const response = await (window as any).deviceManagerService.senseConfiguration({ name, parameters: senseConfig })
         dispatch({ type: ActionType.ConfigureSenseSuccess, response, name }) // Rerender
       } catch (e) {
@@ -246,8 +257,6 @@ const App: React.FC = () => {
       } catch (e) {
         dispatch({ type: ActionType.StreamEnableFailure, name, message: e.message })
       }
-
-      // Make a watchdog here?
     }
   }
 
