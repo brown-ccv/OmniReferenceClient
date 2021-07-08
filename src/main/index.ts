@@ -243,7 +243,20 @@ ipcMain.handle('integrity-test', async (event, request) => {
   return await new Promise((resolve, reject) => {
     deviceClient.LeadIntegrityTest(request, (err: Error, resp: any) => {
       if (err) return reject(err)
-      return resolve(resp)
+
+      const error = parseAny(resp.error)
+      return resolve({...resp, error})
+    })
+  })
+})
+
+ipcMain.handle('beep-config', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.ConfigureBeep(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const error = parseAny(resp.error)
+      return resolve({...resp, error})
     })
   })
 })

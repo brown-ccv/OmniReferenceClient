@@ -74,6 +74,10 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 
   integrityTest: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('integrity-test', request)
+  },
+
+  configureBeep: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('configure-beep', request)
   }
 })
 
