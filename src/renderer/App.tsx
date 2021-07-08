@@ -264,7 +264,7 @@ const App: React.FC = () => {
     <Router>
       {/* Container for entire window */}
       <div id='app-container'>
-        <Header isRecording={isRecording} />
+        <Header isRecording={isRecording} recordingTime={recordingTime} />
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}

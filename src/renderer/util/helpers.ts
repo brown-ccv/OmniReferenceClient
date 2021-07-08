@@ -238,3 +238,7 @@ export const integrityTestPairs = () => {
   }
   return pairs
 }
+
+export const recordTimeFormat = (seconds: number) => {
+  return new Date(seconds * 1000).toISOString().substr(11, 8)
+}
