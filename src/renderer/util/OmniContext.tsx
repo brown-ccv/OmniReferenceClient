@@ -4,7 +4,7 @@ import React, { useContext, useReducer } from 'react'
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
  * be hidden in a configuration file. The configuration file will have a structure:
  *
- *   { 
+ *   {
  *     "left": {
  *       "name": "//summit/bridge/foo/device/bar",
  *       "config": {}
@@ -50,6 +50,9 @@ export enum ActionType {
   BatteryBridge = 'battery-bridge',
   BatteryBridgeSuccess = 'battery-bridge-success',
   BatteryBridgeFailure = 'battery-bridge-failure',
+  ConfigureBeep = 'configure-beep',
+  ConfigureBeepSuccess = 'configure-beep-success',
+  ConfigureBeepFailure = 'configure-beep-failure',
   ListDevices = 'list-devices',
   ListDevicesSuccess = 'list-devices-success',
   ListDevicesFailure = 'list-devices-failure',
@@ -89,6 +92,9 @@ export type Action =
   | { type: ActionType.BatteryBridge, name: string }
   | { type: ActionType.BatteryBridgeSuccess, response: {details: any, error: any}, name: string }
   | { type: ActionType.BatteryBridgeFailure, message: string, name: string }
+  | { type: ActionType.ConfigureBeep, name: string }
+  | { type: ActionType.ConfigureBeepSuccess, response: any, name: string }
+  | { type: ActionType.ConfigureBeepFailure, message: string, name: string }
   | { type: ActionType.ListDevices, name: string }
   | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, error: any, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
@@ -169,9 +175,9 @@ export const omniReducer = (state: State, action: Action) => {
      */
     case ActionType.ConnectedBridges: {
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown
-          && item.connectionState !== ConnectionState.Disconnected
-          && item.connectionState !== ConnectionState.NotFoundDevice) { return }
+        if (item.connectionState !== ConnectionState.Unknown &&
+          item.connectionState !== ConnectionState.Disconnected &&
+          item.connectionState !== ConnectionState.NotFoundDevice) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -184,7 +190,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name))) {
+        if (bridges.find(({ name }) => item.name.startsWith(name)) != null) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
         } else {
@@ -197,10 +203,10 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ListBridges: {
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown
-          && item.connectionState !== ConnectionState.Disconnected
-          && item.connectionState !== ConnectionState.NotFoundDevice
-          && item.connectionState !== ConnectionState.NotConnectedBridge) { return }
+        if (item.connectionState !== ConnectionState.Unknown &&
+          item.connectionState !== ConnectionState.Disconnected &&
+          item.connectionState !== ConnectionState.NotFoundDevice &&
+          item.connectionState !== ConnectionState.NotConnectedBridge) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -214,7 +220,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name))) {
+        if (bridges.find(({ name }) => item.name.startsWith(name)) != null) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredBridge
         } else {
@@ -321,6 +327,8 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.ConfigureBeep:
+    case ActionType.ConfigureBeepSuccess:
     case ActionType.IntegrityTest:
     case ActionType.IntegrityTestSuccess:
     case ActionType.StreamDisable:
@@ -351,6 +359,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.ConfigureBeepFailure:
     case ActionType.BatteryBridgeFailure: {
       const { message, name } = action
 
@@ -385,10 +394,10 @@ export const omniReducer = (state: State, action: Action) => {
         if (item.name !== name) { return }
         if (item.connectionState !== ConnectionState.ScanningDevice) { return }
 
-        if (error?.message === "InsAlreadyConnected") {
+        if (error?.message === 'InsAlreadyConnected') {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedDevice
-        } else if (devices.find(({ name }) => item.name.startsWith(name))) {
+        } else if (devices.find(({ name }) => item.name.startsWith(name)) != null) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredDevice
         } else {
@@ -418,7 +427,7 @@ export const omniReducer = (state: State, action: Action) => {
          *             connection can be disposed of before all pending calls are
          *             complete. This is a workaround to treat that as a successful
          *             disconnect. It basically swallows null-reference exceptions
-         *             in the server. 
+         *             in the server.
          */
         if (message.includes('device-status')) {
           item.connectionState = ConnectionState.Disconnected
@@ -540,7 +549,6 @@ export const omniReducer = (state: State, action: Action) => {
           item.bridgeBattery = -1
           item.deviceBattery = -1
           item.error = error.message
-          return
         }
       })
 
@@ -553,7 +561,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.name !== name) { return }
 
-        switch(streamConfigureStatus) {
+        switch (streamConfigureStatus) {
           case 'STREAM_CONFIGURE_STATUS_SUCCESS':
             item.previousState = item.connectionState
             item.connectionState = ConnectionState.Streaming
@@ -566,7 +574,6 @@ export const omniReducer = (state: State, action: Action) => {
             item.bridgeBattery = -1
             item.deviceBattery = -1
             item.error = error?.message
-            return
         }
       })
 
@@ -579,7 +586,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.name !== name) { return }
 
-        switch(streamConfigureStatus) {
+        switch (streamConfigureStatus) {
           case 'STREAM_CONFIGURE_STATUS_SUCCESS':
             item.previousState = item.connectionState
             item.connectionState = ConnectionState.ConnectedDevice
@@ -592,7 +599,6 @@ export const omniReducer = (state: State, action: Action) => {
             item.bridgeBattery = -1
             item.deviceBattery = -1
             item.error = error?.message
-            return
         }
       })
 

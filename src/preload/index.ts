@@ -40,6 +40,10 @@ contextBridge.exposeInMainWorld('bridgeManagerService', {
       ipcRenderer.send('connection-status-stream', request)
       ipcRenderer.removeAllListeners('connection-update')
     }
+  },
+
+  configureBeep: async (request: any): Promise<any> => {
+    return await ipcRenderer.invoke('configure-beep', request)
   }
 })
 
@@ -74,10 +78,6 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 
   integrityTest: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('integrity-test', request)
-  },
-
-  configureBeep: async (request: any): Promise<any> => {
-    return await ipcRenderer.invoke('configure-beep', request)
   }
 })
 

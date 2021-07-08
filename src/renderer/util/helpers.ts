@@ -3,7 +3,7 @@ import { BridgeDevicePairState, ConnectionState, State } from './OmniContext'
 export const bridgeConnected = ({ connectionState }: BridgeDevicePairState): boolean =>
   connectionState >= ConnectionState.ConnectedBridge
 
-export const deviceConnected = ({ connectionState }: BridgeDevicePairState): boolean => 
+export const deviceConnected = ({ connectionState }: BridgeDevicePairState): boolean =>
   connectionState >= ConnectionState.ConnectedDevice
 
 export const connectionStateString = (connectionState: ConnectionState): string =>
@@ -24,7 +24,7 @@ export const slowPolling = ({ left, right }: State): boolean => {
 
 export const senseConfigConvert = (config: any): any => {
   let timedomainSamplingRate = 0x00
-  switch(config.TDSampleRate) {
+  switch (config.TDSampleRate) {
     case 250: timedomainSamplingRate = 0x00; break
     case 500: timedomainSamplingRate = 0x01; break
     case 1000: timedomainSamplingRate = 0x02; break
@@ -33,7 +33,7 @@ export const senseConfigConvert = (config: any): any => {
 
   const tdChannelConfigs = config.TimeDomains.map((entry: any) => {
     const mapMux = (input: number): number => {
-      switch(input){
+      switch (input) {
         case 0: case 8: return 0x01
         case 1: case 9: return 0x02
         case 2: case 10: return 0x04
@@ -47,7 +47,7 @@ export const senseConfigConvert = (config: any): any => {
     }
 
     const mapLpfs1 = (input: number): number => {
-      switch(input) {
+      switch (input) {
         case 50: return 0x24
         case 100: return 0x12
         case 450: return 0x09
@@ -66,7 +66,7 @@ export const senseConfigConvert = (config: any): any => {
     }
 
     const mapHpf = (input: number): number => {
-      switch(input) {
+      switch (input) {
         case 0.85: return 0x00
         case 1.2: return 0x10
         case 3.3: return 0x20
@@ -95,7 +95,7 @@ export const senseConfigConvert = (config: any): any => {
   }
 
   let windowLoad
-  switch(config.FFT.WindowLoad) {
+  switch (config.FFT.WindowLoad) {
     default:
     case 100: windowLoad = 0x02; break
     case 50: windowLoad = 0x16; break
@@ -104,7 +104,7 @@ export const senseConfigConvert = (config: any): any => {
 
   let bandFormationConfig
   switch (config.FFT.WeightMultiplies) {
-    default: 
+    default:
     case 7: bandFormationConfig = 8; break
     case 6: bandFormationConfig = 9; break
     case 5: bandFormationConfig = 10; break
@@ -122,12 +122,12 @@ export const senseConfigConvert = (config: any): any => {
     enableWindow: config.FFT.WindowEnabled,
     bandFormationConfig,
     binsToStream: config.FFT.StreamSizeBins,
-    binsToStreamOffset: config.FFT.StreamOffsetBins,
+    binsToStreamOffset: config.FFT.StreamOffsetBins
   }
 
   const powerBandEnables = config.PowerBands.map((entry: any): boolean => entry.isEnabled)
 
-  //HACK (BNR): I'm not doing the calculation for the boundries of the power bands. These are indexes!
+  // HACK (BNR): I'm not doing the calculation for the boundries of the power bands. These are indexes!
   const powerBandConfiguration = config.PowerBands.map((entry: any) => {
     const [bandStart, bandStop] = entry.ChannelPowerBand
     return { bandStart, bandStop }
@@ -156,7 +156,7 @@ export const senseConfigConvert = (config: any): any => {
 
   let loopRecordTriggers = 0
   if (!config.Misc.LoopRecordingTriggersIsEnabled) {
-      loopRecordTriggers = 0x0000
+    loopRecordTriggers = 0x0000
   } else {
     switch (config.Misc.LoopRecordingTriggersState) {
       case 0: loopRecordTriggers = 0x0001; break
@@ -183,7 +183,7 @@ export const senseConfigConvert = (config: any): any => {
   if (config.Accelerometer.SampleRateDisabled) {
     sampleRate = 0xff
   } else {
-    switch(config.Accelerometer.SampleRate) {
+    switch (config.Accelerometer.SampleRate) {
       case 64: sampleRate = 0x00; break
       case 32: sampleRate = 0x01; break
       case 16: sampleRate = 0x02; break
@@ -205,7 +205,7 @@ export const senseConfigConvert = (config: any): any => {
     miscStreamConfig,
     accelerometerConfig: {
       sampleRate
-    },
+    }
   }
 }
 
@@ -220,7 +220,7 @@ export const streamConfigConvert = (config: any): any => {
     enableDetector: config.AdaptiveTherapy,
     enableAdaptiveState: config.AdaptiveState,
     enableLoopRecordMarkerEcho: config.EventMarker,
-    enableTime: config.TimeStamp,
+    enableTime: config.TimeStamp
   }
 }
 
@@ -231,8 +231,8 @@ export const integrityTestPairs = () => {
     for (const j of i) {
       for (const k of i) {
         if (j === k) { continue }
-        if (pairs.find(p => p.lead1 === k && p.lead2 === j)) { continue }
-        pairs.push({lead1: j, lead2: k})
+        if (pairs.find(p => p.lead1 === k && p.lead2 === j) != null) { continue }
+        pairs.push({ lead1: j, lead2: k })
       }
     }
   }

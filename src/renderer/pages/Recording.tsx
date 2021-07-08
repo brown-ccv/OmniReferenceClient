@@ -17,12 +17,9 @@ interface RecordingProp {
 
 const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordingTime, setRecordingTime, onClick }) => {
   const { state } = useOmni()
-  const recordingEnabled = state.left.connectionState === ConnectionState.ConnectedDevice || state.right.connectionState === ConnectionState.ConnectedDevice
+  const recordingEnabled = state.left.connectionState >= ConnectionState.ConnectedDevice || state.right.connectionState >= ConnectionState.ConnectedDevice
   let warningText = null
-  if (!recordingEnabled) { warningText = 'Warning: At least one INS needs to be connected before you can start recording.' } 
-  else if (state.left.connectionState !== ConnectionState.ConnectedDevice) { warningText = 'Warning: Only your right INS is connected. If you were instructed to record with only one INS, you may proceed.' } 
-  else if (state.right.connectionState !== ConnectionState.ConnectedDevice) { warningText = 'Warning: Only your left INS is connected. If you were instructed to record with only one INS, you may proceed.' }
-
+  if (!recordingEnabled) { warningText = 'Warning: At least one INS needs to be connected before you can start recording.' } else if (state.left.connectionState < ConnectionState.ConnectedDevice) { warningText = 'Warning: Only your right INS is connected. If you were instructed to record with only one INS, you may proceed.' } else if (state.right.connectionState < ConnectionState.ConnectedDevice) { warningText = 'Warning: Only your left INS is connected. If you were instructed to record with only one INS, you may proceed.' }
 
   const handleRecording = async () => {
     await onClick(!isRecording)
@@ -43,12 +40,12 @@ const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordi
       <div className='box has-background-grey-darker'>
         <p className='content is-size-4 has-text-white is-flex is-justify-content-center'>On demand recording</p>
         {recordingEnabled
-          ? <a className='box has-background-white is-rounded' onClick={handleRecording} id='record-red-dot'>
+          ? <button className='box has-background-white is-rounded' onClick={handleRecording} id='record-red-dot'>
             <figure className='image is 96x96 is-flex is-justify-content-center mx-5 my-3'>
               <img src={isRecording ? RecordingLogo : RecordLogo} />
             </figure>
             <p className='content has-text-danger is-size-6 is-flex is-justify-content-center'>{isRecording ? 'Stop Recording' : 'Start Recording'}</p>
-          </a>
+          </button>
           : <div className='box has-background-grey is-rounded' id='record-red-dot'>
             <figure className='image is 96x96 is-flex is-justify-content-center mx-5 my-3'>
               <img src={RecordDisabled} />
@@ -64,7 +61,6 @@ const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordi
             <FontAwesomeIcon className='icon has-text-danger mt-3 mr-3' icon={faCircle} />
             Not Recording
             </p>}
-
       </div>
     </>
   )

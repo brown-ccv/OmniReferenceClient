@@ -104,12 +104,12 @@ ipcMain.handle('list-bridges', async (event, request: any) => {
   })
 })
 
-ipcMain.handle('connect-to-bridge', async (event, { name }) => {
+ipcMain.handle('connect-to-bridge', async (event, request) => {
   return await new Promise((resolve, reject) => {
-    bridgeClient.ConnectBridge({ name }, (err: Error, resp: any) => {
+    bridgeClient.ConnectBridge(request, (err: Error, resp: any) => {
       if (err) return reject(err)
       const details = parseAny(resp.details)
-      return resolve({...resp, details})
+      return resolve({ ...resp, details })
     })
   })
 })
@@ -135,7 +135,7 @@ ipcMain.handle('describe-bridge', async (event, request) => {
   })
 })
 
-ipcMain.handle('disconnect-from-bridge', async (event, request) => { 
+ipcMain.handle('disconnect-from-bridge', async (event, request) => {
   return await new Promise((resolve, reject) => {
     bridgeClient.DisconnectBridge(request, (err: Error, resp: any) => {
       if (err) return reject(err)
@@ -167,7 +167,7 @@ ipcMain.handle('list-devices', async (event, request) => {
     deviceClient.ListDevices(request, (err: Error, resp: any) => {
       if (err) return reject(err)
       const error = parseAny(resp.error)
-      return resolve({...resp, error})
+      return resolve({ ...resp, error })
     })
   })
 })
@@ -245,18 +245,18 @@ ipcMain.handle('integrity-test', async (event, request) => {
       if (err) return reject(err)
 
       const error = parseAny(resp.error)
-      return resolve({...resp, error})
+      return resolve({ ...resp, error })
     })
   })
 })
 
-ipcMain.handle('beep-config', async (event, request) => {
+ipcMain.handle('configure-beep', async (event, request) => {
   return await new Promise((resolve, reject) => {
-    deviceClient.ConfigureBeep(request, (err: Error, resp: any) => {
+    bridgeClient.ConfigureBeep(request, (err: Error, resp: any) => {
       if (err) return reject(err)
 
       const error = parseAny(resp.error)
-      return resolve({...resp, error})
+      return resolve({ ...resp, error })
     })
   })
 })

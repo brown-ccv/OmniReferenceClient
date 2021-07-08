@@ -23,32 +23,42 @@ const App: React.FC = () => {
   const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
+  const [runLeadIntegrityTest, setRunLeatIntegrityTest] = React.useState<boolean>(true)
   const { state, dispatch } = useOmni()
+
+  /**
+   * HACK (BNR): Due to closures relying on a state variable in the update connection
+   *             generator function is sketchy at best. I mostly ignore it, but in this
+   *             case I _need_ the right value for the beepOnDiscoverDevice so we configure
+   *             the beep right after the bridge connects. I'd much prefer to do this
+   *             without a ref.
+   */
+  const beepOnDeviceDiscover = React.useRef<boolean>(true)
 
   /**
    * NOTE (BNR): In react, when the state updates a component rerenders, and optionally
    *             fires useEffect hooks based on their dependency arrays. We want the app
    *             to try and move the state machine forward whenever the state changes.
-   * 
+   *
    *             If we take the simple approach and use an async function in the useEffect
    *             hook, the async function will cause a state update which causes the component
    *             to rerender and the useEffect hook to fire again _before_ the first call
    *             even finishes. What we wind up with is a stack of pending async calls, all
    *             manipulating the state machine at the same time. It's chaos
-   * 
+   *
    *             What we need is a way to halt the async function after the state has been updated
    *             and resume it after the rerender is complete. To accomplish this we use a refernce
    *             to a generator.
-   * 
+   *
    *             The generator function yields after every state change, effectively halting our
    *             async function. The useEffect hook calls next() on the generator after the
    *             rerender completes, and the next() call moves the state machine forward one tick.
-   * 
+   *
    *             In react, state, variables and other data are regenerated on rerender. To ensure
    *             that doesn't happen we use the useRef hook to pull the generator out of the
    *             state update loop so it cannot change on rerenders or component updates.
    */
-  async function* updateConnectionState() {
+  async function * updateConnectionState () {
     const { left, right } = state
 
     while (true) {
@@ -56,7 +66,7 @@ const App: React.FC = () => {
       for (const item of [left, right]) {
         const { connectionState, name } = item
 
-        console.group((name === left.name) ? "left" : "right")
+        console.group((name === left.name) ? 'left' : 'right')
 
         switch (connectionState) {
           case ConnectionState.NotFoundDevice:
@@ -80,8 +90,17 @@ const App: React.FC = () => {
             console.group('ConnectToBridge')
             try {
               yield dispatch({ type: ActionType.ConnectToBridge, name })
-              const connection = await (window as any).bridgeManagerService.connectToBridge({ name, retries: 0 })
+              const connection = await (window as any).bridgeManagerService.connectToBridge({ name })
               console.log(connection)
+              console.log('beepOnDeviceDiscover', beepOnDeviceDiscover)
+              const response = await (window as any).bridgeManagerService.configureBeep({
+                name,
+                parameters: {
+                  '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
+                  beepConfig: (beepOnDeviceDiscover.current) ? 0x04 : 0x00
+                }
+              })
+              console.log(response)
               yield dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
               console.log('ConnectToBridge Success')
             } catch (e) {
@@ -89,7 +108,7 @@ const App: React.FC = () => {
               console.log('ConnectToBridge Failure')
             }
             console.groupEnd()
-            break;
+            break
           }
           case ConnectionState.NotFoundDevice:
           case ConnectionState.ConnectedBridge: {
@@ -105,7 +124,7 @@ const App: React.FC = () => {
               console.log('ListDevices Failure')
             }
             console.groupEnd()
-            break;
+            break
           }
           case ConnectionState.DiscoveredDevice: {
             console.group('ConnectToDevice')
@@ -120,7 +139,7 @@ const App: React.FC = () => {
               console.log('ConnectToDevice Failure')
             }
             console.groupEnd()
-            break;
+            break
           }
         }
 
@@ -139,7 +158,7 @@ const App: React.FC = () => {
           console.groupEnd()
         }
 
-       console.groupEnd()
+        console.groupEnd()
       }
 
       /**
@@ -150,7 +169,7 @@ const App: React.FC = () => {
        *
        * TODO (BNR): If I split out the loop into two would it help?
        */
-      if (slowPolling({left, right})) {
+      if (slowPolling({ left, right })) {
         await new Promise(resolve => setTimeout(resolve, 5000))
       } else {
         await new Promise(resolve => setTimeout(resolve, 500))
@@ -158,7 +177,7 @@ const App: React.FC = () => {
     }
   }
   const updateStateGenerator = React.useRef(updateConnectionState())
-  
+
   React.useEffect(() => {
     (async () => {
       await updateStateGenerator.current.next()
@@ -181,24 +200,23 @@ const App: React.FC = () => {
     const { left, right } = state
     const config = (window as any).appService.config()
 
-    if (!isRecording) { 
+    if (!isRecording) {
       console.log('disable streaming')
       for (const item of [left, right]) {
-        const { connectionState, name }  = item
+        const { connectionState, name } = item
         if (connectionState < ConnectionState.ConnectedDevice) { continue }
 
         let streamConfig = (config.left.name === name) ? config.left.config.StreamEnables : config.right.config.StreamEnables
         streamConfig = streamConfigConvert(streamConfig)
 
         try {
-          dispatch({ type: ActionType.StreamDisable, name})
+          dispatch({ type: ActionType.StreamDisable, name })
           const response = await (window as any).deviceManagerService.streamDisable({ name, parameters: streamConfig })
           await (window as any).bridgeManagerService.disconnectFromBridge({ name })
           dispatch({ type: ActionType.DisconnectFromBridge, name })
         } catch (e) {
           dispatch({ type: ActionType.StreamDisableFailure, name, message: e.message })
         }
-
       }
 
       return
@@ -207,8 +225,7 @@ const App: React.FC = () => {
     console.log('enable streaming')
     // Do something here to configure streams and enable the streaming watchdog
     for (const item of [left, right]) {
-      console.log((item.name === left.name)? "left" : "right")
-      const { connectionState, name }  = item
+      const { connectionState, name } = item
       const itemConfig = (config.left.name === name) ? config.left.config : config.right.config
 
       if (connectionState < ConnectionState.ConnectedDevice) { continue }
@@ -225,18 +242,18 @@ const App: React.FC = () => {
           enableLd0: itemConfig.SenseOptions.LD0,
           enableLd1: itemConfig.SenseOptions.LD1,
           enableAdaptiveStim: itemConfig.SenseOptions.AdaptiveState,
-          enableLoopRecording: itemConfig.SenseOptions.LoopRecording,
+          enableLoopRecording: itemConfig.SenseOptions.LoopRecording
         }
       }
 
-      console.log('here')
-      try {
-        dispatch({ type: ActionType.IntegrityTest, name }) // NOP
-        const response = await (window as any).deviceManagerService.integrityTest({ name, leadList: integrityTestPairs() })
-        console.log(response)
-        dispatch({ type: ActionType.IntegrityTestSuccess, name }) // NOP
-      } catch (e) {
-        dispatch({ type: ActionType.IntegrityTestFailure, message: e.message, name })
+      if (runLeadIntegrityTest) {
+        try {
+          dispatch({ type: ActionType.IntegrityTest, name }) // NOP
+          const response = await (window as any).deviceManagerService.integrityTest({ name, leadList: integrityTestPairs() })
+          dispatch({ type: ActionType.IntegrityTestSuccess, name }) // NOP
+        } catch (e) {
+          dispatch({ type: ActionType.IntegrityTestFailure, message: e.message, name })
+        }
       }
 
       try {
@@ -251,13 +268,41 @@ const App: React.FC = () => {
       streamConfig = streamConfigConvert(streamConfig)
 
       try {
-        dispatch({ type: ActionType.StreamEnable, name})
+        dispatch({ type: ActionType.StreamEnable, name })
         const response = await (window as any).deviceManagerService.streamEnable({ name, parameters: streamConfig })
         dispatch({ type: ActionType.StreamEnableSuccess, response, name })
       } catch (e) {
         dispatch({ type: ActionType.StreamEnableFailure, name, message: e.message })
       }
     }
+  }
+
+  const toggleBeepConfig = async (newBeepOnDeviceDiscover: boolean) => {
+    const { left, right } = state
+    ;[left, right].forEach(async item => {
+      const { connectionState, name } = item
+
+      if (connectionState < ConnectionState.ConnectedDevice) { return }
+
+      try {
+        dispatch({ type: ActionType.ConfigureBeep, name })
+        const beepConfig = (newBeepOnDeviceDiscover) ? 0x04 : 0x00
+        const response = await (window as any).bridgeManagerService.configureBeep({
+          name,
+          parameters: {
+            '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
+            beepConfig
+          }
+        })
+        console.log(response)
+        dispatch({ type: ActionType.ConfigureBeepSuccess, name, response })
+      } catch (e) {
+        console.log(e)
+        dispatch({ type: ActionType.ConfigureBeepFailure, message: e.message, name })
+      }
+    })
+
+    beepOnDeviceDiscover.current = newBeepOnDeviceDiscover
   }
 
   return (
@@ -279,7 +324,11 @@ const App: React.FC = () => {
                 <Playground showProvocationTask={showProvocationTask} />
               </Route>
               <Route path='/settings'>
-                <Settings showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask} />
+                <Settings
+                  showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask}
+                  runLeadIntegrityTest={runLeadIntegrityTest} setRunLeadIntegrityTest={setRunLeatIntegrityTest}
+                  beepOnDeviceDiscover={beepOnDeviceDiscover.current} beepToggleHandle={toggleBeepConfig}
+                />
               </Route>
               <Route path='/help'>
                 <Help />
