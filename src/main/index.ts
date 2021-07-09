@@ -5,8 +5,9 @@ import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
-import Electron, { app, BrowserWindow, ipcMain, shell } from 'electron'
-import { isTcpSubchannelAddress } from '@grpc/grpc-js/build/src/subchannel'
+import execa from 'execa'
+
+import { app, BrowserWindow, ipcMain } from 'electron'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -64,8 +65,10 @@ app.on('activate', () => {
   }
 })
 
-const CONFIG_PATH = isDevelopment ? path.join(__dirname, '../../config.json') : path.join(__dirname, '../../../config.json')
-const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'))
+const CONFIG_DIR = isDevelopment ? path.join(__dirname, '../../config') : path.join(__dirname, '../../../config')
+const config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'config.json'), 'utf-8'))
+config.left.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.left.configPath), 'utf-8'))
+config.right.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.right.configPath), 'utf-8'))
 
 const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.join(__dirname, '../../../protos')
 const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
@@ -103,12 +106,12 @@ ipcMain.handle('list-bridges', async (event, request: any) => {
   })
 })
 
-ipcMain.handle('connect-to-bridge', async (event, { name }) => {
+ipcMain.handle('connect-to-bridge', async (event, request) => {
   return await new Promise((resolve, reject) => {
-    bridgeClient.ConnectBridge({ name }, (err: Error, resp: any) => {
+    bridgeClient.ConnectBridge(request, (err: Error, resp: any) => {
       if (err) return reject(err)
       const details = parseAny(resp.details)
-      return resolve({...resp, details})
+      return resolve({ ...resp, details })
     })
   })
 })
@@ -134,7 +137,7 @@ ipcMain.handle('describe-bridge', async (event, request) => {
   })
 })
 
-ipcMain.handle('disconnect-from-bridge', async (event, request) => { 
+ipcMain.handle('disconnect-from-bridge', async (event, request) => {
   return await new Promise((resolve, reject) => {
     bridgeClient.DisconnectBridge(request, (err: Error, resp: any) => {
       if (err) return reject(err)
@@ -165,7 +168,8 @@ ipcMain.handle('list-devices', async (event, request) => {
   return await new Promise((resolve, reject) => {
     deviceClient.ListDevices(request, (err: Error, resp: any) => {
       if (err) return reject(err)
-      return resolve(resp)
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, error })
     })
   })
 })
@@ -203,11 +207,71 @@ ipcMain.handle('device-status', async (event, request) => {
   })
 })
 
+ipcMain.handle('sense-configuration', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.SenseConfiguration(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, error })
+    })
+  })
+})
+
+ipcMain.handle('stream-enable', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.StreamEnable(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, error })
+    })
+  })
+})
+
+ipcMain.handle('stream-disable', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.StreamDisable(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, error })
+    })
+  })
+})
+
+ipcMain.handle('integrity-test', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    deviceClient.LeadIntegrityTest(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, error })
+    })
+  })
+})
+
+ipcMain.handle('configure-beep', async (event, request) => {
+  return await new Promise((resolve, reject) => {
+    bridgeClient.ConfigureBeep(request, (err: Error, resp: any) => {
+      if (err) return reject(err)
+
+      const error = parseAny(resp.error)
+      return resolve({ ...resp, error })
+    })
+  })
+})
+
 // Function to launch jsPsych tasks
 ipcMain.on('task-launch', (event, { appName }) => {
-  // const home = app.getPath('home');
-  const fullPath = path.join('/Applications', appName)
-  shell.openPath(fullPath)
+  const home = app.getPath('home')
+  const fullPath = path.join(home, 'AppData', 'Local', appName )
+
+  if (fullPath === null) {
+    throw new Error('need an app name')
+  }
+
+  execa(fullPath).stdout?.pipe(process.stdout)
 })
 
 ipcMain.on('quit', (event, args) => {

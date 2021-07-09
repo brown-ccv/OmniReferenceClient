@@ -81,6 +81,16 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
         connectionJSON.connectCTM = 'error'
         break
       }
+      /**
+       * HACK (BNR): There's some combination of states that I can't find right now.
+       *             This ensures there's some error indicator on the screen when that
+       *             undiscovered state combo hits.
+       * TODO (BNR): Account for all the error cases, or figure out a way to make this
+       *             logic simpler.
+       */
+      default: {
+        connectionJSON.scanCTM = 'error'
+      }
     }
   }
   // Success case
@@ -124,6 +134,7 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
         connectionJSON.connectINS = 'in-progress'
         break
       }
+      case ConnectionState.Streaming:
       case ConnectionState.ConnectedDevice: {
         connectionJSON.scanCTM = 'success'
         connectionJSON.connectCTM = 'success'
