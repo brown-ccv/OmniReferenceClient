@@ -1,5 +1,6 @@
 import React from 'react'
 import TaskBox from '../components/TaskBox'
+import { ConnectionState, useOmni } from '../util/OmniContext'
 
 const BeadsLogo = require('../../../public/logos/beads.svg')
 const MsitLogo = require('../../../public/logos/msit.svg')
@@ -12,12 +13,19 @@ interface ProvocationProp {
   isRecording: boolean
 }
 
-const Playground: React.FC<ProvocationProp> = ({ showProvocationTask, isRecording }) => {
-  let warningText = null
-  if (!isRecording) { warningText = 'Warning: please begin recording before starting a task' }
-
+const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
+  const { state } = useOmni()
+  const disabled = state.left.connectionState < ConnectionState.Streaming && state.right.connectionState < ConnectionState.Streaming
   const launchTask = (appName: string) => {
     (window as any).appService.taskLaunch(appName)
+  }
+  let warningText
+  if (disabled) {
+    warningText = 'Warning: At least one INS needs to be recording before you can start a task.'
+  } else if (state.left.connectionState < ConnectionState.Streaming && state.right.connectionState === ConnectionState.Streaming) {
+    warningText = 'Warning: Only your right INS is recording. If you were instructed to complete a task with only one INS, you may proceed.'
+  } else if (state.right.connectionState < ConnectionState.Streaming && state.left.connectionState === ConnectionState.Streaming) {
+    warningText = 'Warning: Only your left INS is recording. If you were instructed to complete a task with only one INS, you may proceed.'
   }
 
   return (
@@ -30,18 +38,18 @@ const Playground: React.FC<ProvocationProp> = ({ showProvocationTask, isRecordin
         {/* Column 1 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <TaskBox name='Beads' logo={BeadsLogo} onClick={() => launchTask('task-msit.app')} disabled={!isRecording} />
-          <TaskBox name='CBT' logo={CbtLogo} onClick={() => launchTask('task-msit.app')} disabled={!isRecording} />
+          <TaskBox disabled={disabled} name='Beads' logo={BeadsLogo} onClick={() => launchTask('task-msit.app')} />
+          <TaskBox disabled={disabled} name='CBT' logo={CbtLogo} onClick={() => launchTask('task-msit.app')} />
           {showProvocationTask
-            ? <TaskBox name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('task-msit.app')} disabled={!isRecording} />
+            ? <TaskBox disabled={disabled} name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('task-msit.app')} />
             : ''}
 
         </div>
         {/* Column 2 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <TaskBox name='MSIT' logo={MsitLogo} onClick={() => launchTask('task-msit.app')} disabled={!isRecording} />
-          <TaskBox name='Resting' logo={RestingLogo} onClick={() => launchTask('task-msit.app')} disabled={!isRecording} />
+          <TaskBox disabled={disabled} name='MSIT' logo={MsitLogo} onClick={() => launchTask('task-msit.app')} />
+          <TaskBox disabled={disabled} name='Resting' logo={RestingLogo} onClick={() => launchTask('task-msit.app')} />
         </div>
 
       </div>

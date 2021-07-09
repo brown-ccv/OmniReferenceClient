@@ -4,7 +4,7 @@ import React, { useContext, useReducer } from 'react'
  * There's two different state machines running concurrently in this application, * one for each device. Configuration for connections and streaming parameters will
  * be hidden in a configuration file. The configuration file will have a structure:
  *
- *   { 
+ *   {
  *     "left": {
  *       "name": "//summit/bridge/foo/device/bar",
  *       "config": {}
@@ -50,6 +50,9 @@ export enum ActionType {
   BatteryBridge = 'battery-bridge',
   BatteryBridgeSuccess = 'battery-bridge-success',
   BatteryBridgeFailure = 'battery-bridge-failure',
+  ConfigureBeep = 'configure-beep',
+  ConfigureBeepSuccess = 'configure-beep-success',
+  ConfigureBeepFailure = 'configure-beep-failure',
   ListDevices = 'list-devices',
   ListDevicesSuccess = 'list-devices-success',
   ListDevicesFailure = 'list-devices-failure',
@@ -60,6 +63,18 @@ export enum ActionType {
   BatteryDevice = 'battery-device',
   BatteryDeviceSuccess = 'battery-device-success',
   BatteryDeviceFailure = 'battery-device-failure',
+  ConfigureSense = 'configure-sense',
+  ConfigureSenseSuccess = 'configure-sense-success',
+  ConfigureSenseFailure = 'configure-sense-failure',
+  StreamEnable = 'stream-enable',
+  StreamEnableSuccess = 'stream-enable-success',
+  StreamEnableFailure = 'stream-enable-failure',
+  StreamDisable = 'stream-disable',
+  StreamDisableSuccess = 'stream-disable-success',
+  StreamDisableFailure = 'stream-disable-failure',
+  IntegrityTest = 'integrity-test',
+  IntegrityTestSuccess = 'integrity-test-success',
+  IntegrityTestFailure = 'integrity-test-failure',
   ResetConnection = 'reset-connection',
 }
 
@@ -77,8 +92,11 @@ export type Action =
   | { type: ActionType.BatteryBridge, name: string }
   | { type: ActionType.BatteryBridgeSuccess, response: {details: any, error: any}, name: string }
   | { type: ActionType.BatteryBridgeFailure, message: string, name: string }
+  | { type: ActionType.ConfigureBeep, name: string }
+  | { type: ActionType.ConfigureBeepSuccess, response: any, name: string }
+  | { type: ActionType.ConfigureBeepFailure, message: string, name: string }
   | { type: ActionType.ListDevices, name: string }
-  | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, name: string }
+  | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, error: any, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
   | { type: ActionType.ConnectToDevice, name: string }
   | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
@@ -87,6 +105,18 @@ export type Action =
   | { type: ActionType.BatteryDevice, name: string }
   | { type: ActionType.BatteryDeviceSuccess, response: {batteryLevelPercent: { value: number }, error: any}, name: string }
   | { type: ActionType.BatteryDeviceFailure, message: string, name: string }
+  | { type: ActionType.ConfigureSense, name: string }
+  | { type: ActionType.ConfigureSenseSuccess, response: any, name: string }
+  | { type: ActionType.ConfigureSenseFailure, message: string, name: string }
+  | { type: ActionType.StreamEnable, name: string }
+  | { type: ActionType.StreamEnableSuccess, response: any, name: string }
+  | { type: ActionType.StreamEnableFailure, message: string, name: string }
+  | { type: ActionType.StreamDisable, name: string }
+  | { type: ActionType.StreamDisableSuccess, response: any, name: string }
+  | { type: ActionType.StreamDisableFailure, message: string, name: string }
+  | { type: ActionType.IntegrityTest, name: string }
+  | { type: ActionType.IntegrityTestSuccess, name: string }
+  | { type: ActionType.IntegrityTestFailure, message: string, name: string }
   | { type: ActionType.ResetConnection, name: string }
 export type Dispatch = (action: Action) => void
 
@@ -97,6 +127,7 @@ export interface BridgeDevicePairState {
   bridgeBattery: number
   deviceBattery: number
   error?: string
+  connectionAttempts: number
 }
 
 export interface State {
@@ -120,14 +151,16 @@ const initialState: State = {
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
-    deviceBattery: -1
+    deviceBattery: -1,
+    connectionAttempts: 0
   },
   right: {
     name: (window as any).appService.config().right.name,
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
-    deviceBattery: -1
+    deviceBattery: -1,
+    connectionAttempts: 0
   }
 }
 
@@ -145,9 +178,9 @@ export const omniReducer = (state: State, action: Action) => {
      */
     case ActionType.ConnectedBridges: {
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown
-          && item.connectionState !== ConnectionState.Disconnected
-          && item.connectionState !== ConnectionState.NotFoundDevice) { return }
+        if (item.connectionState !== ConnectionState.Unknown &&
+          item.connectionState !== ConnectionState.Disconnected &&
+          item.connectionState !== ConnectionState.NotFoundDevice) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -160,7 +193,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name))) {
+        if (bridges.find(({ name }) => item.name.startsWith(name)) != null) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
         } else {
@@ -173,10 +206,10 @@ export const omniReducer = (state: State, action: Action) => {
     }
     case ActionType.ListBridges: {
       ;[left, right].forEach(item => {
-        if (item.connectionState !== ConnectionState.Unknown
-          && item.connectionState !== ConnectionState.Disconnected
-          && item.connectionState !== ConnectionState.NotFoundDevice
-          && item.connectionState !== ConnectionState.NotConnectedBridge) { return }
+        if (item.connectionState !== ConnectionState.Unknown &&
+          item.connectionState !== ConnectionState.Disconnected &&
+          item.connectionState !== ConnectionState.NotFoundDevice &&
+          item.connectionState !== ConnectionState.NotConnectedBridge) { return }
 
         item.previousState = item.connectionState
         item.connectionState = ConnectionState.ScanningBridge
@@ -190,7 +223,7 @@ export const omniReducer = (state: State, action: Action) => {
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ScanningBridge) { return }
 
-        if (bridges.find(({ name }) => item.name.startsWith(name))) {
+        if (bridges.find(({ name }) => item.name.startsWith(name)) != null) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredBridge
         } else {
@@ -244,14 +277,23 @@ export const omniReducer = (state: State, action: Action) => {
         if (name !== item.name) { return }
 
         if (connectionStatus === 'CONNECTION_SUCCESS') {
+          item.connectionAttempts = 0
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
           return
         }
 
         if (connectionStatus === 'CONNECTION_FAILURE' && details?.connectionStatus === 4) {
+          item.connectionAttempts += 1
           item.previousState = item.connectionState
-          item.connectionState = ConnectionState.Disconnected
+
+          console.log(item.connectionAttempts)
+
+          if (item.connectionAttempts >= 3) {
+            item.connectionState = ConnectionState.NotFoundBridge
+          } else {
+            item.connectionState = ConnectionState.Disconnected
+          }
           return
         }
 
@@ -297,6 +339,13 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.ConfigureBeep:
+    case ActionType.ConfigureBeepSuccess:
+    case ActionType.IntegrityTest:
+    case ActionType.IntegrityTestSuccess:
+    case ActionType.StreamDisable:
+    case ActionType.StreamEnable:
+    case ActionType.ConfigureSense:
     case ActionType.BatteryDevice:
     case ActionType.BatteryBridge: {
       return { left, right }
@@ -322,6 +371,7 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.ConfigureBeepFailure:
     case ActionType.BatteryBridgeFailure: {
       const { message, name } = action
 
@@ -350,13 +400,16 @@ export const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ListDevicesSuccess: {
-      const { devices, name } = action
+      const { devices, error, name } = action
 
       ;[left, right].forEach(item => {
         if (item.name !== name) { return }
         if (item.connectionState !== ConnectionState.ScanningDevice) { return }
 
-        if (devices.find(({ name }) => item.name.startsWith(name))) {
+        if (error?.message === 'InsAlreadyConnected') {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.ConnectedDevice
+        } else if (devices.find(({ name }) => item.name.startsWith(name)) != null) {
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.DiscoveredDevice
         } else {
@@ -367,6 +420,10 @@ export const omniReducer = (state: State, action: Action) => {
 
       return { left, right }
     }
+    case ActionType.IntegrityTestFailure:
+    case ActionType.StreamDisableFailure:
+    case ActionType.StreamEnableFailure:
+    case ActionType.ConfigureSenseFailure:
     case ActionType.BatteryDeviceFailure:
     case ActionType.ConnectToDeviceFailure:
     case ActionType.ListDevicesFailure: {
@@ -376,7 +433,20 @@ export const omniReducer = (state: State, action: Action) => {
         if (name !== item.name) { return }
 
         item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorDevice
+
+        /**
+         * HACK (BNR): Difficult to fix race condition in the server where a
+         *             connection can be disposed of before all pending calls are
+         *             complete. This is a workaround to treat that as a successful
+         *             disconnect. It basically swallows null-reference exceptions
+         *             in the server.
+         */
+        if (message.includes('device-status')) {
+          item.connectionState = ConnectionState.Disconnected
+        } else {
+          item.connectionState = ConnectionState.ErrorDevice
+        }
+
         item.error = message
       })
 
@@ -474,6 +544,74 @@ export const omniReducer = (state: State, action: Action) => {
         }
 
         item.deviceBattery = batteryLevel
+      })
+
+      return { left, right }
+    }
+    case ActionType.ConfigureSenseSuccess: {
+      const { response, name } = action
+      const { senseConfigureStatus, error } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        if (error && error.rejectCode !== undefined) {
+          item.previousState = item.connectionState
+          item.connectionState = ConnectionState.Disconnected
+          item.bridgeBattery = -1
+          item.deviceBattery = -1
+          item.error = error.message
+        }
+      })
+
+      return { left, right }
+    }
+    case ActionType.StreamEnableSuccess: {
+      const { response, name } = action
+      const { streamConfigureStatus, error } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        switch (streamConfigureStatus) {
+          case 'STREAM_CONFIGURE_STATUS_SUCCESS':
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.Streaming
+            return
+          case 'STREAM_CONFIGURE_STATUS_UNKNOWN':
+          case 'STREAM_CONFIGURE_STATUS_FAILURE':
+          default:
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.Disconnected
+            item.bridgeBattery = -1
+            item.deviceBattery = -1
+            item.error = error?.message
+        }
+      })
+
+      return { left, right }
+    }
+    case ActionType.StreamDisableSuccess: {
+      const { response, name } = action
+      const { streamConfigureStatus, error } = response
+
+      ;[left, right].forEach(item => {
+        if (item.name !== name) { return }
+
+        switch (streamConfigureStatus) {
+          case 'STREAM_CONFIGURE_STATUS_SUCCESS':
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.ConnectedDevice
+            return
+          case 'STREAM_CONFIGURE_STATUS_UNKNOWN':
+          case 'STREAM_CONFIGURE_STATUS_FAILURE':
+          default:
+            item.previousState = item.connectionState
+            item.connectionState = ConnectionState.Disconnected
+            item.bridgeBattery = -1
+            item.deviceBattery = -1
+            item.error = error?.message
+        }
       })
 
       return { left, right }
