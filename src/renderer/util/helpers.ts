@@ -14,11 +14,19 @@ export const terminalState = ({ connectionState }: BridgeDevicePairState): boole
     ConnectionState.ErrorBridge, ConnectionState.ErrorDevice].includes(connectionState)
 
 export const slowPolling = ({ left, right }: State): boolean => {
-  if (deviceConnected(left) || deviceConnected(right)) { return true }
-  if (left.connectionState === ConnectionState.NotFoundBridge || right.connectionState === ConnectionState.NotFoundBridge) { return true }
-  if (left.connectionState === ConnectionState.NotFoundDevice || right.connectionState === ConnectionState.NotFoundDevice) { return true }
-  if (left.connectionState === ConnectionState.ErrorBridge || right.connectionState === ConnectionState.ErrorBridge) { return true }
-  if (left.connectionState === ConnectionState.ErrorDevice || right.connectionState === ConnectionState.ErrorDevice) { return true }
+  if (deviceConnected(left) && deviceConnected(right)) { return true }
+  if (deviceConnected(left)
+    && [ConnectionState.NotFoundBridge, ConnectionState.NotFoundDevice, ConnectionState.ErrorBridge, ConnectionState.ErrorDevice].includes(right.connectionState)) {
+      return true
+    }
+  if (deviceConnected(right)
+    && [ConnectionState.NotFoundBridge, ConnectionState.NotFoundDevice, ConnectionState.ErrorBridge, ConnectionState.ErrorDevice].includes(left.connectionState)) {
+      return true
+    }
+  if ([ConnectionState.NotFoundBridge, ConnectionState.NotFoundDevice, ConnectionState.ErrorBridge, ConnectionState.ErrorDevice].includes(left.connectionState)
+    && [ConnectionState.NotFoundBridge, ConnectionState.NotFoundDevice, ConnectionState.ErrorBridge, ConnectionState.ErrorDevice].includes(right.connectionState)) {
+      return true
+    }
   return false
 }
 

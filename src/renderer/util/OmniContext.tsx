@@ -127,6 +127,7 @@ export interface BridgeDevicePairState {
   bridgeBattery: number
   deviceBattery: number
   error?: string
+  connectionAttempts: number
 }
 
 export interface State {
@@ -150,14 +151,16 @@ const initialState: State = {
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
-    deviceBattery: -1
+    deviceBattery: -1,
+    connectionAttempts: 0
   },
   right: {
     name: (window as any).appService.config().right.name,
     connectionState: ConnectionState.Unknown,
     previousState: ConnectionState.Unknown,
     bridgeBattery: -1,
-    deviceBattery: -1
+    deviceBattery: -1,
+    connectionAttempts: 0
   }
 }
 
@@ -274,14 +277,23 @@ export const omniReducer = (state: State, action: Action) => {
         if (name !== item.name) { return }
 
         if (connectionStatus === 'CONNECTION_SUCCESS') {
+          item.connectionAttempts = 0
           item.previousState = item.connectionState
           item.connectionState = ConnectionState.ConnectedBridge
           return
         }
 
         if (connectionStatus === 'CONNECTION_FAILURE' && details?.connectionStatus === 4) {
+          item.connectionAttempts += 1
           item.previousState = item.connectionState
-          item.connectionState = ConnectionState.Disconnected
+
+          console.log(item.connectionAttempts)
+
+          if (item.connectionAttempts >= 3) {
+            item.connectionState = ConnectionState.NotFoundBridge
+          } else {
+            item.connectionState = ConnectionState.Disconnected
+          }
           return
         }
 

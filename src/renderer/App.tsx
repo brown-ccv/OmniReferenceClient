@@ -7,7 +7,6 @@ import {
 
 import { useOmni, ConnectionState, ActionType, State, Dispatch } from './util/OmniContext'
 
-import Buttons from './pages/Buttons'
 import Help from './pages/Help'
 import Playground from './pages/Playground'
 import Settings from './pages/Settings'
@@ -69,7 +68,6 @@ const App: React.FC = () => {
         console.group((name === left.name) ? 'left' : 'right')
 
         switch (connectionState) {
-          case ConnectionState.NotFoundDevice:
           case ConnectionState.Unknown:
           case ConnectionState.Disconnected:
           case ConnectionState.NotConnectedBridge: {
@@ -77,6 +75,7 @@ const App: React.FC = () => {
             try {
               yield dispatch({ type: ActionType.ListBridges })
               const { bridges } = await (window as any).bridgeManagerService.listBridges({})
+              console.log('bridges', bridges)
               yield dispatch({ type: ActionType.ListBridgesSuccess, bridges })
               console.log('ListBridges Success')
             } catch (e) {
@@ -93,14 +92,27 @@ const App: React.FC = () => {
               const connection = await (window as any).bridgeManagerService.connectToBridge({ name })
               console.log(connection)
               console.log('beepOnDeviceDiscover', beepOnDeviceDiscover)
-              const response = await (window as any).bridgeManagerService.configureBeep({
-                name,
-                parameters: {
-                  '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
-                  beepConfig: (beepOnDeviceDiscover.current) ? 0x04 : 0x00
-                }
-              })
-              console.log(response)
+              /**
+               * HACK (BNR): The connection endpoint is a little busted, so the beep
+               *             config doesn't work. Instead I have to connect, then write
+               *             the beep config after the connection is initialized.
+               * TODO (BNR): Fix connection endpoint to properly handle parameters with default values.
+               *
+               * HACK (BNR): Generally I don't want anyone to check responses outside of
+               *             the reducer, but it's really convenient to do here to make sure
+               *             I don't try to configure the beep of a bridge that is not connected.
+               * TODO (BNR): Redo state management.
+               */
+              if (connection.connectionStatus !== 'CONNECTION_FAILURE') {
+                const response = await (window as any).bridgeManagerService.configureBeep({
+                  name,
+                  parameters: {
+                    '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
+                    beepConfig: (beepOnDeviceDiscover.current) ? 0x04 : 0x00
+                  }
+                })
+                console.log(response)
+              }
               yield dispatch({ type: ActionType.ConnectToBridgeSuccess, connection })
               console.log('ConnectToBridge Success')
             } catch (e) {
@@ -135,6 +147,7 @@ const App: React.FC = () => {
               yield dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
               console.log('ConnectToDevice Success')
             } catch (e) {
+              console.log(e)
               yield dispatch({ type: ActionType.ConnectToDeviceFailure, message: e.message, name })
               console.log('ConnectToDevice Failure')
             }
@@ -167,10 +180,10 @@ const App: React.FC = () => {
        *             As an egregious hack we slow down the loop if both sides are connected or if
        *             one side is connected and the bridge isn't found for the other side.
        *
-       * TODO (BNR): If I split out the loop into two would it help?
+       * TODO (BNR): If I split out the loop into two would it help? Nope.
        */
       if (slowPolling({ left, right })) {
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        await new Promise(resolve => setTimeout(resolve, 10000))
       } else {
         await new Promise(resolve => setTimeout(resolve, 500))
       }
@@ -332,9 +345,6 @@ const App: React.FC = () => {
               </Route>
               <Route path='/help'>
                 <Help />
-              </Route>
-              <Route path='/buttons'>
-                <Buttons />
               </Route>
               <Route path='/recording'>
                 <Recording isRecording={isRecording} setRecording={setRecording} recordingTime={recordingTime} setRecordingTime={setRecordingTime} onClick={recordingClickHandler} />
