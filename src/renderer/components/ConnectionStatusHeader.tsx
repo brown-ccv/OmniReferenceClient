@@ -34,6 +34,7 @@ const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
         </a>
       </div>
     )
+    case ConnectionState.Streaming:
     case ConnectionState.ConnectedDevice: return (
       <div className='level-item'>
         <a className='box has-background-success is-flex py-1'>
