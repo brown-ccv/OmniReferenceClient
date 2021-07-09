@@ -38,18 +38,18 @@ const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
         {/* Column 1 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <TaskBox disabled={disabled} name='Beads' logo={BeadsLogo} onClick={() => launchTask('task-msit.app')} />
-          <TaskBox disabled={disabled} name='CBT' logo={CbtLogo} onClick={() => launchTask('task-msit.app')} />
+          <TaskBox disabled={disabled} name='Beads' logo={BeadsLogo} onClick={() => launchTask('task-msit.exe')} />
+          <TaskBox disabled={disabled} name='CBT' logo={CbtLogo} onClick={() => launchTask('task-msit.exe')} />
           {showProvocationTask
-            ? <TaskBox disabled={disabled} name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('task-msit.app')} />
+            ? <TaskBox disabled={disabled} name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('task-msit.exe')} />
             : ''}
 
         </div>
         {/* Column 2 for tasks */}
         <div className='column is-half'>
           {/* Boxes for tasks */}
-          <TaskBox disabled={disabled} name='MSIT' logo={MsitLogo} onClick={() => launchTask('task-msit.app')} />
-          <TaskBox disabled={disabled} name='Resting' logo={RestingLogo} onClick={() => launchTask('task-msit.app')} />
+          <TaskBox disabled={disabled} name='MSIT' logo={MsitLogo} onClick={() => launchTask('task-msit.exe')} />
+          <TaskBox disabled={disabled} name='Resting' logo={RestingLogo} onClick={() => launchTask('task-msit.exe')} />
         </div>
 
       </div>
