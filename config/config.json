@@ -1,0 +1,11 @@
+{
+  "serverAddress": "192.168.0.106:50051",
+  "left": {
+    "name": "//summit/bridge/NKW005449N/device/NPC700365H",
+    "configPath": "./senseLeft_config.json"
+  },
+  "right": {
+    "name": "//summit/bridge/NKW021653N/device/NPC700365H",
+    "configPath": "./senseRight_config.json"
+  }
+}

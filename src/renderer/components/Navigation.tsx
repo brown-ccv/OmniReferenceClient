@@ -22,10 +22,6 @@ const Navigation: React.FC = () => {
         <li className='menu-list'>
           <Link to='/help'>Help <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
-        <li className='menu-list'>
-          <Link to='/buttons'>Buttons <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
-        </li>
-
       </ul>
     </aside>
   )

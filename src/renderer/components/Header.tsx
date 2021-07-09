@@ -32,10 +32,10 @@ const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime }) => {
           <Clock />
           {isRecording
             ? <Link to='/recording' className='level pt-1'>
-                <p className='level-item has-text-danger'><FontAwesomeIcon className='icon mx-2' icon={faCircle} />
-                Recording for: 
-                </p>
-                <p className='level-item has-text-white'>{recordTimeFormat(recordingTime)}</p>
+              <p className='level-item has-text-danger'><FontAwesomeIcon className='icon mx-2' icon={faCircle} />
+                Recording for:
+              </p>
+              <p className='level-item has-text-white'>{recordTimeFormat(recordingTime)}</p>
               </Link>
             : ''}
         </div>
