@@ -5,7 +5,9 @@ import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import execa from 'execa'
+
+import { app, BrowserWindow, ipcMain } from 'electron'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -209,7 +211,6 @@ ipcMain.handle('sense-configuration', async (event, request) => {
   return await new Promise((resolve, reject) => {
     deviceClient.SenseConfiguration(request, (err: Error, resp: any) => {
       if (err) return reject(err)
-      console.log('here', err)
 
       const error = parseAny(resp.error)
       return resolve({ ...resp, error })
@@ -263,9 +264,14 @@ ipcMain.handle('configure-beep', async (event, request) => {
 
 // Function to launch jsPsych tasks
 ipcMain.on('task-launch', (event, { appName }) => {
-  // const home = app.getPath('home');
-  const fullPath = path.join('/Applications', appName)
-  shell.openPath(fullPath)
+  const home = app.getPath('home')
+  const fullPath = path.join(home, 'AppData', 'Local', appName )
+
+  if (fullPath === null) {
+    throw new Error('need an app name')
+  }
+
+  execa(fullPath).stdout?.pipe(process.stdout)
 })
 
 ipcMain.on('quit', (event, args) => {

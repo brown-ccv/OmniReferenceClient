@@ -49,13 +49,17 @@
   overflow-x: hidden;
 }
 
-#record-red-dot{
+.record-red-dot{
   margin-left: 36%;
   margin-right: 36%;
 }
 
-#task-box{
+.task-box{
   max-width: 260px;
+}
+
+.task-box:disabled {
+  opacity: 50%
 }
 
 #disabled-link{
