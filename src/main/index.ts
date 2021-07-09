@@ -19,6 +19,11 @@ if (require('electron-squirrel-startup') === undefined) { // eslint-disable-line
   app.quit()
 }
 
+// Auto update
+require('update-electron-app')({
+  repo: 'brown-ccv/OmniReferenceClient'
+})
+
 // TODO: https://stackoverflow.com/questions/52236641/electron-ipc-and-nodeintegration
 const createWindow = (): void => {
   // Create the browser window.
