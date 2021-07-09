@@ -2,8 +2,6 @@ import React from 'react'
 import TaskBox from '../components/TaskBox'
 import { ConnectionState, useOmni } from '../util/OmniContext'
 
-const mywindow: any = window
-
 const BeadsLogo = require('../../../public/logos/beads.svg')
 const MsitLogo = require('../../../public/logos/msit.svg')
 const CbtLogo = require('../../../public/logos/cbt.svg')
@@ -12,13 +10,14 @@ const ProvocationLogo = require('../../../public/logos/provocation.svg')
 
 interface ProvocationProp {
   showProvocationTask: boolean
+  isRecording: boolean
 }
 
 const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
   const { state } = useOmni()
   const disabled = state.left.connectionState < ConnectionState.Streaming && state.right.connectionState < ConnectionState.Streaming
   const launchTask = (appName: string) => {
-    mywindow.appService.taskLaunch(appName)
+    (window as any).appService.taskLaunch(appName)
   }
   let warningText
   if (disabled) {

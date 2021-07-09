@@ -3,11 +3,7 @@ import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons'
 
-interface NavigationProp {
-  isRecording: boolean
-}
-
-const Navigation: React.FC<NavigationProp> = ({ isRecording }) => {
+const Navigation: React.FC = () => {
   return (
     <aside className='menu is-large is-flex is-justify-content-center'>
       <ul>
