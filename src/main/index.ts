@@ -270,7 +270,9 @@ ipcMain.handle('configure-beep', async (event, request) => {
 // Function to launch jsPsych tasks
 ipcMain.on('task-launch', (event, { appName }) => {
   const home = app.getPath('home')
-  const fullPath = path.join(home, 'AppData', 'Local', appName )
+  const appDirectory = appName.replace(/-/g, '_')
+  // Path to tasks - /AppData/Local/<task_name>/<task-name>.exe
+  const fullPath = path.join(home, 'AppData', 'Local', appDirectory, `${appName}.exe`)
 
   if (fullPath === null) {
     throw new Error('need an app name')
