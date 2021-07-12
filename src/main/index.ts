@@ -70,7 +70,8 @@ app.on('activate', () => {
   }
 })
 
-const CONFIG_DIR = isDevelopment ? path.join(__dirname, '../../config') : path.join(__dirname, '../../../config')
+// Absolute path for configs -> /AppData/Local/omniconfig
+const CONFIG_DIR = isDevelopment ? path.join(__dirname, '../../config') : path.join(app.getPath('home'), 'AppData/Local/omniconfig')
 const config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'config.json'), 'utf-8'))
 config.left.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.left.configPath), 'utf-8'))
 config.right.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.right.configPath), 'utf-8'))
