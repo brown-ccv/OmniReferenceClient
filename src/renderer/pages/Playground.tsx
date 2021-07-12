@@ -17,8 +17,9 @@ interface ProvocationProp {
 const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
   const { state } = useOmni()
   const disabled = state.left.connectionState < ConnectionState.Streaming && state.right.connectionState < ConnectionState.Streaming
-  const launchTask = (appName: string) => {
-    (window as any).appService.taskLaunch(appName)
+  const launchTask = (appDir: string) => {
+    // appDir is the path after AppData/Local/
+    (window as any).appService.taskLaunch(appDir)
   }
   let warningText
   if (disabled) {
@@ -39,22 +40,22 @@ const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
         {/* Column 1 for tasks */}
         <div className='column is-third'>
           {/* Boxes for tasks */}
-          <TaskBox disabled={disabled} name='Beads' logo={BeadsLogo} onClick={() => launchTask('task-beads')} />
-          <TaskBox disabled={disabled} name='Ratings' logo={RatingsLogo} onClick={() => launchTask('task-ratings')} />
+          <TaskBox disabled={disabled} name='Beads' logo={BeadsLogo} onClick={() => launchTask('beads/beads.exe')} />
+          <TaskBox disabled={disabled} name='Ratings' logo={RatingsLogo} onClick={() => launchTask('task_ratings/task-ratings.exe')} />
 
         </div>
         {/* Column 2 for tasks */}
         <div className='column is-third'>
           {/* Boxes for tasks */}
-          <TaskBox disabled={disabled} name='MSIT' logo={MsitLogo} onClick={() => launchTask('task-msit')} />
-          <TaskBox disabled={disabled} name='Resting' logo={RestingLogo} onClick={() => launchTask('task-resting-state')} />
+          <TaskBox disabled={disabled} name='MSIT' logo={MsitLogo} onClick={() => launchTask('task_msit/task-msit.exe')} />
+          <TaskBox disabled={disabled} name='Resting' logo={RestingLogo} onClick={() => launchTask('resting_state/resting-state.exe')} />
         </div>
         {/* Column 2 for tasks */}
         <div className='column is-third'>
           {/* Boxes for tasks */}
-          <TaskBox disabled={disabled} name='CBT' logo={CbtLogo} onClick={() => launchTask('Programming')} />
+          <TaskBox disabled={disabled} name='ERP' logo={CbtLogo} onClick={() => launchTask('erp/erp.exe')} />
           {showProvocationTask
-            ? <TaskBox disabled={disabled} name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('task-provocation')} />
+            ? <TaskBox disabled={disabled} name='Provocation' logo={ProvocationLogo} onClick={() => launchTask('provocation/provocation.exe')} />
             : ''}
         </div>
 

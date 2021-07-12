@@ -82,8 +82,8 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 })
 
 contextBridge.exposeInMainWorld('appService', {
-  taskLaunch: (appName: string): void => {
-    ipcRenderer.send('task-launch', { appName })
+  taskLaunch: (appDir: string): void => {
+    ipcRenderer.send('task-launch', { appDir })
   },
 
   closeApp: (): void => {
