@@ -1,7 +1,7 @@
 {
   "name": "omniclient",
   "productName": "omniclient",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "private": true,
@@ -25,8 +25,7 @@
     "forge": {
       "packagerConfig": {
         "extraResource": [
-          "./protos",
-          "./config"
+          "./protos"
         ]
       },
       "makers": [

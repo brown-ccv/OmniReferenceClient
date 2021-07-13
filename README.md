@@ -45,3 +45,6 @@ To have the linter fix errors, run:
 ```
 npm run lint -- --fix
 ```
+## Configuration files
+
+In the packaged version of the app, the sensing config files will not be bundled with the app and needs to be copied into this directory on windows: `/AppData/Roaming/omniconfig`. 
