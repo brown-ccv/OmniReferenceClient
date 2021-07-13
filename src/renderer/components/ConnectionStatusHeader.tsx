@@ -1,6 +1,6 @@
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLaptopMedical, faCheck, faSpinner, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faLaptopMedical, faCheck, faSpinner, faTimes, faDotCircle } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionState } from '../util/OmniContext'
 
 interface ConnectionProp {
@@ -12,7 +12,7 @@ const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
     case ConnectionState.NotConnectedBridge:
     case ConnectionState.Unknown: return (
       <div className='level-item'>
-        <a className='box has-background-danger has-text-white is-flex py-1'>
+        <a className='box has-background-grey has-text-white is-flex py-1'>
           <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
             Unknown<FontAwesomeIcon className='icon is-small ml-2' icon={faTimes} />
           </p>
@@ -34,7 +34,15 @@ const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
         </a>
       </div>
     )
-    case ConnectionState.Streaming:
+    case ConnectionState.Streaming: return (
+      <div className='level-item'>
+        <a className='box has-background-success is-flex py-1'>
+          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
+            Streaming<FontAwesomeIcon className='icon is-small ml-2' icon={faDotCircle} />
+          </p>
+        </a>
+      </div>
+    )
     case ConnectionState.ConnectedDevice: return (
       <div className='level-item'>
         <a className='box has-background-success is-flex py-1'>
