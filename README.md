@@ -47,4 +47,8 @@ npm run lint -- --fix
 ```
 ## Configuration files
 
-In the packaged version of the app, the sensing config files will not be bundled with the app and needs to be copied into this directory on windows: `/AppData/Roaming/omniconfig`. 
+In the packaged version of the app, the sensing config files will not be bundled with the app and needs to be copied into this directory on windows: `/AppData/Roaming/omniconfig`. Examples of these files can be found in the `config` folder of this repository.
+
+- `config.json` - main config file, the `name` field of the left and right objects need to be updated with the serial number of both the CTM and the INS: "//summit/bridge/<CTM serial number>/device/<INS serial number>".
+- `senseLeft_config.json` - sensing config for the left INS, make sure that this file is in the same directory as `config.json`.
+- `senseRight_config.json` - sensing config for the right INS, make sure that this file is in the same directory as `config.json`.
