@@ -21,7 +21,8 @@ if (require('electron-squirrel-startup') === undefined) { // eslint-disable-line
 
 // Auto update
 require('update-electron-app')({
-  repo: 'brown-ccv/OmniReferenceClient'
+  repo: 'brown-ccv/OmniReferenceClient',
+  updateInterval: '1 hour'
 })
 
 // TODO: https://stackoverflow.com/questions/52236641/electron-ipc-and-nodeintegration
