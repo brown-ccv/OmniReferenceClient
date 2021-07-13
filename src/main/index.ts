@@ -21,7 +21,8 @@ if (require('electron-squirrel-startup') === undefined) { // eslint-disable-line
 
 // Auto update
 require('update-electron-app')({
-  repo: 'brown-ccv/OmniReferenceClient'
+  repo: 'brown-ccv/OmniReferenceClient',
+  updateInterval: '1 hour'
 })
 
 // TODO: https://stackoverflow.com/questions/52236641/electron-ipc-and-nodeintegration
@@ -70,7 +71,8 @@ app.on('activate', () => {
   }
 })
 
-const CONFIG_DIR = isDevelopment ? path.join(__dirname, '../../config') : path.join(__dirname, '../../../config')
+// Absolute path for configs on windows-> /AppData/Roaming/omniconfig
+const CONFIG_DIR = isDevelopment ? path.join(__dirname, '../../config') : path.join(app.getPath('appData'), 'omniconfig')
 const config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'config.json'), 'utf-8'))
 config.left.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.left.configPath), 'utf-8'))
 config.right.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.right.configPath), 'utf-8'))
