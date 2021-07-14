@@ -1,7 +1,7 @@
 {
   "name": "omniclient",
   "productName": "omniclient",
-  "version": "2.4.0",
+  "version": "2.5.2",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "private": true,
