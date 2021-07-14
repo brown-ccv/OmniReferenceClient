@@ -1,4 +1,5 @@
 import React from 'react'
+import { version } from '../../../package.json'
 
 interface HelpText{
   title: string
@@ -27,7 +28,9 @@ const Help: React.FC = () => {
           )
         })
       }
-
+      <footer>
+        <p className="is-size-6 has-text-white">Version: {version}</p>
+      </footer>
     </>
   )
 }
