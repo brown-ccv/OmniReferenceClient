@@ -19,27 +19,12 @@ contextBridge.exposeInMainWorld('bridgeManagerService', {
     return await ipcRenderer.invoke('connect-to-bridge', request)
   },
 
-  connectedBridges: async (request: any): Promise<any> => {
-    return await ipcRenderer.invoke('connected-bridges', request)
-  },
-
   describeBridge: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('describe-bridge', request)
   },
 
   disconnectFromBridge: async (request: any): Promise<void> => {
     return await ipcRenderer.invoke('disconnect-from-bridge', request)
-  },
-
-  connectionStatusStream: (request: any, callback: Function): void => {
-    const { enableStream } = request
-    if (enableStream) {
-      ipcRenderer.send('connection-status-stream', request)
-      ipcRenderer.on('connection-update', (_, resp) => callback(resp))
-    } else {
-      ipcRenderer.send('connection-status-stream', request)
-      ipcRenderer.removeAllListeners('connection-update')
-    }
   },
 
   configureBeep: async (request: any): Promise<any> => {
