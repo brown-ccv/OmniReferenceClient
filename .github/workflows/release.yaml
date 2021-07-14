@@ -16,9 +16,7 @@ jobs:
       - name: npm install
         shell: bash
         run: |
-          npm --version
           npm install -g npm
-          npm --version
           npm install
       - name: generate windows installer
         run: npm run make
