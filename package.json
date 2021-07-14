@@ -24,6 +24,7 @@
   "config": {
     "forge": {
       "packagerConfig": {
+        "icon": "path/to/icon.icns",
         "extraResource": [
           "./protos"
         ]
