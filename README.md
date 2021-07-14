@@ -52,3 +52,7 @@ In the packaged version of the app, the sensing config files will not be bundled
 - `config.json` - main config file, the `name` field of the left and right objects need to be updated with the serial number of both the CTM and the INS: "//summit/bridge/<CTM serial number>/device/<INS serial number>".
 - `senseLeft_config.json` - sensing config for the left INS, make sure that this file is in the same directory as `config.json`.
 - `senseRight_config.json` - sensing config for the right INS, make sure that this file is in the same directory as `config.json`.
+
+## Logging
+
+There are very simple logs contained in `%USERPROFILE%\AppData\Roaming\{app name}\logs\{process type}.log`
