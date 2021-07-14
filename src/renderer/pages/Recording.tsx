@@ -5,7 +5,6 @@ import { ConnectionState, useOmni } from '../util/OmniContext'
 import { recordTimeFormat } from '../util/helpers'
 const RecordLogo = require('../../../public/logos/record.svg')
 const RecordingLogo = require('../../../public/logos/recording.svg')
-const RecordDisabled = require('../../../public/logos/recordDisabled.svg')
 
 interface RecordingProp {
   isRecording: boolean
