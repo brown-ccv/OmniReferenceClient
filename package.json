@@ -1,6 +1,6 @@
 {
-  "name": "omniclient",
-  "productName": "omniclient",
+  "name": "summit-rcs",
+  "productName": "summit-rcs",
   "version": "2.6.0",
   "description": "My Electron application description",
   "main": ".webpack/main",
@@ -33,7 +33,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "omniclient"
+            "name": "summit-rcs"
           }
         },
         {
@@ -146,12 +146,12 @@
               "label": "RELEASES"
             },
             {
-              "path": "out/make/squirrel.windows/x64/omniclient-*-full.nupkg",
-              "label": "omniclient.nupkg"
+              "path": "out/make/squirrel.windows/x64/summit-rcs-*-full.nupkg",
+              "label": "summit-rcs.nupkg"
             },
             {
-              "path": "out/make/squirrel.windows/x64/omniclient-*Setup.exe",
-              "label": "omniclient-setup.exe"
+              "path": "out/make/squirrel.windows/x64/summit-rcs-*Setup.exe",
+              "label": "summit-rcs-setup.exe"
             }
           ]
         }
