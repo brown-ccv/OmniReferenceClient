@@ -16,7 +16,10 @@ jobs:
       - name: npm install
         shell: bash
         run: |
-          npm install --legacy-peer-deps --no-optional
+          npm --version
+          npm upgrade -g npm
+          npm --version
+          npm install
       - name: generate windows installer
         run: npm run make
       - name: release
