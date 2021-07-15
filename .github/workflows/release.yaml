@@ -4,7 +4,27 @@ on:
     branches:
       - main
 jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Check if version has been updated
+        id: check
+        uses: EndBug/version-check@v1
+      - name:  'Automated Version Bump'
+        if: steps.check.outputs.changed == 'false'
+        uses:  'phips28/gh-action-bump-version@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          skip-tag:  'true'
   release:
+    needs: bump
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
