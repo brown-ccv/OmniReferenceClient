@@ -3,16 +3,16 @@
 		"comment": "event name to use to log to .json files",
 		"type": "Home streaming"
 	},
-	"Mode": 4,
-	"Ratio": 4,
+	"Mode": 3,
+	"Ratio": 32,
 	"SenseOptions": {
 		"comment": "lets you set what to sense",
 		"TimeDomain": true,
 		"FFT": true,
 		"Power": true,
-		"LD0": true,
+		"LD0": false,
 		"LD1": false,
-		"AdaptiveState": true,
+		"AdaptiveState": false,
 		"LoopRecording": false,
 		"Unused": false
 	},
@@ -22,9 +22,9 @@
 		"FFT": false,
 		"Power": true,
 		"Accelerometry": true,
-		"AdaptiveTherapy": true,
-		"AdaptiveState": true,
-		"EventMarker": true,
+		"AdaptiveTherapy": false,
+		"AdaptiveState": false,
+		"EventMarker": false,
 		"TimeStamp": true
 	},
 	"Sense": {
@@ -35,7 +35,7 @@
 			{
 				"IsEnabled": true,
 				"Hpf": 0.85,
-				"Lpf1": 100,
+				"Lpf1": 450,
 				"Lpf2": 100,
 				"Inputs": [
 					0,
@@ -58,31 +58,31 @@
 				"IsEnabled": true,
 				"Hpf": 0.85,
 				"Lpf1": 450,
-				"Lpf2": 1700,
+				"Lpf2": 100,
 				"Inputs": [
-					9,
-					10
+					8,
+					9
 				],
 				"TdEvokedResponseEnable": 0
 			},
 			{
 				"IsEnabled": true,
 				"Hpf": 0.85,
-				"Lpf1": 450,
-				"Lpf2": 1700,
+				"Lpf1": 100,
+				"Lpf2": 100,
 				"Inputs": [
-					8,
-					10
+					10,
+					11
 				],
 				"TdEvokedResponseEnable": 0
 			}
 		],
 		"FFT": {
 			"commentFFTParameters": "FFT Size can be: 64, 256, or 1024 samples, Hanning window load can be: 25, 50, or 100 (%), channel is for the fft channel must be between 0-3 and time domain must be enabled for that channel, WeightMultiplies can be shift: 0-7",
-			"Channel": 2,
+			"Channel": 1,
 			"FftSize": 256,
 			"FftInterval": 100,
-			"WindowLoad": 100,
+			"WindowLoad": 50,
 			"StreamSizeBins": 0,
 			"StreamOffsetBins": 0,
 			"WindowEnabled": true,
@@ -93,72 +93,72 @@
 			{
 				"comment": "Channel: 0 PowerBand: 0",
 				"ChannelPowerBand": [
-					17.09,
-					22.95
+					2,
+					3
 				],
 				"IsEnabled": true
 			},
 			{
 				"comment": "Channel: 0 PowerBand: 1",
 				"ChannelPowerBand": [
-					117.68,
-					121.58
+					5,
+					15
 				],
 				"IsEnabled": true
 			},
 			{
 				"comment": "Channel: 1 PowerBand: 0",
 				"ChannelPowerBand": [
-					123.54,
-					124.51
+					1,
+					5
 				],
 				"IsEnabled": true
 			},
 			{
 				"comment": "Channel: 1 PowerBand: 1",
 				"ChannelPowerBand": [
-					123.54,
-					124.51
+					5,
+					15
 				],
 				"IsEnabled": true
 			},
 			{
 				"comment": "Channel: 2 PowerBand: 0",
 				"ChannelPowerBand": [
-					8.3,
-					13.18
+					1,
+					5
 				],
-				"IsEnabled": false
+				"IsEnabled": true
 			},
 			{
 				"comment": "Channel: 2 PowerBand: 1",
 				"ChannelPowerBand": [
-					17.09,
-					22.95
+					5,
+					15
 				],
-				"IsEnabled": false
+				"IsEnabled": true
 			},
 			{
 				"comment": "Channel: 3 PowerBand: 0",
 				"ChannelPowerBand": [
-					8.3,
-					13.18
+					1,
+					5
 				],
-				"IsEnabled": false
+				"IsEnabled": true
 			},
 			{
 				"comment": "Channel: 3 PowerBand: 1",
 				"ChannelPowerBand": [
-					17.09,
-					22.95
+					5,
+					15
 				],
-				"IsEnabled": false
+				"IsEnabled": true
 			}
 		],
 		"Accelerometer": {
 			"commentAcc": "Can be 4,8,16,32,64Hz or set SampleRateDisabled to true for disabled",
 			"SampleRateDisabled": false,
-			"SampleRate": 64
+			"SampleRate": 8
 		},
 		"Misc": {
 			"commentMiscParameters": "stream rate can be 30-100 by tens and is in ms; LoopRecordingTriggersState can be 0-8 or can be disabled by changing IsEnabled to false; Bridging can be 0 = None, 1 = Bridge 0-2 enabled, 2 = Bridge 1-3 enabled",
