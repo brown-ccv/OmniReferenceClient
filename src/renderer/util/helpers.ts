@@ -133,7 +133,7 @@ export const senseConfigConvert = (config: any): any => {
     binsToStreamOffset: config.FFT.StreamOffsetBins
   }
 
-  const powerBandEnables = config.PowerBands.map((entry: any): boolean => entry.isEnabled)
+  const powerBandEnables = config.PowerBands.map((entry: any): boolean => entry.IsEnabled)
 
   // HACK (BNR): I'm not doing the calculation for the boundries of the power bands. These are indexes!
   const powerBandConfiguration = config.PowerBands.map((entry: any) => {
