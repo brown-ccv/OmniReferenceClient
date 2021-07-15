@@ -16,6 +16,8 @@ jobs:
       - name: Check if version has been updated
         id: check
         uses: EndBug/version-check@v1
+      - name: Log
+        run: 'echo "version: ${{ steps.check.outputs.changed }}"'
       - name:  'Automated Version Bump'
         if: steps.check.outputs.changed == 'false'
         uses:  'phips28/gh-action-bump-version@master'
