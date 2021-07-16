@@ -86,7 +86,7 @@ export const senseConfigConvert = (config: any): any => {
     return {
       minus: mapMux(entry.Inputs[0]),
       plus: mapMux(entry.Inputs[1]),
-      evokedMode: entry.TdEvokedResponseEnable || false,
+      evokedMode: entry.TdEvokedResponseEnable || 0,
       disabled: !entry.IsEnabled,
       lowPassFilterStage1: mapLpfs1(entry.Lpf1),
       lowPassFilterStage2: mapLpfs2(entry.Lpf2),

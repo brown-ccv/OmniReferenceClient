@@ -30,12 +30,12 @@
 	"Sense": {
 		"commentTDChannelDefinitions": "No more than two channels can be on a single bore. When configuring, channels on first bore will always be first. Can only have sampling rates of: 250, 500, and 1000 (Hz) or disable it by setting IsDisabled to true",
 		"commentFilters": "Stage one low pass(Lpf1) can only be: 450, 100, or 50 (Hz). Stage two low pass(Lpf2) can only be: 1700, 350, 160, or 100 (Hz). High pass(Hpf) can only be: 0.85, 1.2, 3.3, or 8.6 (Hz), Inputs[ anode(positive), cathode(negative) ]",
-		"TDSampleRate": 250,
+		"TDSampleRate": 1000,
 		"TimeDomains": [
 			{
 				"IsEnabled": true,
 				"Hpf": 0.85,
-				"Lpf1": 450,
+				"Lpf1": 100,
 				"Lpf2": 100,
 				"Inputs": [
 					0,
@@ -57,7 +57,7 @@
 			{
 				"IsEnabled": true,
 				"Hpf": 0.85,
-				"Lpf1": 450,
+				"Lpf1": 100,
 				"Lpf2": 100,
 				"Inputs": [
 					8,
@@ -80,7 +80,7 @@
 		"FFT": {
 			"commentFFTParameters": "FFT Size can be: 64, 256, or 1024 samples, Hanning window load can be: 25, 50, or 100 (%), channel is for the fft channel must be between 0-3 and time domain must be enabled for that channel",
 			"Channel": 1,
-			"FftSize": 256,
+			"FftSize": 1024,
 			"FftInterval": 100,
 			"WindowLoad": 50,
 			"StreamSizeBins": 0,
@@ -93,8 +93,8 @@
 			{
 				"comment": "Channel: 0 PowerBand: 0",
 				"ChannelPowerBand": [
-					2,
-					3
+					1,
+					5
 				],
 				"IsEnabled": true
 			},

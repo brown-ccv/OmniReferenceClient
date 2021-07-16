@@ -401,6 +401,9 @@ ipcMain.on('quit', (event, args) => {
 
 ipcMain.on('config', (event) => {
   const logScope = log.scope('config')
+  const config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'config.json'), 'utf-8'))
+  config.left.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.left.configPath), 'utf-8'))
+  config.right.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.right.configPath), 'utf-8'))
   logScope.info('recieved config')
   event.returnValue = config
 })
