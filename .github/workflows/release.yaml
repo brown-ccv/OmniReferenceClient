@@ -1,11 +1,12 @@
 name: Package Electron
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Bump Version"]
+    types: [completed]
 jobs:
   release:
     runs-on: windows-2019
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v2
         with:
