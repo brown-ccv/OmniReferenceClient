@@ -89,7 +89,24 @@ const App: React.FC = () => {
             console.group('ConnectToBridge')
             try {
               yield dispatch({ type: ActionType.ConnectToBridge, name })
-              const connection = await (window as any).bridgeManagerService.connectToBridge({ name })
+              const config = await (window as any).appService.config()
+              let telemetryMode, telemetryRatio
+              console.log(config)
+              if (name === config.left.name) {
+                telemetryMode = config.left.config.Mode
+                telemetryRatio = config.left.config.Ratio
+              } else {
+                telemetryMode = config.right.config.Mode
+                telemetryRatio = config.right.config.Ratio
+              }
+              const connection = await (window as any).bridgeManagerService.connectToBridge({
+                name,
+                parameters: {
+                  '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
+                  telemetryMode: { value: telemetryMode },
+                  telemetryRatio: { value: telemetryRatio }, 
+                }
+              })
               console.log(connection)
               console.log('beepOnDeviceDiscover', beepOnDeviceDiscover)
               /**
