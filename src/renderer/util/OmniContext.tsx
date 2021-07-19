@@ -99,7 +99,7 @@ export type Action =
   | { type: ActionType.ListDevicesSuccess, devices: Array<{name: string}>, error: any, name: string }
   | { type: ActionType.ListDevicesFailure, message: string, name: string }
   | { type: ActionType.ConnectToDevice, name: string }
-  | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any}}
+  | { type: ActionType.ConnectToDeviceSuccess, connection: {name: string, connectionStatus: string, details: any, error: any}}
   | { type: ActionType.ConnectToDeviceFailure, message: string, name: string }
   | { type: ActionType.DisconnectFromDevice, name: string }
   | { type: ActionType.BatteryDevice, name: string }
@@ -466,7 +466,7 @@ export const omniReducer = (state: State, action: Action) => {
       return { left, right }
     }
     case ActionType.ConnectToDeviceSuccess: {
-      const { name, connectionStatus, details } = action?.connection
+      const { name, connectionStatus, details, error } = action?.connection
 
       ;[left, right].forEach(item => {
         if (item.connectionState !== ConnectionState.ConnectingDevice) { return }
@@ -477,6 +477,15 @@ export const omniReducer = (state: State, action: Action) => {
             item.previousState = item.connectionState
             item.connectionState = ConnectionState.ConnectedDevice
             break
+          }
+          case 'CONNECT_DEVICE_STATUS_UNSPECIFIED': {
+            if (error?.message === 'InsAlreadyConnected') {
+              item.previousState = item.connectionState
+              item.connectionState = ConnectionState.ConnectedDevice
+              break
+            }
+
+            // Intentional fall-through
           }
           /**
            * NOTE (BNR): Why handle errors here instead of ActionType.ConnectToDeviceFailure?
@@ -490,7 +499,6 @@ export const omniReducer = (state: State, action: Action) => {
            *             should be here in the reducer
            */
           case 'CONNECTION_FAILURE':
-          case 'CONNECT_DEVICE_STATUS_UNSPECIFIED':
           default: {
             item.previousState = item.connectionState
             item.connectionState = ConnectionState.ErrorDevice
