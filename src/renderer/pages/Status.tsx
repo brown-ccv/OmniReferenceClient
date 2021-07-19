@@ -1,11 +1,12 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import ConnectionStatusHome from '../components/ConnectionStatusHome'
-import { terminalState } from '../util/helpers'
-import { ActionType, ConnectionState, useOmni } from '../util/OmniContext'
+import { deviceConnected, terminalState, integrityTestPairs } from '../util/helpers'
+import { ActionType, useOmni } from '../util/OmniContext'
 
 const Status: React.FC = () => {
   const { state, dispatch } = useOmni()
+
+  const [leadIntegrityPending, setLeadIntegrityPending] = React.useState<boolean>(false);
 
   return (
     <>
@@ -39,7 +40,31 @@ const Status: React.FC = () => {
           </div>
         </div>
         <div className='block is-flex is-justify-content-center mt-6'>
-          <Link to='/recording' className='button is-light has-text-danger'>Go to recording</Link>
+          <button
+            className='button is-warning'
+            disabled={!(deviceConnected(state.left) || deviceConnected(state.right) && !leadIntegrityPending)}
+            onClick={async () => {
+              setLeadIntegrityPending(true)
+              console.log('here')
+
+              for (var item of [state.left, state.right]) {
+                const { name } = item
+
+                if (!deviceConnected(item)) { continue }
+
+                try {
+                  dispatch({ type: ActionType.IntegrityTest, name }) // NOP
+                  const response = await (window as any).deviceManagerService.integrityTest({ name, leadList: integrityTestPairs() })
+                  dispatch({ type: ActionType.IntegrityTestSuccess, name }) // NOP
+                } catch (e) {
+                  dispatch({ type: ActionType.IntegrityTestFailure, message: e.message, name })
+                }
+              }
+
+              console.log('here2')
+              setLeadIntegrityPending(false)
+            }}
+          >Lead Integrity Test</button>
         </div>
       </div>
     </>

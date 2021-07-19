@@ -276,16 +276,6 @@ const App: React.FC = () => {
         }
       }
 
-      if (runLeadIntegrityTest) {
-        try {
-          dispatch({ type: ActionType.IntegrityTest, name }) // NOP
-          const response = await (window as any).deviceManagerService.integrityTest({ name, leadList: integrityTestPairs() })
-          dispatch({ type: ActionType.IntegrityTestSuccess, name }) // NOP
-        } catch (e) {
-          dispatch({ type: ActionType.IntegrityTestFailure, message: e.message, name })
-        }
-      }
-
       try {
         dispatch({ type: ActionType.ConfigureSense, name }) // NOP
         const response = await (window as any).deviceManagerService.senseConfiguration({ name, parameters: senseConfig })
@@ -356,7 +346,6 @@ const App: React.FC = () => {
               <Route path='/settings'>
                 <Settings
                   showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask}
-                  runLeadIntegrityTest={runLeadIntegrityTest} setRunLeadIntegrityTest={setRunLeatIntegrityTest}
                   beepOnDeviceDiscover={beepOnDeviceDiscover.current} beepToggleHandle={toggleBeepConfig}
                 />
               </Route>
