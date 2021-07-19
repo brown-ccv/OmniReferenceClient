@@ -134,7 +134,6 @@ const ConnectionStatusHome: React.FC<ConnectionProp> = ({ name, status, prevStat
         connectionJSON.connectINS = 'in-progress'
         break
       }
-      case ConnectionState.Streaming:
       case ConnectionState.ConnectedDevice: {
         connectionJSON.scanCTM = 'success'
         connectionJSON.connectCTM = 'success'

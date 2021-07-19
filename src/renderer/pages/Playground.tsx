@@ -14,9 +14,9 @@ interface ProvocationProp {
   isRecording: boolean
 }
 
-const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
+const Playground: React.FC<ProvocationProp> = ({ showProvocationTask, isRecording }) => {
   const { state } = useOmni()
-  const disabled = state.left.connectionState < ConnectionState.Streaming && state.right.connectionState < ConnectionState.Streaming
+  const disabled = !isRecording
   const launchTask = (appDir: string) => {
     // appDir is the path after AppData/Local/
     (window as any).appService.taskLaunch(appDir)
@@ -24,10 +24,6 @@ const Playground: React.FC<ProvocationProp> = ({ showProvocationTask }) => {
   let warningText
   if (disabled) {
     warningText = 'Warning: At least one INS needs to be recording before you can start a task.'
-  } else if (state.left.connectionState < ConnectionState.Streaming && state.right.connectionState === ConnectionState.Streaming) {
-    warningText = 'Warning: Only your right INS is recording. If you were instructed to complete a task with only one INS, you may proceed.'
-  } else if (state.right.connectionState < ConnectionState.Streaming && state.left.connectionState === ConnectionState.Streaming) {
-    warningText = 'Warning: Only your left INS is recording. If you were instructed to complete a task with only one INS, you may proceed.'
   }
 
   return (

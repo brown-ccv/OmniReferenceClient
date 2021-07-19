@@ -34,15 +34,6 @@ const ConnectionStatusHeader: React.FC<ConnectionProp> = ({ status }) => {
         </a>
       </div>
     )
-    case ConnectionState.Streaming: return (
-      <div className='level-item'>
-        <a className='box has-background-success is-flex py-1'>
-          <p className='content'><FontAwesomeIcon className='icon is-small mr-2' icon={faLaptopMedical} />
-            Streaming<FontAwesomeIcon className='icon is-small ml-2' icon={faDotCircle} />
-          </p>
-        </a>
-      </div>
-    )
     case ConnectionState.ConnectedDevice: return (
       <div className='level-item'>
         <a className='box has-background-success is-flex py-1'>
