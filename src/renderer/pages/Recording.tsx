@@ -2,7 +2,7 @@ import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircle } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionState, useOmni } from '../util/OmniContext'
-import { recordTimeFormat } from '../util/helpers'
+import { deviceConnected, recordTimeFormat } from '../util/helpers'
 const RecordLogo = require('../../../public/logos/record.svg')
 const RecordingLogo = require('../../../public/logos/recording.svg')
 
@@ -32,6 +32,13 @@ const Recording: React.FC<RecordingProp> = ({ isRecording, setRecording, recordi
     setRecording(!isRecording)
     setDisabled(false)
   }
+
+  React.useEffect(() => {
+    if (!deviceConnected(state.left) && !deviceConnected(state.right)) {
+      setRecording(false)
+      setRecordingTime(0)
+    }
+  }, [state.left.connectionState, state.right.connectionState])
 
   return (
     <>
