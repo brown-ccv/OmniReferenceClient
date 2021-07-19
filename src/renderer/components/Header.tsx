@@ -42,12 +42,12 @@ const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime }) => {
         {/* Right Side of header */}
         <div className='level-right mt-1'>
           <p className='level-item has-text-white'>L:</p>
-          {state.left.connectionState === ConnectionState.ConnectedDevice || state.left.connectionState === ConnectionState.Streaming
+          {state.left.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{leftBatteryPercent}%<Battery percent={leftBatteryPercent} /></p>
             : ''}
           <ConnectionStatusHeader status={state.left.connectionState} />
           <p className='level-item has-text-white'>R:</p>
-          {state.right.connectionState === ConnectionState.ConnectedDevice || state.right.connectionState === ConnectionState.Streaming
+          {state.right.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{rightBatteryPercent}%<Battery percent={rightBatteryPercent} /></p>
             : ''}
           <ConnectionStatusHeader status={state.right.connectionState} />

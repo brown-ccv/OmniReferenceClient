@@ -33,7 +33,6 @@ export enum ConnectionState {
   DiscoveredDevice,
   ConnectingDevice,
   ConnectedDevice,
-  Streaming,
 }
 
 export enum ActionType {
@@ -584,7 +583,7 @@ export const omniReducer = (state: State, action: Action) => {
         switch (streamConfigureStatus) {
           case 'STREAM_CONFIGURE_STATUS_SUCCESS':
             item.previousState = item.connectionState
-            item.connectionState = ConnectionState.Streaming
+            item.connectionState = ConnectionState.ConnectedDevice
             return
           case 'STREAM_CONFIGURE_STATUS_UNKNOWN':
           case 'STREAM_CONFIGURE_STATUS_FAILURE':
