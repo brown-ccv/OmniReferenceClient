@@ -7,7 +7,7 @@ import * as protoLoader from '@grpc/proto-loader'
 import * as protobufjs from 'protobufjs'
 
 import execa from 'execa'
-import log, { info } from 'electron-log'
+import log from 'electron-log'
 
 import { app, BrowserWindow, ipcMain } from 'electron'
 
@@ -22,12 +22,6 @@ log.info('main process start')
 if (require('electron-squirrel-startup') === undefined) { // eslint-disable-line global-require
   app.quit()
 }
-
-// Auto update
-require('update-electron-app')({
-  repo: 'brown-ccv/OmniReferenceClient',
-  updateInterval: '1 hour'
-})
 
 // TODO: https://stackoverflow.com/questions/52236641/electron-ipc-and-nodeintegration
 const createWindow = (): void => {
@@ -80,6 +74,17 @@ const CONFIG_DIR = isDevelopment ? path.join(__dirname, '../../config') : path.j
 const config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, 'config.json'), 'utf-8'))
 config.left.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.left.configPath), 'utf-8'))
 config.right.config = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, config.right.configPath), 'utf-8'))
+
+// Auto update
+if (config.autoUpdate === true) {
+  log.info('Auto update enabled')
+  require('update-electron-app')({
+    repo: 'brown-ccv/OmniReferenceClient',
+    updateInterval: '1 hour'
+  })
+} else {
+  log.info('Auto update disabled')
+}
 
 const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.join(__dirname, '../../../protos')
 const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
