@@ -101,11 +101,8 @@ const App: React.FC = () => {
               }
               const connection = await (window as any).bridgeManagerService.connectToBridge({
                 name,
-                parameters: {
-                  '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
-                  telemetryMode: { value: telemetryMode },
-                  telemetryRatio: { value: telemetryRatio }, 
-                }
+                telemetryMode: telemetryMode.toString(),
+                telemetryRatio
               })
               console.log(connection)
               console.log('beepOnDeviceDiscover', beepOnDeviceDiscover)
@@ -123,10 +120,7 @@ const App: React.FC = () => {
               if (connection.connectionStatus !== 'CONNECTION_FAILURE') {
                 const response = await (window as any).bridgeManagerService.configureBeep({
                   name,
-                  parameters: {
-                    '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
-                    beepConfig: (beepOnDeviceDiscover.current) ? 0x04 : 0x00
-                  }
+                  beepConfig: (beepOnDeviceDiscover.current) ? 0x04 : 0x00
                 })
                 console.log(response)
               }
@@ -278,7 +272,7 @@ const App: React.FC = () => {
 
       try {
         dispatch({ type: ActionType.ConfigureSense, name }) // NOP
-        const response = await (window as any).deviceManagerService.senseConfiguration({ name, parameters: senseConfig })
+        const response = await (window as any).deviceManagerService.senseConfiguration({ name, ...senseConfig })
         dispatch({ type: ActionType.ConfigureSenseSuccess, response, name }) // Rerender
       } catch (e) {
         dispatch({ type: ActionType.ConfigureSenseFailure, name, message: e.message })
@@ -309,10 +303,7 @@ const App: React.FC = () => {
         const beepConfig = (newBeepOnDeviceDiscover) ? 0x04 : 0x00
         const response = await (window as any).bridgeManagerService.configureBeep({
           name,
-          parameters: {
-            '@type': 'types.googleapis.com/openmind.SummitConnectBridgeParameters',
-            beepConfig
-          }
+          beepConfig
         })
         console.log(response)
         dispatch({ type: ActionType.ConfigureBeepSuccess, name, response })

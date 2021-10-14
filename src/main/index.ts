@@ -142,9 +142,8 @@ ipcMain.handle('connect-to-bridge', async (event, request) => {
         logScope.error(err)
         return reject(err)
       }
-      const response = {...resp, details: parseAny(resp.details)}
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -161,12 +160,8 @@ ipcMain.handle('describe-bridge', async (event, request) => {
         return reject(err)
       }
 
-      const response = {...resp,
-        details: parseAny(resp.details),
-        error: parseAny(resp.error)
-      }
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -201,9 +196,8 @@ ipcMain.handle('list-devices', async (event, request) => {
         return reject(err)
       }
 
-      const response = {...resp, error: parseAny(resp.error)}
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -220,13 +214,8 @@ ipcMain.handle('connect-to-device', async (event, request) => {
         return reject(err)
       }
 
-      const response = {
-        ...resp,
-        details: parseAny(resp.details),
-        error: parseAny(resp.error)
-      }
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -261,13 +250,8 @@ ipcMain.handle('device-status', async (event, request) => {
         return reject(err)
       }
 
-      const response = {
-        ...resp,
-        details: parseAny(resp.details),
-        error: parseAny(resp.error)
-      }
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -284,12 +268,8 @@ ipcMain.handle('sense-configuration', async (event, request) => {
         return reject(err)
       }
 
-      const response = {
-        ...resp,
-        error: parseAny(resp.error)
-      }
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -306,12 +286,8 @@ ipcMain.handle('stream-enable', async (event, request) => {
         return reject(err)
       }
 
-      const response = {
-        ...resp,
-        error: parseAny(resp.error)
-      }
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -328,12 +304,8 @@ ipcMain.handle('stream-disable', async (event, request) => {
         return reject(err)
       }
 
-      const response = {
-        ...resp,
-        error: parseAny(resp.error)
-      }
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -350,12 +322,8 @@ ipcMain.handle('integrity-test', async (event, request) => {
         return reject(err)
       }
 
-      const response = {
-        ...resp,
-        error: parseAny(resp.error)
-      }
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })
@@ -372,9 +340,8 @@ ipcMain.handle('configure-beep', async (event, request) => {
         return reject(err)
       }
 
-      const response = {...resp, error: parseAny(resp.error)}
-      logScope.info(`response ${inspect(response)}`)
-      return resolve(response)
+      logScope.info(`response ${inspect(resp)}`)
+      return resolve(resp)
     })
   })
 })

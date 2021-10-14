@@ -202,7 +202,6 @@ export const senseConfigConvert = (config: any): any => {
   }
 
   return {
-    '@type': 'types.googleapis.com/openmind.SummitSenseConfiguration',
     timedomainSamplingRate,
     tdChannelConfigs,
     fftConfig,
@@ -220,7 +219,6 @@ export const senseConfigConvert = (config: any): any => {
 export const streamConfigConvert = (config: any): any => {
   console.log(config)
   return {
-    '@type': 'types.googleapis.com/openmind.SummitStreamEnablesConfiguration',
     enableTimedomain: config.TimeDomain,
     enableFft: config.FFT,
     enablePower: config.Power,
