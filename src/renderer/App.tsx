@@ -117,7 +117,7 @@ const App: React.FC = () => {
                *             I don't try to configure the beep of a bridge that is not connected.
                * TODO (BNR): Redo state management.
                */
-              if (connection.connectionStatus !== 'CONNECTION_FAILURE') {
+              if (connection.connectionStatus === 'CONNECT_BRIDGE_SUCCESS') {
                 const response = await (window as any).bridgeManagerService.configureBeep({
                   name,
                   beepConfig: (beepOnDeviceDiscover.current) ? 0x04 : 0x00
@@ -154,7 +154,6 @@ const App: React.FC = () => {
             try {
               yield dispatch({ type: ActionType.ConnectToDevice, name })
               const connection = await (window as any).deviceManagerService.connectToDevice({ name })
-              console.log(connection)
               yield dispatch({ type: ActionType.ConnectToDeviceSuccess, connection })
               console.log('ConnectToDevice Success')
             } catch (e) {
@@ -173,8 +172,8 @@ const App: React.FC = () => {
           console.group('DeviceStatus')
           try {
             yield dispatch({ type: ActionType.BatteryDevice, name: item.name })
-            const response = await (window as any).deviceManagerService.deviceStatus({ name: item.name })
-            yield dispatch({ type: ActionType.BatteryDeviceSuccess, response, name: item.name })
+            const { batteryLevelPercent, error }= await (window as any).deviceManagerService.deviceStatus({ name: item.name })
+            yield dispatch({ type: ActionType.BatteryDeviceSuccess, batteryLevelPercent, name: item.name, error })
           } catch (e) {
             console.log(e)
             yield dispatch({ type: ActionType.BatteryDeviceFailure, message: e.message, name: item.name })

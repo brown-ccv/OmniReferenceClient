@@ -87,7 +87,7 @@ if (config.autoUpdate === true) {
 }
 
 const PROTO_DIR = isDevelopment ? path.join(__dirname, '../../protos') : path.join(__dirname, '../../../protos')
-const PROTO_FILES = ['bridge.proto', 'device.proto', 'platform/summit.proto'].map(f => path.join(PROTO_DIR, f))
+const PROTO_FILES = ['bridge.proto', 'device.proto', 'summit.proto'].map(f => path.join(PROTO_DIR, f))
 
 const packageDefinition = protoLoader.loadSync(PROTO_FILES, {
   longs: String,
