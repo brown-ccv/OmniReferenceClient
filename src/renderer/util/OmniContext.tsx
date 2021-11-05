@@ -144,24 +144,6 @@ const splitName = (name: string) => {
 }
 
 const OmniContext = React.createContext<{state: State, dispatch: Dispatch} | undefined>(undefined)
-const initialState: State = {
-  left: {
-    name: (window as any).appService.config().left.name,
-    connectionState: ConnectionState.Unknown,
-    previousState: ConnectionState.Unknown,
-    bridgeBattery: -1,
-    deviceBattery: -1,
-    connectionAttempts: 0
-  },
-  right: {
-    name: (window as any).appService.config().right.name,
-    connectionState: ConnectionState.Unknown,
-    previousState: ConnectionState.Unknown,
-    bridgeBattery: -1,
-    deviceBattery: -1,
-    connectionAttempts: 0
-  }
-}
 
 export const omniReducer = (state: State, action: Action) => {
   const { left, right } = state
@@ -286,7 +268,12 @@ export const omniReducer = (state: State, action: Action) => {
           item.connectionAttempts += 1
           item.previousState = item.connectionState
 
-          console.log(item.connectionAttempts)
+          /**
+           * TODO (BNR): The connection status enum off of the details object
+           *             is in 'CONSTANT_CASE' should I reformat to 'human case'
+           *             or should I leave it as is?
+           */
+          item.error = connectionStatus
 
           if (item.connectionAttempts >= 3) {
             item.connectionState = ConnectionState.NotFoundBridge
@@ -295,16 +282,6 @@ export const omniReducer = (state: State, action: Action) => {
           }
           return
         }
-
-        item.previousState = item.connectionState
-        item.connectionState = ConnectionState.ErrorBridge
-
-        /**
-         * TODO (BNR): The connection status enum off of the details object
-         *             is in 'CONSTANT_CASE' should I reformat to 'human case'
-         *             or should I leave it as is?
-         */
-        item.error = connectionStatus
       })
 
       return { left, right }
@@ -618,6 +595,24 @@ export const omniReducer = (state: State, action: Action) => {
 }
 
 const OmniProvider: React.FC = ({ children }) => {
+  const initialState: State = {
+    left: {
+      name: (window as any).appService.config().left.name,
+      connectionState: ConnectionState.Unknown,
+      previousState: ConnectionState.Unknown,
+      bridgeBattery: -1,
+      deviceBattery: -1,
+      connectionAttempts: 0
+    },
+    right: {
+      name: (window as any).appService.config().right.name,
+      connectionState: ConnectionState.Unknown,
+      previousState: ConnectionState.Unknown,
+      bridgeBattery: -1,
+      deviceBattery: -1,
+      connectionAttempts: 0
+    }
+  }
   const [state, dispatch] = useReducer(omniReducer, initialState)
   const value = { state, dispatch }
   return <OmniContext.Provider value={value}>{children}</OmniContext.Provider>
