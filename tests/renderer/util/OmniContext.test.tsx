@@ -11,6 +11,7 @@ describe('omniReducer', () => {
         previousState: ConnectionState.Unknown,
         bridgeBattery: -1,
         deviceBattery: -1,
+        connectionAttempts: 0,
       },
       /**
        * NOTE (BNR): This right bridge/device pair will always be connected. We
@@ -23,6 +24,7 @@ describe('omniReducer', () => {
         previousState: ConnectionState.ConnectingBridge,
         bridgeBattery: -1,
         deviceBattery: -1,
+        connectionAttempts: 0,
       }
     }
   })
@@ -180,23 +182,23 @@ describe('omniReducer', () => {
       left.connectionState = ConnectionState.ConnectingBridge
       left.previousState = ConnectionState.DiscoveredBridge
 
-      let connection = { name: left.name, connectionStatus: 'CONNECTION_SUCCESS', details: undefined }
+      let connection = { name: left.name, connectionStatus: 'CONNECT_BRIDGE_SUCCESS' }
       ;({ left } = omniReducer(initState, { type: ActionType.ConnectToBridgeSuccess, connection }))
 
       expect(left.connectionState).toBe(ConnectionState.ConnectedBridge)
       expect(left.previousState).toBe(ConnectionState.ConnectingBridge)
     })
 
-    it('transitions to error-bridge if the connection is not established', () => {
+    it('transitions to disconnected if the connection is not established', () => {
       let { left } = initState
 
       left.connectionState = ConnectionState.ConnectingBridge
       left.previousState = ConnectionState.DiscoveredBridge
 
-      let connection = { name: left.name, connectionStatus: 'CONNECTION_FAILURE', details: undefined }
+      let connection = { name: left.name, connectionStatus: 'CONNECTION_FAILURE' }
       ;({ left } = omniReducer(initState, { type: ActionType.ConnectToBridgeSuccess, connection }))
 
-      expect(left.connectionState).toBe(ConnectionState.ErrorBridge)
+      expect(left.connectionState).toBe(ConnectionState.Disconnected)
       expect(left.previousState).toBe(ConnectionState.ConnectingBridge)
     })
 
@@ -257,7 +259,7 @@ describe('omniReducer', () => {
       right.previousState = ConnectionState.ConnectedBridge
 
       const devices: Array<{name: string}> = []
-      ;({ right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: right.name }))
+      ;({ right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: right.name, error: {} }))
 
       expect(right.connectionState).toBe(ConnectionState.NotFoundDevice)
       expect(right.previousState).toBe(ConnectionState.ScanningDevice)
@@ -270,7 +272,7 @@ describe('omniReducer', () => {
       right.previousState = ConnectionState.ConnectedBridge
 
       const devices = [{ name: '//summit/bridge/bar/device/baz' }]
-      ;({ right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: right.name }))
+      ;({ right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: right.name, error: {} }))
 
       expect(right.connectionState).toBe(ConnectionState.DiscoveredDevice)
       expect(right.previousState).toBe(ConnectionState.ScanningDevice)
@@ -286,7 +288,7 @@ describe('omniReducer', () => {
       right.previousState = ConnectionState.ConnectedBridge
 
       const devices = [{ name: '//summit/bridge/bar/device/baz'}, {name: '//summit/bridge/foo/device/bar'}]
-      ;({ left, right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: left.name }))
+      ;({ left, right } = omniReducer(initState, { type: ActionType.ListDevicesSuccess, devices, name: left.name, error: {} }))
 
       expect(left.connectionState).toBe(ConnectionState.DiscoveredDevice)
       expect(left.previousState).toBe(ConnectionState.ScanningDevice)
@@ -329,7 +331,7 @@ describe('omniReducer', () => {
       left.connectionState = ConnectionState.ConnectingDevice
       left.previousState = ConnectionState.DiscoveredDevice
 
-      const connection = { name: left.name, connectionStatus: 'CONNECTION_SUCCESS', details: undefined }
+      const connection = { name: left.name, connectionStatus: 0x00000001, error: undefined }
       ;({ left } = omniReducer(initState, { type: ActionType.ConnectToDeviceSuccess, connection }))
 
       expect(left.connectionState).toBe(ConnectionState.ConnectedDevice)
@@ -345,20 +347,20 @@ describe('omniReducer', () => {
       right.connectionState = ConnectionState.ConnectingDevice
       right.previousState = ConnectionState.DiscoveredDevice
 
-      const details = { connectionStatus: 'failure message' }
-      let connection = { name: left.name, connectionStatus: 'CONNECT_DEVICE_STATUS_UNSPECIFIED', details }
+      const error = { message: 'failure message' }
+      let connection = { name: left.name, connectionStatus: 0x00000000, error }
       ;({ left } = omniReducer(initState, { type: ActionType.ConnectToDeviceSuccess, connection }))
 
       expect(left.connectionState).toBe(ConnectionState.ErrorDevice)
       expect(left.previousState).toBe(ConnectionState.ConnectingDevice)
-      expect(left.error).toBe(details.connectionStatus)
+      expect(left.error).toBe(error.message)
 
-      connection = { name: right.name, connectionStatus: 'CONNECTION_FAILURE', details }
+      connection = { name: right.name, connectionStatus: 0x00000000, error }
       ;({ right } = omniReducer(initState, { type: ActionType.ConnectToDeviceSuccess, connection }))
 
       expect(right.connectionState).toBe(ConnectionState.ErrorDevice)
       expect(right.previousState).toBe(ConnectionState.ConnectingDevice)
-      expect(right.error).toBe(details.connectionStatus)
+      expect(right.error).toBe(error.message)
     })
 
     it('transitions to error-device if the api call fails', () => {
@@ -487,7 +489,7 @@ describe('omniReducer', () => {
       left.deviceBattery = 12
 
       const response = { batteryLevelPercent: { value: 100 }, error: null }
-      ;({ left } = omniReducer(initState, { type: ActionType.BatteryDeviceSuccess, response, name: left.name }))
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryDeviceSuccess, ...response, name: left.name }))
 
       expect(left.deviceBattery).toBe(response.batteryLevelPercent.value)
     })
@@ -503,7 +505,7 @@ describe('omniReducer', () => {
       const details = { batteryLevel: 100 }
       const error = { rejectCode: 'NO_CTM_CONNECTED', message: 'faliure message' }
       const response = { batteryLevelPercent: { value: 100 }, error }
-      ;({ left } = omniReducer(initState, { type: ActionType.BatteryDeviceSuccess, response, name: left.name }))
+      ;({ left } = omniReducer(initState, { type: ActionType.BatteryDeviceSuccess, ...response, name: left.name }))
 
       expect(left.bridgeBattery).toBe(-1)
       expect(left.deviceBattery).toBe(-1)
