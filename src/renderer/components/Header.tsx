@@ -15,9 +15,11 @@ interface HeaderProp {
   isRecording: boolean
   recordingTime: number
   isPacketMonitoring: boolean
+  leftPacketMonitor: any
+  rightPacketMonitor: any
 }
 
-const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime, isPacketMonitoring }) => {
+const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime, isPacketMonitoring, leftPacketMonitor, rightPacketMonitor }) => {
   const { state } = useOmni()
   const leftBatteryPercent = state.left.deviceBattery
   const rightBatteryPercent = state.right.deviceBattery
@@ -47,14 +49,14 @@ const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime, isPacketMoni
           {state.left.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{leftBatteryPercent}%<Battery percent={leftBatteryPercent} /></p>
             : ''}
-          {isPacketMonitoring? <PacketConnectionStatus status='medium'/>
+          {isPacketMonitoring? <PacketConnectionStatus percentPacket={leftPacketMonitor.displayPacketPercent}/>
           : ''}
           <ConnectionStatusHeader status={state.left.connectionState} />
           <p className='level-item has-text-white'>R:</p>
           {state.right.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{rightBatteryPercent}%<Battery percent={rightBatteryPercent} /></p>
             : ''}
-          {isPacketMonitoring? <PacketConnectionStatus status=''/>
+          {isPacketMonitoring? <PacketConnectionStatus percentPacket={rightPacketMonitor.displayPacketPercent}/>
           : ''}
           <ConnectionStatusHeader status={state.right.connectionState} />
           <div className='level-item'>

@@ -24,6 +24,8 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const [runLeadIntegrityTest, setRunLeatIntegrityTest] = React.useState<boolean>(true)
   const [isPacketMonitoring, setPacketMonitoring] = React.useState<boolean>(true)
+  const [leftPacketMonitor, setLeftPacketMonitor] = React.useState<any>({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
+  const [rightPacketMonitor, setRightPacketMonitor] = React.useState<any>({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
   const { state, dispatch } = useOmni()
 
   /**
@@ -288,7 +290,7 @@ const App: React.FC = () => {
         if (isPacketMonitoring) {
           (window as any).deviceManagerService.streamTimeDomains({name, enableStream: true}, 
             (data: any) => {
-              console.log(data)
+              processStreamPacket(data)
             })
         }
       } catch (e) {
@@ -322,6 +324,30 @@ const App: React.FC = () => {
     beepOnDeviceDiscover.current = newBeepOnDeviceDiscover
   }
 
+  const processStreamPacket = (streamData: any) => {
+    if (streamData.name.includes(state.left.name)){
+     
+    }
+    else {
+      const packetTime = streamData.header.insTimestamp
+      if (packetTime !== rightPacketMonitor.currentPacket){
+        setRightPacketMonitor((prev: any) => {
+          prev.currentPacket = packetTime
+          prev.displayPacketPercent = prev.calcPacketPercent
+          prev.calcPacketPercent = 0
+          return prev
+        })
+      }
+      else {
+        setRightPacketMonitor((prev: any) => {
+          prev.calcPacketPercent = prev.calcPacketPercent + 0.1
+          return prev
+        })
+      }
+      console.log(rightPacketMonitor)
+    }
+  }
+
   const handlePacketMonitor = ( name: string ) => {
     if (isPacketMonitoring===false){
       setPacketMonitoring(true);
@@ -340,7 +366,7 @@ const App: React.FC = () => {
     <Router>
       {/* Container for entire window */}
       <div id='app-container'>
-        <Header isRecording={isRecording} recordingTime={recordingTime} isPacketMonitoring={isPacketMonitoring}/>
+        <Header isRecording={isRecording} recordingTime={recordingTime} isPacketMonitoring={isPacketMonitoring} leftPacketMonitor={leftPacketMonitor} rightPacketMonitor={rightPacketMonitor}/>
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
