@@ -24,8 +24,8 @@ const App: React.FC = () => {
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const [runLeadIntegrityTest, setRunLeatIntegrityTest] = React.useState<boolean>(true)
   const [isPacketMonitoring, setPacketMonitoring] = React.useState<boolean>(true)
-  const [leftPacketMonitor, setLeftPacketMonitor] = React.useState<any>({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
-  const [rightPacketMonitor, setRightPacketMonitor] = React.useState<any>({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
+  const [leftPacketMonitor, setLeftPacketMonitor] = React.useState<any>({lastPacketTime: 0, currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
+  const [rightPacketMonitor, setRightPacketMonitor] = React.useState<any>({lastPacketTime: 0, currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
   const { state, dispatch } = useOmni()
 
   /**
@@ -215,7 +215,16 @@ const App: React.FC = () => {
     let recordingInterval: any
     if (isRecording) {
       recordingInterval = setInterval(
-        () => setRecordingTime(prevRecording => prevRecording + 1), 1000
+        () => {setRecordingTime(prevRecording => prevRecording + 1)
+          // Checks for how many seconds since last packet
+          const currentTime = Date.now()
+          if (currentTime - rightPacketMonitor.lastPacketTime >= 3) {
+            setRightPacketMonitor((prev: any) => {   
+              prev.displayPacketPercent = 0.1
+              return prev
+            })
+          }
+        }, 1000
       )
     }
 
@@ -334,6 +343,7 @@ const App: React.FC = () => {
       const packetTime = streamData.header.insTimestamp
       if (packetTime !== rightPacketMonitor.currentPacket){
         setRightPacketMonitor((prev: any) => {
+          prev.lastPacketTime = Date.now()
           prev.currentPacket = packetTime
           prev.displayPacketPercent = prev.calcPacketPercent
           prev.calcPacketPercent = 0.08
@@ -342,6 +352,7 @@ const App: React.FC = () => {
       }
       else {
         setRightPacketMonitor((prev: any) => {
+          prev.lastPacketTime = Date.now()
           prev.calcPacketPercent = prev.calcPacketPercent + 0.1
           return prev
         })
@@ -361,21 +372,24 @@ const App: React.FC = () => {
             })
         }
         if (state.right.connectionState===ConnectionState.ConnectedDevice) {
+          console.log('right stream start');
           (window as any).deviceManagerService.streamTimeDomains({name: state.right.name, enableStream: true}, 
             (data: any) => {
               processStreamPacket(data)
             })
+          
         }
       }
     }
     else {
       setPacketMonitoring(false);
-      setLeftPacketMonitor({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
-      setRightPacketMonitor({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
       if (isRecording) {
         
-        if (state.right.connectionState===ConnectionState.ConnectedDevice)
+        if (state.right.connectionState===ConnectionState.ConnectedDevice) {
           (window as any).deviceManagerService.streamTimeDomains({name: state.right.name, enableStream: false}, console.log)
+          console.log('right stream ended')
+        }
+          
       }
         
     }
