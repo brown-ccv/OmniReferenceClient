@@ -5,6 +5,7 @@ import { faTimesCircle, faCircle } from '@fortawesome/free-solid-svg-icons'
 import Clock from './Clock'
 import ConnectionStatusHeader from './ConnectionStatusHeader'
 import Battery from './Battery'
+import PacketConnectionStatus from './PacketConnectionStatus'
 import { ConnectionState, useOmni } from '../util/OmniContext'
 import { recordTimeFormat } from '../util/helpers'
 
@@ -13,9 +14,10 @@ const mywindow: any = window
 interface HeaderProp {
   isRecording: boolean
   recordingTime: number
+  isPacketMonitoring: boolean
 }
 
-const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime }) => {
+const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime, isPacketMonitoring }) => {
   const { state } = useOmni()
   const leftBatteryPercent = state.left.deviceBattery
   const rightBatteryPercent = state.right.deviceBattery
@@ -45,11 +47,15 @@ const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime }) => {
           {state.left.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{leftBatteryPercent}%<Battery percent={leftBatteryPercent} /></p>
             : ''}
+          {isPacketMonitoring? <PacketConnectionStatus status='medium'/>
+          : ''}
           <ConnectionStatusHeader status={state.left.connectionState} />
           <p className='level-item has-text-white'>R:</p>
           {state.right.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{rightBatteryPercent}%<Battery percent={rightBatteryPercent} /></p>
             : ''}
+          {isPacketMonitoring? <PacketConnectionStatus status=''/>
+          : ''}
           <ConnectionStatusHeader status={state.right.connectionState} />
           <div className='level-item'>
             <a className='box has-background-danger is-flex py-1 mr-2' onClick={quitHandler}>

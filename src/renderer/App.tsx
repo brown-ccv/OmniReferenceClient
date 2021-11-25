@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const [runLeadIntegrityTest, setRunLeatIntegrityTest] = React.useState<boolean>(true)
+  const [isPacketMonitoring, setPacketMonitoring] = React.useState<boolean>(true)
   const { state, dispatch } = useOmni()
 
   /**
@@ -284,6 +285,12 @@ const App: React.FC = () => {
         dispatch({ type: ActionType.StreamEnable, name })
         const response = await (window as any).deviceManagerService.streamEnable({ name, parameters: streamConfig })
         dispatch({ type: ActionType.StreamEnableSuccess, response, name })
+        if (isPacketMonitoring) {
+          (window as any).deviceManagerService.streamTimeDomains({name, enableStream: true}, 
+            (data: any) => {
+              console.log(data)
+            })
+        }
       } catch (e) {
         dispatch({ type: ActionType.StreamEnableFailure, name, message: e.message })
       }
@@ -315,11 +322,25 @@ const App: React.FC = () => {
     beepOnDeviceDiscover.current = newBeepOnDeviceDiscover
   }
 
+  const handlePacketMonitor = ( name: string ) => {
+    if (isPacketMonitoring===false){
+      setPacketMonitoring(true);
+      //(window as any).deviceManagerService.streamTimeDomains({name, enableStream: true}, 
+        //(data: any) => {
+          //console.log(data)
+        //})
+    }
+    else {
+      setPacketMonitoring(false);
+      //(window as any).deviceManagerService.streamTimeDomains({name, enableStream: false}, console.log)
+    }
+  }
+
   return (
     <Router>
       {/* Container for entire window */}
       <div id='app-container'>
-        <Header isRecording={isRecording} recordingTime={recordingTime} />
+        <Header isRecording={isRecording} recordingTime={recordingTime} isPacketMonitoring={isPacketMonitoring}/>
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
@@ -337,6 +358,7 @@ const App: React.FC = () => {
                 <Settings
                   showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask}
                   beepOnDeviceDiscover={beepOnDeviceDiscover.current} beepToggleHandle={toggleBeepConfig}
+                  isPacketMonitoring={isPacketMonitoring} handlePacketMonitor={handlePacketMonitor}
                 />
               </Route>
               <Route path='/help'>

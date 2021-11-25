@@ -8,9 +8,11 @@ interface SettingProp {
   setShowProvocationTask: Function
   beepOnDeviceDiscover: boolean
   beepToggleHandle: Function
+  isPacketMonitoring: boolean
+  handlePacketMonitor: Function
 }
 
-const Settings: React.FC<SettingProp> = ({ showProvocationTask, setShowProvocationTask, beepOnDeviceDiscover, beepToggleHandle }) => {
+const Settings: React.FC<SettingProp> = ({ showProvocationTask, setShowProvocationTask, beepOnDeviceDiscover, beepToggleHandle, isPacketMonitoring, handlePacketMonitor }) => {
   const { state } = useOmni()
   const noConnections = state.left.connectionState < ConnectionState.ConnectedDevice && state.right.connectionState < ConnectionState.ConnectedDevice
 
@@ -23,6 +25,7 @@ const Settings: React.FC<SettingProp> = ({ showProvocationTask, setShowProvocati
       <h1 className='title is-1 has-text-white mb-6 pb-4'>Settings</h1>
       <SettingsToggle text='Provocation Launcher:' toggleIsOn={showProvocationTask} buttonHandle={provocationHandle} />
       <SettingsToggle text='Beep:' disabled={noConnections} toggleIsOn={beepOnDeviceDiscover} buttonHandle={() => beepToggleHandle(!beepOnDeviceDiscover)} />
+      <SettingsToggle text='Packet Monitoring:' toggleIsOn={isPacketMonitoring} buttonHandle={()=>handlePacketMonitor()}/>
     </>
   )
 }
