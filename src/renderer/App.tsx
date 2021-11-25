@@ -223,6 +223,10 @@ const App: React.FC = () => {
   }, [isRecording])
 
   const recordingClickHandler = async (isRecording: boolean): Promise<void> => {
+    // Reset packet monitor
+    setLeftPacketMonitor({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
+    setRightPacketMonitor({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
+    
     const { left, right } = state
     const config = (window as any).appService.config()
 
@@ -325,6 +329,7 @@ const App: React.FC = () => {
   }
 
   const processStreamPacket = (streamData: any) => {
+    console.log(streamData)
     if (streamData.name.includes(state.left.name)){
      
     }
@@ -334,7 +339,7 @@ const App: React.FC = () => {
         setRightPacketMonitor((prev: any) => {
           prev.currentPacket = packetTime
           prev.displayPacketPercent = prev.calcPacketPercent
-          prev.calcPacketPercent = 0
+          prev.calcPacketPercent = 0.08
           return prev
         })
       }
@@ -349,6 +354,8 @@ const App: React.FC = () => {
   }
 
   const handlePacketMonitor = () => {
+    setLeftPacketMonitor({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
+    setRightPacketMonitor({currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
     if (isPacketMonitoring===false){
       setPacketMonitoring(true);
       if (isRecording){
@@ -369,13 +376,13 @@ const App: React.FC = () => {
     else {
       setPacketMonitoring(false);
       if (isRecording) {
-        if (state.left.connectionState===ConnectionState.ConnectedDevice)
-          (window as any).deviceManagerService.streamTimeDomains({name: state.left.name, enableStream: false}, console.log)
+        
         if (state.right.connectionState===ConnectionState.ConnectedDevice)
           (window as any).deviceManagerService.streamTimeDomains({name: state.right.name, enableStream: false}, console.log)
       }
         
     }
+
   }
 
   return (
