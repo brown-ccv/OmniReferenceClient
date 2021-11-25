@@ -348,17 +348,33 @@ const App: React.FC = () => {
     }
   }
 
-  const handlePacketMonitor = ( name: string ) => {
+  const handlePacketMonitor = () => {
     if (isPacketMonitoring===false){
       setPacketMonitoring(true);
-      //(window as any).deviceManagerService.streamTimeDomains({name, enableStream: true}, 
-        //(data: any) => {
-          //console.log(data)
-        //})
+      if (isRecording){
+        if (state.left.connectionState===ConnectionState.ConnectedDevice) {
+          (window as any).deviceManagerService.streamTimeDomains({name: state.left.name, enableStream: true}, 
+            (data: any) => {
+              processStreamPacket(data)
+            })
+        }
+        if (state.right.connectionState===ConnectionState.ConnectedDevice) {
+          (window as any).deviceManagerService.streamTimeDomains({name: state.right.name, enableStream: true}, 
+            (data: any) => {
+              processStreamPacket(data)
+            })
+        }
+      }
     }
     else {
       setPacketMonitoring(false);
-      //(window as any).deviceManagerService.streamTimeDomains({name, enableStream: false}, console.log)
+      if (isRecording) {
+        if (state.left.connectionState===ConnectionState.ConnectedDevice)
+          (window as any).deviceManagerService.streamTimeDomains({name: state.left.name, enableStream: false}, console.log)
+        if (state.right.connectionState===ConnectionState.ConnectedDevice)
+          (window as any).deviceManagerService.streamTimeDomains({name: state.right.name, enableStream: false}, console.log)
+      }
+        
     }
   }
 

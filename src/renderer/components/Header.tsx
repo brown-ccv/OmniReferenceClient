@@ -49,14 +49,14 @@ const Header: React.FC<HeaderProp> = ({ isRecording, recordingTime, isPacketMoni
           {state.left.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{leftBatteryPercent}%<Battery percent={leftBatteryPercent} /></p>
             : ''}
-          {isPacketMonitoring? <PacketConnectionStatus percentPacket={leftPacketMonitor.displayPacketPercent}/>
+          {isPacketMonitoring && isRecording? <PacketConnectionStatus percentPacket={leftPacketMonitor.displayPacketPercent}/>
           : ''}
           <ConnectionStatusHeader status={state.left.connectionState} />
           <p className='level-item has-text-white'>R:</p>
           {state.right.connectionState >= ConnectionState.ConnectedDevice
             ? <p className='level-item is-size-7 has-text-white'>{rightBatteryPercent}%<Battery percent={rightBatteryPercent} /></p>
             : ''}
-          {isPacketMonitoring? <PacketConnectionStatus percentPacket={rightPacketMonitor.displayPacketPercent}/>
+          {isPacketMonitoring && isRecording? <PacketConnectionStatus percentPacket={rightPacketMonitor.displayPacketPercent}/>
           : ''}
           <ConnectionStatusHeader status={state.right.connectionState} />
           <div className='level-item'>

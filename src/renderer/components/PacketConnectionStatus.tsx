@@ -7,14 +7,14 @@ interface PacketConnectionProp {
 }
 
 const PacketConnectionStatus: React.FC<PacketConnectionProp> = ({ percentPacket }) => {
-    if (percentPacket>=0.9)
-        return (<FontAwesomeIcon className='icon mx-1 has-text-primary is-size-6' icon={faSignal}/>)
-    else if (percentPacket>=0.7)
-        return (<FontAwesomeIcon className='icon mx-1 has-text-warning is-size-6' icon={faSignal}/>)
-    else if (percentPacket >= 0.4)
-        return (<FontAwesomeIcon className='icon mx-1 has-text-danger is-size-6' icon={faSignal}/>)
+    if (percentPacket>=0.85)
+        return (<FontAwesomeIcon className='icon mr-2 has-text-primary is-size-6' icon={faSignal}/>)
+    else if (percentPacket>=0.6)
+        return (<FontAwesomeIcon className='icon mr-2 has-text-warning is-size-6' icon={faSignal}/>)
+    else if (percentPacket >= 0.3)
+        return (<FontAwesomeIcon className='icon mr-2 has-text-danger is-size-6' icon={faSignal}/>)
     else 
-        return (<FontAwesomeIcon className='icon mx-1 has-text-grey is-size-6' icon={faSignal}/>)
+        return (<FontAwesomeIcon className='icon mr-2 has-text-grey is-size-6' icon={faSignal}/>)
     
 }
 
