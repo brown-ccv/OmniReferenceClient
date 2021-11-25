@@ -218,7 +218,7 @@ const App: React.FC = () => {
         () => {setRecordingTime(prevRecording => prevRecording + 1)
           // Checks for how many seconds since last packet
           const currentTime = Date.now()
-          if (currentTime - rightPacketMonitor.lastPacketTime >= 3) {
+          if (currentTime - rightPacketMonitor.lastPacketTime >= 2000) {
             setRightPacketMonitor((prev: any) => {   
               prev.displayPacketPercent = 0.1
               return prev
