@@ -23,6 +23,9 @@ const App: React.FC = () => {
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const [runLeadIntegrityTest, setRunLeatIntegrityTest] = React.useState<boolean>(true)
+  const [isPacketMonitoring, setPacketMonitoring] = React.useState<boolean>(true)
+  const [leftPacketMonitor, setLeftPacketMonitor] = React.useState<any>({lastPacketTime: 0, currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
+  const [rightPacketMonitor, setRightPacketMonitor] = React.useState<any>({lastPacketTime: 0, currentPacket: -10, calcPacketPercent: 0, displayPacketPercent: 0})
   const { state, dispatch } = useOmni()
 
   /**
@@ -212,7 +215,16 @@ const App: React.FC = () => {
     let recordingInterval: any
     if (isRecording) {
       recordingInterval = setInterval(
-        () => setRecordingTime(prevRecording => prevRecording + 1), 1000
+        () => {setRecordingTime(prevRecording => prevRecording + 1)
+          // Checks for how many seconds since last packet
+          const currentTime = Date.now()
+          if (currentTime - rightPacketMonitor.lastPacketTime >= 2000) {
+            setRightPacketMonitor((prev: any) => {   
+              prev.displayPacketPercent = 0.1
+              return prev
+            })
+          }
+        }, 1000
       )
     }
 
@@ -220,6 +232,7 @@ const App: React.FC = () => {
   }, [isRecording])
 
   const recordingClickHandler = async (isRecording: boolean): Promise<void> => {
+    
     const { left, right } = state
     const config = (window as any).appService.config()
 
@@ -284,6 +297,12 @@ const App: React.FC = () => {
         dispatch({ type: ActionType.StreamEnable, name })
         const response = await (window as any).deviceManagerService.streamEnable({ name, parameters: streamConfig })
         dispatch({ type: ActionType.StreamEnableSuccess, response, name })
+        if (isPacketMonitoring) {
+          (window as any).deviceManagerService.streamTimeDomains({name, enableStream: true}, 
+            (data: any) => {
+              processStreamPacket(data)
+            })
+        }
       } catch (e) {
         dispatch({ type: ActionType.StreamEnableFailure, name, message: e.message })
       }
@@ -315,11 +334,73 @@ const App: React.FC = () => {
     beepOnDeviceDiscover.current = newBeepOnDeviceDiscover
   }
 
+  const processStreamPacket = (streamData: any) => {
+    console.log(streamData.header.insTimestamp)
+    if (streamData.name.includes(state.left.name)){
+     
+    }
+    else {
+      const packetTime = streamData.header.insTimestamp
+      if (packetTime !== rightPacketMonitor.currentPacket){
+        setRightPacketMonitor((prev: any) => {
+          prev.lastPacketTime = Date.now()
+          prev.currentPacket = packetTime
+          prev.displayPacketPercent = prev.calcPacketPercent
+          prev.calcPacketPercent = 0.08
+          return prev
+        })
+      }
+      else {
+        setRightPacketMonitor((prev: any) => {
+          prev.lastPacketTime = Date.now()
+          prev.calcPacketPercent = prev.calcPacketPercent + 0.1
+          return prev
+        })
+      }
+      console.log(rightPacketMonitor)
+    }
+  }
+
+  const handlePacketMonitor = () => {
+    if (isPacketMonitoring===false){
+      setPacketMonitoring(true);
+      if (isRecording){
+        if (state.left.connectionState===ConnectionState.ConnectedDevice) {
+          (window as any).deviceManagerService.streamTimeDomains({name: state.left.name, enableStream: true}, 
+            (data: any) => {
+              processStreamPacket(data)
+            })
+        }
+        if (state.right.connectionState===ConnectionState.ConnectedDevice) {
+          console.log('right stream start');
+          (window as any).deviceManagerService.streamTimeDomains({name: state.right.name, enableStream: true}, 
+            (data: any) => {
+              processStreamPacket(data)
+            })
+          
+        }
+      }
+    }
+    else {
+      setPacketMonitoring(false);
+      if (isRecording) {
+        
+        if (state.right.connectionState===ConnectionState.ConnectedDevice) {
+          (window as any).deviceManagerService.streamTimeDomains({name: state.right.name, enableStream: false}, console.log)
+          console.log('right stream ended')
+        }
+          
+      }
+        
+    }
+
+  }
+
   return (
     <Router>
       {/* Container for entire window */}
       <div id='app-container'>
-        <Header isRecording={isRecording} recordingTime={recordingTime} />
+        <Header isRecording={isRecording} recordingTime={recordingTime} isPacketMonitoring={isPacketMonitoring} leftPacketMonitor={leftPacketMonitor} rightPacketMonitor={rightPacketMonitor}/>
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
@@ -337,6 +418,7 @@ const App: React.FC = () => {
                 <Settings
                   showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask}
                   beepOnDeviceDiscover={beepOnDeviceDiscover.current} beepToggleHandle={toggleBeepConfig}
+                  isPacketMonitoring={isPacketMonitoring} handlePacketMonitor={handlePacketMonitor}
                 />
               </Route>
               <Route path='/help'>

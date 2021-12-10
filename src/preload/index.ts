@@ -63,6 +63,11 @@ contextBridge.exposeInMainWorld('deviceManagerService', {
 
   integrityTest: async (request: any): Promise<any> => {
     return await ipcRenderer.invoke('integrity-test', request)
+  },
+
+  streamTimeDomains: (request: any, callback: any): void => {
+    ipcRenderer.send('stream-timedomains', request)
+    ipcRenderer.on('stream-update', (_, resp) => callback(resp))
   }
 })
 

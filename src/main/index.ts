@@ -346,6 +346,33 @@ ipcMain.handle('configure-beep', async (event, request) => {
   })
 })
 
+ipcMain.on('stream-timedomains', async (event, request) => {
+  const logScope = log.scope('stream-timedomains')
+  logScope.info('recieved steam-timedomains')
+  logScope.info(`request ${inspect(request)}`)
+  const call = deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
+  call.setMaxListeners(4)
+  call.on('data', (resp: any) => {
+    event.reply('stream-update', resp)
+    call.removeListener('data', (stream:any)=>logScope.info('listener removed in event'))
+  })
+
+  call.on('status', (status: any) => {
+    logScope.info(`status ${inspect(status)}`)
+  })
+
+  call.on('end', () => {
+    logScope.info('received end')
+    call.removeListener('data', (stream:any)=>logScope.info('listener removed'))
+  })
+
+  call.on('error', (err: Error) => {
+    // TODO (BNR): How do we handle errors at this level?
+    logScope.error(`error: ${err}`)
+    call.removeListener('data', (stream:any)=>logScope.info('listener removed'))
+  })
+})
+
 // Function to launch jsPsych tasks
 ipcMain.on('task-launch', (event, { appDir }) => {
   const logScope = log.scope('task-launch')
