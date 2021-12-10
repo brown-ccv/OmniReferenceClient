@@ -351,6 +351,8 @@ ipcMain.on('stream-timedomains', async (event, request) => {
   logScope.info('recieved steam-timedomains')
   logScope.info(`request ${inspect(request)}`)
   const call = deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
+  if (request.enableStream===false)
+    call.removeAllListeners()
   call.on('data', (resp: any) => {
     logScope.info(' received data')
     logScope.info(`stream data ${inspect(resp)}`)
