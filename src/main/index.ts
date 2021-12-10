@@ -363,13 +363,13 @@ ipcMain.on('stream-timedomains', async (event, request) => {
 
   call.on('end', () => {
     logScope.info('received end')
-    call.removeAllListeners('data')
+    call.removeAllListeners()
   })
 
   call.on('error', (err: Error) => {
     // TODO (BNR): How do we handle errors at this level?
     logScope.error(`error: ${err}`)
-    call.removeAllListeners('data')
+    call.removeAllListeners()
     
   })
 })
