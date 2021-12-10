@@ -346,12 +346,15 @@ ipcMain.handle('configure-beep', async (event, request) => {
   })
 })
 
+let call:any;
+
 ipcMain.on('stream-timedomains', async (event, request) => {
   const logScope = log.scope('stream-timedomains')
   logScope.info('recieved steam-timedomains')
   logScope.info(`request ${inspect(request)}`)
-  const call = deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
-  if (request.enableStream===false)
+  if (request.enableStream)
+    call = deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
+  else
     call.removeAllListeners()
   call.on('data', (resp: any) => {
     event.reply('stream-update', resp)
