@@ -346,17 +346,11 @@ ipcMain.handle('configure-beep', async (event, request) => {
   })
 })
 
-let call:any;
-
 ipcMain.on('stream-timedomains', async (event, request) => {
   const logScope = log.scope('stream-timedomains')
   logScope.info('recieved steam-timedomains')
   logScope.info(`request ${inspect(request)}`)
-  if (request.enableStream)
-    call = deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
-  else
-    deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
-    call.removeAllListeners()
+  const call = deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
   call.on('data', (resp: any) => {
     event.reply('stream-update', resp)
   })
@@ -367,13 +361,13 @@ ipcMain.on('stream-timedomains', async (event, request) => {
 
   call.on('end', () => {
     logScope.info('received end')
-    call.removeAllListeners()
+    call.removeListener('data', (stream:any)=>logScope.info('listener removed'))
   })
 
   call.on('error', (err: Error) => {
     // TODO (BNR): How do we handle errors at this level?
     logScope.error(`error: ${err}`)
-    call.removeAllListeners()
+    call.removeListener('data', (stream:any)=>logScope.info('listener removed'))
   })
 })
 
