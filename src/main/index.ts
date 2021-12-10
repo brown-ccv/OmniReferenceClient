@@ -355,6 +355,7 @@ ipcMain.on('stream-timedomains', async (event, request) => {
   if (request.enableStream)
     call = deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
   else
+    deviceClient.TimeDomainStream({name: request.name, enableStream: request.enableStream})
     call.removeAllListeners()
   call.on('data', (resp: any) => {
     event.reply('stream-update', resp)
@@ -367,14 +368,12 @@ ipcMain.on('stream-timedomains', async (event, request) => {
   call.on('end', () => {
     logScope.info('received end')
     call.removeAllListeners()
-    console.log("end and remove")
   })
 
   call.on('error', (err: Error) => {
     // TODO (BNR): How do we handle errors at this level?
     logScope.error(`error: ${err}`)
     call.removeAllListeners()
-    console.log("error and remove")
   })
 })
 
