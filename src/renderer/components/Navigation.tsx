@@ -14,9 +14,6 @@ const Navigation: React.FC = () => {
           <Link to='/recording'>Recording <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>
-          <Link to='/playground'>Playground <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
-        </li>
-        <li className='menu-list'>
           <Link to='/settings'>Settings <FontAwesomeIcon className='icon ml-1' icon={faAngleRight} /></Link>
         </li>
         <li className='menu-list'>

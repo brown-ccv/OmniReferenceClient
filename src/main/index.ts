@@ -346,24 +346,6 @@ ipcMain.handle('configure-beep', async (event, request) => {
   })
 })
 
-// Function to launch jsPsych tasks
-ipcMain.on('task-launch', (event, { appDir }) => {
-  const logScope = log.scope('task-launch')
-  logScope.info('recieved task-launch')
-  logScope.info(`request ${inspect(appDir)}`)
-  const home = app.getPath('home')
-  // Path to tasks - /AppData/Local/<appDir>
-  const fullPath = path.join(home, 'AppData', 'Local', appDir)
-
-  if (fullPath === null) {
-    logScope.error(`need an app name: ${fullPath}`)
-    throw new Error('need an app name')
-  }
-
-  logScope.info(`opening ${fullPath}`)
-  execa(fullPath).stdout?.pipe(process.stdout)
-})
-
 ipcMain.on('quit', (event, args) => {
   const logScope = log.scope('quit')
   logScope.info('recieved quit')

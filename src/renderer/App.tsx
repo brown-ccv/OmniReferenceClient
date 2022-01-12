@@ -8,7 +8,6 @@ import {
 import { useOmni, ConnectionState, ActionType, State, Dispatch } from './util/OmniContext'
 
 import Help from './pages/Help'
-import Playground from './pages/Playground'
 import Settings from './pages/Settings'
 import Recording from './pages/Recording'
 import Status from './pages/Status'
@@ -19,7 +18,6 @@ import Navigation from './components/Navigation'
 import { deviceConnected, connectionStateString, slowPolling, streamConfigConvert, senseConfigConvert, integrityTestPairs } from './util/helpers'
 
 const App: React.FC = () => {
-  const [showProvocationTask, setShowProvocationTask] = React.useState<boolean>(false)
   const [isRecording, setRecording] = React.useState<boolean>(false)
   const [recordingTime, setRecordingTime] = React.useState<number>(0)
   const [runLeadIntegrityTest, setRunLeatIntegrityTest] = React.useState<boolean>(true)
@@ -330,12 +328,8 @@ const App: React.FC = () => {
           {/* Main area */}
           <div id='main-window'>
             <Switch>
-              <Route path='/playground'>
-                <Playground showProvocationTask={showProvocationTask} isRecording={isRecording} />
-              </Route>
               <Route path='/settings'>
                 <Settings
-                  showProvocationTask={showProvocationTask} setShowProvocationTask={setShowProvocationTask}
                   beepOnDeviceDiscover={beepOnDeviceDiscover.current} beepToggleHandle={toggleBeepConfig}
                 />
               </Route>
