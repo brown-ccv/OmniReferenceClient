@@ -219,6 +219,17 @@ const App: React.FC = () => {
     return () => clearInterval(recordingInterval)
   }, [isRecording])
 
+  React.useEffect(() => {
+    const handleUnload = async () => {
+      const config = (window as any).appService.config()
+      await (window as any).bridgeManagerService.disconnectFromBridge({ name: config.left.name })
+      await (window as any).bridgeManagerService.disconnectFromBridge({ name: config.right .name })
+    }
+
+    window.addEventListener('unload', handleUnload)
+    return () => window.removeEventListener('unload', handleUnload)
+  })
+
   const recordingClickHandler = async (isRecording: boolean): Promise<void> => {
     const { left, right } = state
     const config = (window as any).appService.config()
