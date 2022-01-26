@@ -80,7 +80,8 @@ if (config.autoUpdate === true) {
   log.info('Auto update enabled')
   require('update-electron-app')({
     repo: 'brown-ccv/OmniReferenceClient',
-    updateInterval: '1 hour'
+    updateInterval: '1 hour',
+    logger: require('electron-log')
   })
 } else {
   log.info('Auto update disabled')
